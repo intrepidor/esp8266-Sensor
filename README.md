@@ -16,6 +16,7 @@
 
 ## Notes
 - The above Makefile points to another makefile in Esp8266-Arduino-Makefile. If the installation instructions are not followed, edit the Makefile to point to your alternate location.
+- The Esp8266-Arduino-Makefile installed above includes DHT and WiFiManager libraries which are required by this application.
 
 ## License
 The software incorporates AVRQueue from https://github.com/Zuph/AVRQueue which is separately licensed.
