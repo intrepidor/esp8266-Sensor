@@ -7,7 +7,7 @@
 27/Feb/2016 : Allan Inda
 - Initial version
 
-## Installation (Windows)
+## Installation (Windows 7 and Ubuntu 14.04)
 - Follow the installation for https://github.com/intrepidor/Esp8266-Arduino-Makefile
 - cd ~/ESP8266
 - git clone --recursive https://github.com/intrepidor/esp8266-Sensor.git
