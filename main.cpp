@@ -17,7 +17,7 @@ extern int task_webServer(unsigned long now);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Server v1.20\nAllan Inda 2016-Jan-30\n");
+String ProgramInfo("Environment Server v1.21\nAllan Inda 2016-Mar-05\n");
 
 // Other
 long count = 0;
@@ -42,143 +42,144 @@ String header("CNT\tRH%\tTemp1*C\tHIdx*C\tRH%\tTemp2*C\tHIdx*C\tMotion");
 ///////////////////////////////////////////////////////////////////////////////////////////////
 void setup(void) {
 
-    // Setup GPIO
-    pinMode(PIRPIN, INPUT);   // Initialize the PIR sensor pin as an input
-    pinMode(BUILTIN_LED, OUTPUT);  // Initialize the BUILTIN_LED pin as an output
+	// Setup GPIO
+	pinMode(PIRPIN, INPUT);   // Initialize the PIR sensor pin as an input
+	pinMode(BUILTIN_LED, OUTPUT);  // Initialize the BUILTIN_LED pin as an output
 
-    // Signal that setup is proceeding
-    digitalWrite(BUILTIN_LED, BUILTIN_LED_ON);
+	// Signal that setup is proceeding
+	digitalWrite(BUILTIN_LED, BUILTIN_LED_ON);
 
-    // Setup Serial port
-    Serial.begin(115200);
-    Serial.println(ProgramInfo.c_str());
+	// Setup Serial port
+	Serial.begin(115200);
+	Serial.println(ProgramInfo.c_str());
 
-    // Start EEPROM
-    EEPROM.begin(512);
-    dinfo.RestoreConfigurationFromEEPROM();
+	// Start EEPROM
+	EEPROM.begin(512);
+	dinfo.RestoreConfigurationFromEEPROM();
 
-    // Configure Objects
+	// Configure Objects
+	dinfo.init();
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"	// disable warnings about the below strings being "const" while the signatures are non-const
-    {
-        //lint --e{1776}   Ignore Info about using string literal in place of char*
-        t1.Init(sensor_technology::dht22, "3", pD3);
-        t2.Init(sensor_technology::dht22, "4", pD4);
-    }
+	{
+		//lint --e{1776}   Ignore Info about using string literal in place of char*
+		t1.Init(sensor_technology::dht22, "3", pD3);
+		t2.Init(sensor_technology::dht22, "4", pD4);
+	}
 #pragma GCC diagnostic pop
 
-    // Setup the WebServer
-    WebInit();
-    WebPrintInfo();
+	// Setup the WebServer
+	WebInit();
+	WebPrintInfo();
 
-    // Print useful Information
-    dinfo.printThingspeakInfo();
-    Serial.print(String(String("ESP8266_Device_ID=") + String(dinfo.getDeviceID())).c_str());
-    Serial.println(String(String("\nFriendly Name: ") + String(dinfo.getDeviceName()) + String("\n")).c_str());
-    Serial.println(
-            String(
-                    (String("DHT#1=") + String(t1.getstrType()) + String("\nDHT#2=") + String(t2.getstrType())
-                            + String("\n"))).c_str());
-    Serial.println("");
-    Serial.println("");
-    Serial.println(header);
+	// Print useful Information
+	dinfo.printThingspeakInfo();
+	Serial.print(String(String("ESP8266_Device_ID=") + String(dinfo.getDeviceID())).c_str());
+	Serial.println(String(String("\r\nFriendly Name: ") + String(dinfo.getDeviceName()) + String("\r\n")).c_str());
+	Serial.println(
+			String(
+					(String("DHT#1=") + String(t1.getstrType()) + String("\r\nDHT#2=") + String(t2.getstrType())
+							+ String("\r\n"))).c_str());
+	Serial.println("");
+	Serial.println("");
+	Serial.println(header);
 
-    //fixme  dinfo.printInfo();
+	//fixme  dinfo.printInfo();
 
-    Queue myQueue;
-    // scheduleFunction arguments (function pointer, task name, start delay in ms, repeat interval in ms)
-    myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
-    // FIXME disable for now -- myQueue.scheduleFunction(task_readtemperature, "Temperature", 1000, 499);
-    // FIXME disable for now -- myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
-    myQueue.scheduleFunction(task_flashled, "LED", 250, 1000);
-    myQueue.scheduleFunction(task_printstatus, "Status", 2000, 5000);
-    myQueue.scheduleFunction(task_webServer, "WebServer", 3000, 1);
+	Queue myQueue;
+	// scheduleFunction arguments (function pointer, task name, start delay in ms, repeat interval in ms)
+	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
+	// FIXME disable for now -- myQueue.scheduleFunction(task_readtemperature, "Temperature", 1000, 499);
+	// FIXME disable for now -- myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
+	myQueue.scheduleFunction(task_flashled, "LED", 250, 1000);
+	myQueue.scheduleFunction(task_printstatus, "Status", 2000, 5000);
+	myQueue.scheduleFunction(task_webServer, "WebServer", 3000, 1);
 
-    // Signal that setup is done
-    digitalWrite(BUILTIN_LED, BUILTIN_LED_OFF);
+	// Signal that setup is done
+	digitalWrite(BUILTIN_LED, BUILTIN_LED_OFF);
 
-    for (;;) {
-        myQueue.Run(millis());
-        delay(10);
-    }
+	for (;;) {
+		myQueue.Run(millis());
+		delay(10);
+	}
 }
 
 int task_readpir(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-    if (digitalRead (PIRPIN)) {
-        PIRcount++;
-    }
-    return 0;
+	if (digitalRead (PIRPIN)) {
+		PIRcount++;
+	}
+	return 0;
 }
 
 int task_readtemperature(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-    if (!t1.read()) {
-        Serial.print("Err sensor #");
-        Serial.print(t1.getPin());
-        Serial.println("");
-    }
-    if (!t2.read()) {
-        Serial.print("Err sensor #");
-        Serial.print(t2.getPin());
-        Serial.println("");
-    }
-    return 0;
+	if (!t1.read()) {
+		Serial.print("Err sensor #");
+		Serial.print(t1.getPin());
+		Serial.println("");
+	}
+	if (!t2.read()) {
+		Serial.print("Err sensor #");
+		Serial.print(t2.getPin());
+		Serial.println("");
+	}
+	return 0;
 }
 
 int task_updatethingspeak(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-    if (dinfo.getEnable()) {
-        dinfo.updateThingspeak();
-    }
-    PIRcountLast = PIRcount;
-    PIRcount = 0; // reset counter for starting a new period
-    return 0;
+	if (dinfo.getEnable()) {
+		dinfo.updateThingspeak();
+	}
+	PIRcountLast = PIRcount;
+	PIRcount = 0; // reset counter for starting a new period
+	return 0;
 }
 
 int task_flashled(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-    static uint8_t current_state = 0;
-    if (current_state == 0) {
-        digitalWrite(BUILTIN_LED, BUILTIN_LED_ON);
-        current_state = 1;
-    }
-    else {
-        digitalWrite(BUILTIN_LED, BUILTIN_LED_OFF);
-        current_state = 0;
-    }
-    return 0;
+	static uint8_t current_state = 0;
+	if (current_state == 0) {
+		digitalWrite(BUILTIN_LED, BUILTIN_LED_ON);
+		current_state = 1;
+	}
+	else {
+		digitalWrite(BUILTIN_LED, BUILTIN_LED_OFF);
+		current_state = 0;
+	}
+	return 0;
 }
 
 int task_printstatus(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-    count++;
-    Serial.print("#,");
-    Serial.print(count);
-    Serial.print(",\t");
-    Serial.print(t1.getHumidity());
-    Serial.print(",\t");
-    Serial.print(t1.getTemperature());
-    Serial.print(",\t");
-    Serial.print(t1.getHeatindex());
-    Serial.print(",\t");
-    Serial.print(t2.getHumidity());
-    Serial.print(",\t");
-    Serial.print(t2.getTemperature());
-    Serial.print(",\t");
-    Serial.print(t2.getHeatindex());
-    Serial.print(",\t");
-    Serial.print(PIRcount);
-    Serial.print(",\t");
-    Serial.println(PIRcountLast);
-    return 0;
+	count++;
+	Serial.print("#,");
+	Serial.print(count);
+	Serial.print(",\t");
+	Serial.print(t1.getHumidity());
+	Serial.print(",\t");
+	Serial.print(t1.getTemperature());
+	Serial.print(",\t");
+	Serial.print(t1.getHeatindex());
+	Serial.print(",\t");
+	Serial.print(t2.getHumidity());
+	Serial.print(",\t");
+	Serial.print(t2.getTemperature());
+	Serial.print(",\t");
+	Serial.print(t2.getHeatindex());
+	Serial.print(",\t");
+	Serial.print(PIRcount);
+	Serial.print(",\t");
+	Serial.println(PIRcountLast);
+	return 0;
 }
 
 int task_webServer(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-    WebWorker();
-    return 0;
+	WebWorker();
+	return 0;
 }
 
 void loop(void) {
