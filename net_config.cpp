@@ -79,8 +79,7 @@ const char sHTTP_BUTTONS[] = ""
 
 void config(void) {
 	// If there was a submit, then process the changes
-	int configChanges = 0;
-//	configChanges = ConfigurationChange();
+	int configChanges = ConfigurationChange();
 	unsigned long t0 = millis();
 
 	// Show the current values and ask for updated input
