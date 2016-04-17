@@ -78,7 +78,7 @@ double Device::getPortAdj(int portnum, int adjnum) {
 
 	if (isValidPort(portnum)) {
 		if (adjnum >= 0 && adjnum < getPortAdjMax()) {
-			return (portnum + 1) * 10 + (adjnum); // fixme this line is wrong and temporarily here. Needs to be fixed.
+			return static_cast<double>((static_cast<double>(portnum) + 1) * 10 + static_cast<double>(adjnum)); // fixme this line is wrong and temporarily here. Needs to be fixed.
 			// fixme this causes the chip to crash -- return db.port[portnum].adj[adjnum];
 		}
 	}
@@ -175,6 +175,4 @@ void Device::updateThingspeak(void) {
 			}
 		}
 	}
-// Print a new chart header for the Serial port
-	Serial.println(header);
 }

@@ -25,9 +25,9 @@ static const uint8_t pD8 = 15;
 static const uint8_t pD9 = 3;
 static const uint8_t pD10 = 1;
 
-extern String header;
 extern long count;
 extern int PIRcount;
+extern bool debug_output;
 
 extern Device dinfo;
 extern TemperatureSensor t1;

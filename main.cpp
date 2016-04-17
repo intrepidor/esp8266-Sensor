@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <EEPROM.h>
-#include <ctype.h>
+//#include <ctype.h>
 #include "main.h"
 #include "temperature.h"
 #include "network.h"
@@ -17,10 +17,11 @@ extern int task_webServer(unsigned long now);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Server v1.21\nAllan Inda 2016-Mar-05\n");
+String ProgramInfo("Environment Server v1.22\nAllan Inda 2016-Mar-12\n");
 
 // Other
 long count = 0;
+bool debug_output = true;
 
 // PIR Sensor
 #define PIRPIN pD1
@@ -37,9 +38,14 @@ TemperatureSensor t2;
 Device dinfo;
 
 // Information
-String header("CNT\tRH%\tTemp1*C\tHIdx*C\tRH%\tTemp2*C\tHIdx*C\tMotion");
+void printMenu(void);
+void printInfo(void);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
+//lint -e{1784}   // suppress message about signature conflict between C++ and C
+void loop(void) {
+}
+//lint -e{1784}   // suppress message about signature conflict between C++ and C
 void setup(void) {
 
 	// Setup GPIO
@@ -71,8 +77,30 @@ void setup(void) {
 
 	// Setup the WebServer
 	WebInit();
-	WebPrintInfo();
+	printInfo();
 
+	//fixme  dinfo.printInfo();
+
+	Queue myQueue;
+	// scheduleFunction arguments (function pointer, task name, start delay in ms, repeat interval in ms)
+	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
+	// FIXME disable for now -- myQueue.scheduleFunction(task_readtemperature, "Temperature", 1000, 499);
+	// FIXME disable for now -- myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
+	myQueue.scheduleFunction(task_flashled, "LED", 250, 1000);
+	myQueue.scheduleFunction(task_printstatus, "Status", 2000, 500);
+	myQueue.scheduleFunction(task_webServer, "WebServer", 3000, 1);
+
+	// Signal that setup is done
+	digitalWrite(BUILTIN_LED, BUILTIN_LED_OFF);
+	printMenu();
+
+	for (;;) {
+		myQueue.Run(millis());
+		delay(10);
+	}
+}
+
+void printInfo(void) {
 	// Print useful Information
 	dinfo.printThingspeakInfo();
 	Serial.print(String(String("ESP8266_Device_ID=") + String(dinfo.getDeviceID())).c_str());
@@ -83,26 +111,24 @@ void setup(void) {
 							+ String("\r\n"))).c_str());
 	Serial.println("");
 	Serial.println("");
-	Serial.println(header);
+}
 
-	//fixme  dinfo.printInfo();
-
-	Queue myQueue;
-	// scheduleFunction arguments (function pointer, task name, start delay in ms, repeat interval in ms)
-	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
-	// FIXME disable for now -- myQueue.scheduleFunction(task_readtemperature, "Temperature", 1000, 499);
-	// FIXME disable for now -- myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
-	myQueue.scheduleFunction(task_flashled, "LED", 250, 1000);
-	myQueue.scheduleFunction(task_printstatus, "Status", 2000, 5000);
-	myQueue.scheduleFunction(task_webServer, "WebServer", 3000, 1);
-
-	// Signal that setup is done
-	digitalWrite(BUILTIN_LED, BUILTIN_LED_OFF);
-
-	for (;;) {
-		myQueue.Run(millis());
-		delay(10);
+void printMenu(void) {
+	Serial.println("MENU ----------------------");
+	Serial.println("c  show calibration values");
+	Serial.println("m  show menu");
+	Serial.println("s  show status");
+	Serial.println("i  show configuration");
+	Serial.println("w  show web URLs");
+	Serial.print("d  [");
+	if (debug_output) {
+		Serial.print("ON");
 	}
+	else {
+		Serial.print("OFF");
+	}
+	Serial.println("] toggle debug output to serial port");
+	Serial.println("");
 }
 
 int task_readpir(unsigned long now) {
@@ -155,24 +181,61 @@ int task_flashled(unsigned long now) {
 int task_printstatus(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
 	count++;
-	Serial.print("#,");
-	Serial.print(count);
-	Serial.print(",\t");
-	Serial.print(t1.getHumidity());
-	Serial.print(",\t");
-	Serial.print(t1.getTemperature());
-	Serial.print(",\t");
-	Serial.print(t1.getHeatindex());
-	Serial.print(",\t");
-	Serial.print(t2.getHumidity());
-	Serial.print(",\t");
-	Serial.print(t2.getTemperature());
-	Serial.print(",\t");
-	Serial.print(t2.getHeatindex());
-	Serial.print(",\t");
-	Serial.print(PIRcount);
-	Serial.print(",\t");
-	Serial.println(PIRcountLast);
+
+	if (Serial.available() > 0) {
+		char ch = static_cast<char>(Serial.read());
+		switch (ch) {
+			case 'm':
+				printMenu();
+				break;
+			case 'd':
+				if (debug_output) {
+					debug_output = false;
+					Serial.println("Debug Disabled");
+				}
+				else {
+					debug_output = true;
+					Serial.println("Debug Enabled");
+				}
+				break;
+			case 'i':
+				printInfo();
+				break;
+			case 's':
+				Serial.println("CNT\tRH%\tTemp1*C\tHIdx*C\tRH%\tTemp2*C\tHIdx*C\tMotion");
+				Serial.print("#,");
+				Serial.print(count);
+				Serial.print(",\t");
+				Serial.print(t1.getHumidity());
+				Serial.print(",\t");
+				Serial.print(t1.getTemperature());
+				Serial.print(",\t");
+				Serial.print(t1.getHeatindex());
+				Serial.print(",\t");
+				Serial.print(t2.getHumidity());
+				Serial.print(",\t");
+				Serial.print(t2.getTemperature());
+				Serial.print(",\t");
+				Serial.print(t2.getHeatindex());
+				Serial.print(",\t");
+				Serial.print(PIRcount);
+				Serial.print(",\t");
+				Serial.println(PIRcountLast);
+				break;
+			case 'c':
+				t1.printCalibrationData();
+				t2.printCalibrationData();
+				break;
+			case 'w':
+				WebPrintInfo();
+				break;
+			default:
+				Serial.print("Unknown command: ");
+				Serial.println(ch);
+				break;
+		}
+	}
+
 	return 0;
 }
 
@@ -182,5 +245,3 @@ int task_webServer(unsigned long now) {
 	return 0;
 }
 
-void loop(void) {
-}

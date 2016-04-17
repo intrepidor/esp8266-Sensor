@@ -6,7 +6,7 @@
  */
 
 #include "network.h"
-#include "temperature.h"
+//#include "temperature.h"
 #include "main.h"
 #include "deviceinfo.h"
 #include "net_config.h"
@@ -107,9 +107,17 @@ void config(void) {
 	// Ports
 	for (int i = 0; i < dinfo.getPortMax(); i++) {
 		// Port Name and edit box
-		r = String(
-				String(sHTTP_PORT_NUMBER) + String(i) + String(sHTTP_PORT_NAME) + String(i)
-						+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortName(i)) + String(sHTTP_ENDLABELQ_BR));
+		if (i > 0) {
+			r = String("<br>");
+		}
+		else {
+			r = String("");
+		}
+		r = r
+				+ String(
+						String(sHTTP_PORT_NUMBER) + String(i) + String(sHTTP_PORT_NAME) + String(i)
+								+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortName(i))
+								+ String(sHTTP_ENDLABELQ_BR));
 		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
 			r += String(
 					String(sHTTP_PORTADJ_NUMBER) + String(k) + String(sHTTP_PORTADJ_NAME) + String(i) + String(k)
@@ -162,49 +170,108 @@ int ConfigurationChange(void) {
 	 http: //192.168.0.74/config?name=_name_&ts_enable=tsenable&apikey=_api_&ipaddr=_addr_&port0=&port1=&port2=_2_&port3=&port4=_4_&port5=_5_&submit=submit
 	 */
 
+	/* ITEM					NAME			VALUE
+	 * ------------------   --------------  ---------------------------
+	 * Device name: 		name			string
+	 * Thingspeak enable: 	ts_enable		tsenable|tsdisable
+	 * API Key: 			apikey			string
+	 * IP Address:			ipaddr			string
+	 * Port N Name:			portN			string
+	 * Port N Adj M:		portadjNM		string (convert to float)
+	 * Radio Port N:		radportN		[OFF|DHT11|DHT22|DS18b20|Sonar|Dust|Sound]N
+	 */
+
 	if (server.args() > 0) {
+		bool found = false;
+		if (debug_output) {
+			Serial.println("");
+			Serial.println("##########################################################");
+		}
 		dinfo.setEnable(false);
 		for (uint8_t i = 0; i < server.args(); i++) {
 			String sarg = server.argName(i);
 			String varg = server.arg(i);
-			Serial.print("NAME=");
-			Serial.print(sarg);
-			Serial.print("  VALUE=");
-			Serial.println(varg);
+			if (debug_output) {
+				Serial.print("NAME=");
+				Serial.print(sarg);
+				Serial.print("  VALUE=");
+				Serial.print(varg);
+			}
 			if (sarg == String("name")) {
 				dinfo.setDeviceName(varg);
+				Serial.println(" ok name");
+				found = true;
 			}
 			if (sarg == String("ts_enable")) {
 				dinfo.setEnable(true);
+				Serial.println(" ok ts_enable");
+				found = true;
 			}
 			if (sarg == "apikey") {
 				dinfo.setThingspeakApikey(varg);
+				Serial.println(" ok apikey");
+				found = true;
 			}
 			if (sarg == "ipaddr") {
 				dinfo.setIpaddr(varg);
+				Serial.println(" ok ipaddr");
+				found = true;
 			}
-			if (strncmp(sarg.c_str(), "port", 4) == 0) {
-				char c = sarg.c_str()[4];
-				int n = static_cast<int>(c - '0');
-				if (n >= 0 && n < dinfo.getPortMax()) {
+			if (strncmp(sarg.c_str(), "portadj", 7) == 0) {
+				found = true;
+				char c1 = sarg.c_str()[7];
+				char c2 = sarg.c_str()[8];
+				int n1 = static_cast<int>(c1) - static_cast<int>('0');
+				int n2 = static_cast<int>(c2) - static_cast<int>('0');
+				if (debug_output) {
+					Serial.print(", n1=");
+					Serial.print(n1);
+					Serial.print(", n2=");
+					Serial.print(n2);
+					Serial.print(", c1=");
+					Serial.print(c1);
+					Serial.print(", c2=");
+					Serial.print(c2);
+				}
+				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					if (varg.length() > 0) {
-						dinfo.setPortName(n, varg);
+						dinfo.setPortName(n1, varg);
+						Serial.println(" ok, set");
 					}
 					else {
-						dinfo.setPortName(n, "");
+						dinfo.setPortName(n1, "");
+						Serial.println(" ok - cleared");
 					}
 				}
 				else {
-					Serial.println("Error: Bug - Invalid port# found in ConfigurationChange()");
+					if (debug_output) {
+						Serial.print("\nError: Bug - Invalid port #(");
+						Serial.print(n1);
+						Serial.print(",");
+						Serial.print(c1);
+						Serial.print(") found in ConfigurationChange() - ");
+						Serial.println(sarg.c_str());
+					}
 				}
 				//dinfo.setPortName(i, varg);
 			}
 			if (sarg == "radport0") {
+				if (debug_output) {
+					Serial.println(", radport0");
+					found = true;
+				}
 				//Ports[i].setMode(varg);
 			}
 			if (sarg == "reboot") {
-				// reboot device
+				if (debug_output) {
+					Serial.println(", reboot");
+					found = true;
+				}
 			}
+			if (!found) {
+				Serial.println("");
+			}
+			found = false;
 		}
 		dinfo.StoreConfigurationIntoEEPROM();
 	}
