@@ -32,6 +32,26 @@ void Device::init(void) {
 	validate_string(db.thingspeak.host, "localhost", sizeof(db.thingspeak.host), 32, 126);
 }
 
+String Device::toString(void) {
+	String s;
+	s = String(
+			String("config_version=") + String(db.config_version) + String("\r\ndevice.name=") + String(getDeviceName())
+					+ String("\r\ndevice.id=") + String(getDeviceID()) + String("\r\nthingspeak.status=")
+					+ String(getThingspeakStatus()) + String("\r\nthingspeak.enable=") + getEnableString()
+					+ String("\r\nTS_apikey=") + getThinkspeakApikey() + String("\r\nthingspeak.host=")
+					+ getThingspeakHost() + String("\r\nthingspeak.ipaddr=") + getIpaddr());
+	for (int i = 0; i < MAX_PORTS; i++) {
+		s = s
+				+ String(
+						String("\r\nport[") + String(i) + String("].name=") + getPortName(i) + String(", mode=")
+								+ String(getModeStr(i)) + String(", pin=") + String(db.port[i].pin));
+		for (int k = 0; k < MAX_ADJ; k++) {
+			s = s + String(String(", adj[") + String(k) + String("]=") + String(db.port[i].adj[k]));
+		}
+	}
+	return s;
+}
+
 void Device::setcDeviceName(const char* newname) {
 	if (newname) {
 		memset(db.device.name, 0, sizeof(db.device.name));
@@ -44,7 +64,8 @@ static bool isValidPort(int portnum) {
 	return false;
 }
 
-const char* PROGMEM Device::getEnableStr() {
+const char* PROGMEM
+Device::getEnableStr() {
 	if (db.thingspeak.enabled) return "checked";
 	return " ";
 }
@@ -59,9 +80,44 @@ portModes Device::getPortMode(int portnum) {
 }
 void Device::setPortMode(int portnum, portModes _mode) {
 	if (isValidPort(portnum)) {
-		db.port[portnum].mode = static_cast<char>(_mode);
+		db.port[portnum].mode = _mode;
 	}
 }
+
+String Device::getModeStr(int portnum) {
+	String s("");
+	if (isValidPort(portnum)) {
+		portModes m = db.port[portnum].mode;
+		switch (m) {
+			case portModes::undefined:
+				s = "undefined";
+				break;
+			case portModes::off:
+				s = "off";
+				break;
+			case portModes::dht11:
+				s = "dht11";
+				break;
+			case portModes::dht22:
+				s = "dht22";
+				break;
+			case portModes::ds18b20:
+				s = "ds18b20";
+				break;
+			case portModes::sonar:
+				s = "sonar";
+				break;
+			case portModes::dust:
+				s = "dust";
+				break;
+			default:
+				s = "not_a_mode";
+				break;
+		}
+	}
+	return s;
+}
+
 void Device::setPortName(int portnum, String _n) {
 	if (isValidPort(portnum)) {
 		strncpy(db.port[portnum].name, _n.c_str(), sizeof(db.port[portnum].name) - 1);
@@ -69,6 +125,7 @@ void Device::setPortName(int portnum, String _n) {
 }
 String Device::getPortName(int portnum) {
 	if (isValidPort(portnum)) {
+		validate_string(db.port[portnum].name, "not_named", sizeof(db.port[portnum].name), 32, 126);
 		return this->db.port[portnum].name;
 	}
 	return String("undefined");

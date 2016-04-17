@@ -12,7 +12,7 @@
 
 const int CURRENT_CONFIG_VERSION = 123;
 
-extern void validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest);
+//extern void validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest);
 
 //-----------------------------------------------------------------------------------
 // Device Class
@@ -20,15 +20,18 @@ const int MAX_PORTS = 6;
 const int MAX_ADJ = 3;
 const int STRING_LENGTH = 20;
 static bool isValidPort(int portnum);
+
 enum class portModes {
 	undefined, off, dht11, dht22, ds18b20, sonar, dust
 };
+
 struct cport {
 	char name[STRING_LENGTH + 1];
-	char mode;
-	char pin;
+	portModes mode;
+	int pin;
 	double adj[MAX_ADJ];
 };
+
 class Device {
 private:
 	struct {
@@ -59,14 +62,15 @@ private:
 	} db;
 
 public:
-	// Default Constructor
+// Default Constructor
 	Device() {
 		init();
 	}
 	void init(void);
+	String toString(void);
 
-	//--------------------------------------------------------
-	// Device Name and ID
+//--------------------------------------------------------
+// Device Name and ID
 	const char* getDeviceName(void) const {
 		return this->db.device.name;
 	}
@@ -80,8 +84,8 @@ public:
 	void setDeviceID(int newID) {
 		this->db.device.id = newID;
 	}
-	//--------------------------------------------------------
-	// Ports
+//--------------------------------------------------------
+// Ports
 	int getPortMax(void) {
 		return MAX_PORTS;
 	}
@@ -94,14 +98,15 @@ public:
 	}
 	double getPortAdj(int portnum, int adjnum);
 	void setPortAdj(int portnum, int adjnum, double v);
+	String getModeStr(int portnum);
 
-	//--------------------------------------------------------
-	// EEPROM and DB Stuff
+//--------------------------------------------------------
+// EEPROM and DB Stuff
 	void RestoreConfigurationFromEEPROM(void);
 	bool StoreConfigurationIntoEEPROM(void);
 
-	//--------------------------------------------------------
-	// Thingspeak
+//--------------------------------------------------------
+// Thingspeak
 	void printThingspeakInfo(void);
 	void updateThingspeak(void);
 
@@ -149,19 +154,23 @@ public:
 			strncpy(this->db.thingspeak.ipaddr, _ipaddr, sizeof(db.thingspeak.ipaddr) - 1);
 		}
 	}
-	String getIpaddr() const {
+	String getIpaddr(void) const {
 		return String(db.thingspeak.ipaddr);
 	}
-	const char* getcIpaddr() const {
+	const char* getcIpaddr(void) const {
 		return db.thingspeak.ipaddr;
 	}
 
 	void setEnable(bool _enable) {
 		this->db.thingspeak.enabled = _enable;
 	}
-	bool getEnable() const {
+	bool getEnable(void) const {
 		if (db.thingspeak.enabled) return true;
 		return false;
+	}
+	String getEnableString(void) const {
+		if (db.thingspeak.enabled) return String("true");
+		return String("false");
 	}
 	const char* PROGMEM getEnableStr();
 };

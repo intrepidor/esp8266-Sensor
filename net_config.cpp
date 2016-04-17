@@ -199,22 +199,22 @@ int ConfigurationChange(void) {
 			}
 			if (sarg == String("name")) {
 				dinfo.setDeviceName(varg);
-				Serial.println(" ok name");
+				if (debug_output) Serial.println(" ok name");
 				found = true;
 			}
 			if (sarg == String("ts_enable")) {
 				dinfo.setEnable(true);
-				Serial.println(" ok ts_enable");
+				if (debug_output) Serial.println(" ok ts_enable");
 				found = true;
 			}
 			if (sarg == "apikey") {
 				dinfo.setThingspeakApikey(varg);
-				Serial.println(" ok apikey");
+				if (debug_output) Serial.println(" ok apikey");
 				found = true;
 			}
 			if (sarg == "ipaddr") {
 				dinfo.setIpaddr(varg);
-				Serial.println(" ok ipaddr");
+				if (debug_output) Serial.println(" ok ipaddr");
 				found = true;
 			}
 			if (strncmp(sarg.c_str(), "portadj", 7) == 0) {
@@ -236,11 +236,11 @@ int ConfigurationChange(void) {
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					if (varg.length() > 0) {
 						dinfo.setPortName(n1, varg);
-						Serial.println(" ok, set");
+						if (debug_output) Serial.println(" ok, set");
 					}
 					else {
 						dinfo.setPortName(n1, "");
-						Serial.println(" ok - cleared");
+						if (debug_output) Serial.println(" ok - cleared");
 					}
 				}
 				else {
@@ -258,15 +258,15 @@ int ConfigurationChange(void) {
 			if (sarg == "radport0") {
 				if (debug_output) {
 					Serial.println(", radport0");
-					found = true;
 				}
+				found = true;
 				//Ports[i].setMode(varg);
 			}
 			if (sarg == "reboot") {
 				if (debug_output) {
 					Serial.println(", reboot");
-					found = true;
 				}
+				found = true;
 			}
 			if (!found) {
 				Serial.println("");

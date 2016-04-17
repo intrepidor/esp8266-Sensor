@@ -120,6 +120,7 @@ void printMenu(void) {
 	Serial.println("s  show status");
 	Serial.println("i  show configuration");
 	Serial.println("w  show web URLs");
+	Serial.println("e  show eeprom");
 	Serial.print("d  [");
 	if (debug_output) {
 		Serial.print("ON");
@@ -200,6 +201,11 @@ int task_printstatus(unsigned long now) {
 				break;
 			case 'i':
 				printInfo();
+				break;
+			case 'e':
+				Serial.println("");
+				Serial.println(dinfo.toString().c_str());
+				Serial.println("");
 				break;
 			case 's':
 				Serial.println("CNT\tRH%\tTemp1*C\tHIdx*C\tRH%\tTemp2*C\tHIdx*C\tMotion");
