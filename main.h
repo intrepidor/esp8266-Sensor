@@ -33,4 +33,7 @@ extern Device dinfo;
 extern TemperatureSensor t1;
 extern TemperatureSensor t2;
 
+extern void printChipInfo(void);
+extern uint32_t spi_flash_get_id(void);
+
 #endif /* MAIN_H_ */

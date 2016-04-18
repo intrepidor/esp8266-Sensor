@@ -11,9 +11,10 @@
 #include "deviceinfo.h"
 #include "main.h"
 
-void validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest) {
+unsigned int validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest) {
 	bool ok = true;
-	for (unsigned int n = 0; n < size; n++) {
+	unsigned int n = 0;
+	for (n = 0; n < size; n++) {
 		if (str[n] < lowest || str[n] > highest) {
 			ok = false;
 			break;
@@ -24,12 +25,18 @@ void validate_string(char* str, const char* const def, unsigned int size, int lo
 		strncpy(str, def, size - 1);
 	}
 	str[size - 1] = 0;
+	if (ok) {
+		return 0;
+	}
+	else {
+		return n;
+	}
 }
 
 void Device::init(void) {
-	validate_string(db.device.name, "not_named", sizeof(db.device.name), 32, 126);
-	validate_string(db.thingspeak.apikey, "no_apikey", sizeof(db.thingspeak.apikey), 48, 95);
-	validate_string(db.thingspeak.host, "localhost", sizeof(db.thingspeak.host), 32, 126);
+	validate_string(db.device.name, "<not named>", sizeof(db.device.name), 32, 126);
+	validate_string(db.thingspeak.apikey, "<no api key>", sizeof(db.thingspeak.apikey), 48, 95);
+	validate_string(db.thingspeak.host, "<no host>", sizeof(db.thingspeak.host), 32, 126);
 }
 
 String Device::toString(void) {
@@ -57,6 +64,9 @@ void Device::setcDeviceName(const char* newname) {
 		memset(db.device.name, 0, sizeof(db.device.name));
 		strncpy(db.device.name, newname, sizeof(db.device.name) - 1);
 	}
+	else {
+		Serial.println("Error: setcDeviceName() - null value");
+	}
 }
 
 static bool isValidPort(int portnum) {
@@ -81,6 +91,9 @@ portModes Device::getPortMode(int portnum) {
 void Device::setPortMode(int portnum, portModes _mode) {
 	if (isValidPort(portnum)) {
 		db.port[portnum].mode = _mode;
+	}
+	else {
+		Serial.println("ERROR: Device::setPortMode() - invalid port");
 	}
 }
 
@@ -115,6 +128,9 @@ String Device::getModeStr(int portnum) {
 				break;
 		}
 	}
+	else {
+		Serial.println("ERROR: Device::getModeStr() - invalid port");
+	}
 	return s;
 }
 
@@ -122,11 +138,20 @@ void Device::setPortName(int portnum, String _n) {
 	if (isValidPort(portnum)) {
 		strncpy(db.port[portnum].name, _n.c_str(), sizeof(db.port[portnum].name) - 1);
 	}
+	else {
+		Serial.println("Error: Device::setPortName() - invalid port");
+	}
 }
+
 String Device::getPortName(int portnum) {
 	if (isValidPort(portnum)) {
-		validate_string(db.port[portnum].name, "not_named", sizeof(db.port[portnum].name), 32, 126);
+		//FIXME unsigned int n = validate_string(db.port[portnum].name, "not_named", sizeof(db.port[portnum].name), 32, 126);
+		//FIXME Serial.print("INFO: getPortName() - n=");
+		//FIXME Serial.println(n);
 		return this->db.port[portnum].name;
+	}
+	else {
+		Serial.println("Error: Device::getPortName() - invalid port");
 	}
 	return String("undefined");
 }
@@ -138,14 +163,27 @@ double Device::getPortAdj(int portnum, int adjnum) {
 			return static_cast<double>((static_cast<double>(portnum) + 1) * 10 + static_cast<double>(adjnum)); // fixme this line is wrong and temporarily here. Needs to be fixed.
 			// fixme this causes the chip to crash -- return db.port[portnum].adj[adjnum];
 		}
+		else {
+			Serial.println("Error: Device::getPortAdj() - invalid adj index");
+		}
+	}
+	else {
+		Serial.println("Error: Device::getPortAdj() - invalid port");
 	}
 	return 0.0;
 }
+
 void Device::setPortAdj(int portnum, int adjnum, double v) {
 	if (isValidPort(portnum)) {
 		if (adjnum >= 0 && adjnum < getPortAdjMax()) {
 			db.port[portnum].adj[adjnum] = v;
 		}
+		else {
+			Serial.println("Error: Device::setPortAdj() - invalid adj index");
+		}
+	}
+	else {
+		Serial.println("Error: Device::setPortAdj() - invalid port");
 	}
 }
 
@@ -154,6 +192,7 @@ void Device::RestoreConfigurationFromEEPROM(void) {
 	for (unsigned int addr = 0; addr < sizeof(db); addr++) {
 		*(pp + addr) = EEPROM.read(static_cast<int>(addr));
 	}
+	Serial.println("Data copied from EEPROM into RAM data structure");
 }
 
 bool Device::StoreConfigurationIntoEEPROM(void) {
@@ -162,11 +201,15 @@ bool Device::StoreConfigurationIntoEEPROM(void) {
 	for (unsigned int addr = 0; addr < sizeof(db); addr++) {
 		v = *(pp + addr);
 		EEPROM.write(static_cast<int>(addr), v);
+		if (debug_output) {
+			Serial.write(v);
+		}
 	}
+	if (debug_output) Serial.println("");
 
 	if (EEPROM.commit()) {
+		Serial.println("SUCCESS: Write from RAM data structure to EEPROM ok.");
 		RestoreConfigurationFromEEPROM();
-		Serial.println("SUCCESS: Write to EEPROM ok.");
 		return true;
 	}
 	else {
@@ -177,9 +220,9 @@ bool Device::StoreConfigurationIntoEEPROM(void) {
 
 void Device::printThingspeakInfo(void) {
 	Serial.print("Thingspeak host: ");
-	Serial.println(db.thingspeak.host);
+	Serial.println(getcThingspeakHost());
 	Serial.print("API Write  Key: ");
-	Serial.println(db.thingspeak.apikey);
+	Serial.println(getcThinkspeakApikey());
 	Serial.println("");
 }
 
@@ -188,13 +231,13 @@ void Device::updateThingspeak(void) {
 
 	if (!client.connect(db.thingspeak.host, 80)) {
 		Serial.print("error: connection to ");
-		Serial.print(db.thingspeak.host);
+		Serial.print(getcThingspeakHost());
 		Serial.println(" failed");
 	}
 	else {
 		// Send message to Thingspeak
 		String getStr = "/update?api_key=";
-		getStr += String(db.thingspeak.apikey);
+		getStr += getThinkspeakApikey();
 		getStr += "&field1=";
 		getStr += String(t1.getTemperature());
 		getStr += "&field2=";
@@ -210,7 +253,7 @@ void Device::updateThingspeak(void) {
 		getStr += "&field7=";
 		getStr += String(PIRcount);
 		client.print(
-				String("GET ") + getStr + " HTTP/1.1\r\n" + "Host: " + db.thingspeak.host + "\r\n"
+				String("GET ") + getStr + " HTTP/1.1\r\n" + "Host: " + getcThingspeakHost() + "\r\n"
 						+ "Connection: close\r\n\r\n");
 		delay(10);
 

@@ -62,7 +62,7 @@ const char sHTTP_PORT_HEADING[] = "<p><b>Port Configuration</b></p>";
 const char sHTTP_PORT_NUMBER[] = "<label>Port#";
 const char sHTTP_PORT_NAME[] = "<input type=\"text\" name=\"port";
 const char sHTTP_PORTADJ_NUMBER[] = "<label>Adj#";
-const char sHTTP_PORTADJ_NAME[] = " <input type=\"text\" name=\"portadj";
+const char sHTTP_PORTADJ_NAME[] = " <input type=\"text\" name=\"adjport";
 // -- Radio buttons for each port
 const char sHTTP_PORT_RADIO_START[] = "<input type=\"radio\" name=\"radport";
 // print port number, e.g. 1, 2, 3, 4, ...
@@ -177,7 +177,7 @@ int ConfigurationChange(void) {
 	 * API Key: 			apikey			string
 	 * IP Address:			ipaddr			string
 	 * Port N Name:			portN			string
-	 * Port N Adj M:		portadjNM		string (convert to float)
+	 * Port N Adj M:		adjportNM		string (convert to float)
 	 * Radio Port N:		radportN		[OFF|DHT11|DHT22|DS18b20|Sonar|Dust|Sound]N
 	 */
 
@@ -217,7 +217,43 @@ int ConfigurationChange(void) {
 				if (debug_output) Serial.println(" ok ipaddr");
 				found = true;
 			}
-			if (strncmp(sarg.c_str(), "portadj", 7) == 0) {
+
+			if (strncmp(sarg.c_str(), "port", 4) == 0) {
+				found = true;
+				char c = sarg.c_str()[4];
+				int n = static_cast<int>(c) - static_cast<int>('0');
+				if (debug_output) {
+					Serial.print(", n=");
+					Serial.print(n);
+				}
+				if (n >= 0 && n < dinfo.getPortMax()) {
+					if (varg.length() > 0) {
+						dinfo.setPortName(n, varg);
+						if (debug_output) {
+							Serial.print(" ok, port[");
+							Serial.print(n);
+							Serial.print("].name set to ");
+							Serial.println(varg.c_str());
+						}
+					}
+					else {
+						dinfo.setPortName(n, "");
+						if (debug_output) Serial.println(" ok - cleared");
+					}
+				}
+				else {
+					if (debug_output) {
+						Serial.print("\nError: Bug - Invalid port #(");
+						Serial.print(n);
+						Serial.print(",");
+						Serial.print(c);
+						Serial.print(") found in ConfigurationChange() - ");
+						Serial.println(sarg.c_str());
+					}
+				}
+			}
+
+			if (strncmp(sarg.c_str(), "adjport", 7) == 0) {
 				found = true;
 				char c1 = sarg.c_str()[7];
 				char c2 = sarg.c_str()[8];
@@ -228,19 +264,13 @@ int ConfigurationChange(void) {
 					Serial.print(n1);
 					Serial.print(", n2=");
 					Serial.print(n2);
-					Serial.print(", c1=");
-					Serial.print(c1);
-					Serial.print(", c2=");
-					Serial.print(c2);
 				}
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					if (varg.length() > 0) {
-						dinfo.setPortName(n1, varg);
-						if (debug_output) Serial.println(" ok, set");
+						if (debug_output) Serial.println(" ok, do something");
 					}
 					else {
-						dinfo.setPortName(n1, "");
-						if (debug_output) Serial.println(" ok - cleared");
+						if (debug_output) Serial.println(" ok - do something");
 					}
 				}
 				else {
@@ -253,8 +283,8 @@ int ConfigurationChange(void) {
 						Serial.println(sarg.c_str());
 					}
 				}
-				//dinfo.setPortName(i, varg);
 			}
+
 			if (sarg == "radport0") {
 				if (debug_output) {
 					Serial.println(", radport0");
@@ -273,7 +303,19 @@ int ConfigurationChange(void) {
 			}
 			found = false;
 		}
+		if (debug_output) {
+			Serial.println("");
+			Serial.println("------- Current RAM BEFORE write to EEPROM --------");
+			Serial.println(dinfo.toString().c_str());
+			Serial.println("---------------------------------------------------");
+		}
 		dinfo.StoreConfigurationIntoEEPROM();
+		if (debug_output) {
+			Serial.println("");
+			Serial.println("------- Current RAM AFTER write to EEPROM --------");
+			Serial.println(dinfo.toString().c_str());
+			Serial.println("--------------------------------------------------");
+		}
 	}
 	return server.args();
 }

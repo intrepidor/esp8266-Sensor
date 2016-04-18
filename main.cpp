@@ -45,6 +45,7 @@ void printInfo(void);
 //lint -e{1784}   // suppress message about signature conflict between C++ and C
 void loop(void) {
 }
+
 //lint -e{1784}   // suppress message about signature conflict between C++ and C
 void setup(void) {
 
@@ -100,6 +101,15 @@ void setup(void) {
 	}
 }
 
+void printChipInfo(void) {
+	//uint32_t fid = spi_flash_get_id();
+	//uint32_t chip = (fid & 0xff00) | ((fid >> 16) & 0xff);
+	//Serial.print("Flash id: ");
+	//Serial.println(fid);
+	//Serial.print("Chip    : ");
+	//Serial.println(chip);
+}
+
 void printInfo(void) {
 	// Print useful Information
 	dinfo.printThingspeakInfo();
@@ -109,6 +119,7 @@ void printInfo(void) {
 			String(
 					(String("DHT#1=") + String(t1.getstrType()) + String("\r\nDHT#2=") + String(t2.getstrType())
 							+ String("\r\n"))).c_str());
+	printChipInfo();
 	Serial.println("");
 	Serial.println("");
 }
@@ -120,7 +131,8 @@ void printMenu(void) {
 	Serial.println("s  show status");
 	Serial.println("i  show configuration");
 	Serial.println("w  show web URLs");
-	Serial.println("e  show eeprom");
+	Serial.println("e  show data stringure in EEPROM");
+	Serial.println("r  show data structure in RAM");
 	Serial.print("d  [");
 	if (debug_output) {
 		Serial.print("ON");
@@ -202,8 +214,14 @@ int task_printstatus(unsigned long now) {
 			case 'i':
 				printInfo();
 				break;
-			case 'e':
+			case 'r':	// Just dump the contents of the RAM data structure
 				Serial.println("");
+				Serial.println(dinfo.toString().c_str());
+				Serial.println("");
+				break;
+			case 'e':	// Read the EEPROM into the RAM data structure, then dump the contents
+				Serial.println("");
+				dinfo.RestoreConfigurationFromEEPROM();
 				Serial.println(dinfo.toString().c_str());
 				Serial.println("");
 				break;
