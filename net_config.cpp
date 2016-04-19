@@ -5,6 +5,8 @@
  *      Author: Allan Inda
  */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "network.h"
 //#include "temperature.h"
 #include "main.h"
@@ -128,7 +130,7 @@ void config(void) {
 		for (int j = 0; j < MAX_SENSOR; j++) {
 			r += String(
 					String(sHTTP_PORT_RADIO_START) + String(i) + String(sHTTP_CLOSE_AND_VALUE) + String(sensors[j].name)
-							+ String(i) + String(sHTTP_ENDBRACEQ) + String(sensors[j].name));
+					/*+ String(i)*/+ String(sHTTP_ENDBRACEQ) + String(sensors[j].name));
 		}
 		server.sendContent(r + String("<br>"));
 	}
@@ -266,12 +268,15 @@ int ConfigurationChange(void) {
 					Serial.print(n2);
 				}
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
+					double d = 0;
 					if (varg.length() > 0) {
-						if (debug_output) Serial.println(" ok, do something");
+						if (debug_output) Serial.println(" ok, set");
+						d = ::atof(varg.c_str());
 					}
 					else {
-						if (debug_output) Serial.println(" ok - do something");
+						if (debug_output) Serial.println(" ok, cleared");
 					}
+					dinfo.setPortAdj(n1, n2, d);
 				}
 				else {
 					if (debug_output) {
@@ -285,19 +290,59 @@ int ConfigurationChange(void) {
 				}
 			}
 
-			if (sarg == "radport0") {
-				if (debug_output) {
-					Serial.println(", radport0");
-				}
+			if (strncmp(sarg.c_str(), "radport", 7) == 0) {
 				found = true;
-				//Ports[i].setMode(varg);
+				char c1 = sarg.c_str()[7];
+				int n1 = static_cast<int>(c1) - static_cast<int>('0');
+				if (debug_output) {
+					Serial.print(", n1=");
+					Serial.print(n1);
+				}
+				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
+					bool found = false;
+					if (varg.length() > 0) {
+						for (int j = 0; j < MAX_SENSOR; j++) {
+							if (strcmp(varg.c_str(), sensors[j].name) == 0) {
+								dinfo.setPortMode(n1, static_cast<portModes>(sensors[j].id));
+								Serial.print("\r\nInfo: Setting mode to ");
+								Serial.println(sensors[j].id);
+								found = true;
+								break;
+							}
+						}
+						if (!found) {
+							Serial.print("\r\nError: unable to map mode: ");
+							Serial.println(varg.c_str());
+						}
+					}
+					else {
+						if (debug_output) {
+							Serial.print("\r\nError: But - Invalid varg mode: (");
+							Serial.print(varg.c_str());
+							Serial.print(") found in ConfigurationChange() - ");
+							Serial.println(sarg.c_str());
+						}
+					}
+				}
+				else {
+					if (debug_output) {
+						Serial.print("\r\nError: Bug - Invalid port #(");
+						Serial.print(n1);
+						Serial.print(",");
+						Serial.print(c1);
+						Serial.print(") found in ConfigurationChange() - ");
+						Serial.println(sarg.c_str());
+					}
+				}
 			}
+
 			if (sarg == "reboot") {
 				if (debug_output) {
 					Serial.println(", reboot");
 				}
 				found = true;
 			}
+
 			if (!found) {
 				Serial.println("");
 			}

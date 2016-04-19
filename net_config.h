@@ -3,9 +3,11 @@
 
 #define MAX_SENSOR 7
 struct t_sensor {
-    const char* const name;
-    int id;
+	const char* const name;
+	int id;
 };
+
+extern t_sensor sensors[];
 
 extern void config(void);
 

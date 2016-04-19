@@ -9,27 +9,27 @@
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include "deviceinfo.h"
+#include "net_config.h"
 #include "main.h"
 
 unsigned int validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest) {
 	bool ok = true;
 	unsigned int n = 0;
-	for (n = 0; n < size; n++) {
+	str[size - 1] = 0;
+	for (n = 0; n < size - 1; n++) {
 		if (str[n] < lowest || str[n] > highest) {
 			ok = false;
 			break;
 		}
 	}
 	if (ok == false) {
-		memset(str, 'A', size);
+		memset(str, 0, size);
 		strncpy(str, def, size - 1);
-	}
-	str[size - 1] = 0;
-	if (ok) {
-		return 0;
+		str[size - 1] = 0;
+		return n;
 	}
 	else {
-		return n;
+		return 0;
 	}
 }
 
@@ -65,7 +65,7 @@ void Device::setcDeviceName(const char* newname) {
 		strncpy(db.device.name, newname, sizeof(db.device.name) - 1);
 	}
 	else {
-		Serial.println("Error: setcDeviceName() - null value");
+		Serial.println("\r\nError: setcDeviceName() - null value");
 	}
 }
 
@@ -93,43 +93,23 @@ void Device::setPortMode(int portnum, portModes _mode) {
 		db.port[portnum].mode = _mode;
 	}
 	else {
-		Serial.println("ERROR: Device::setPortMode() - invalid port");
+		Serial.println("\r\nERROR: Device::setPortMode() - invalid port");
 	}
 }
 
 String Device::getModeStr(int portnum) {
 	String s("");
 	if (isValidPort(portnum)) {
-		portModes m = db.port[portnum].mode;
-		switch (m) {
-			case portModes::undefined:
-				s = "undefined";
-				break;
-			case portModes::off:
-				s = "off";
-				break;
-			case portModes::dht11:
-				s = "dht11";
-				break;
-			case portModes::dht22:
-				s = "dht22";
-				break;
-			case portModes::ds18b20:
-				s = "ds18b20";
-				break;
-			case portModes::sonar:
-				s = "sonar";
-				break;
-			case portModes::dust:
-				s = "dust";
-				break;
-			default:
-				s = "not_a_mode";
-				break;
+		int m = static_cast<int>(db.port[portnum].mode);
+		if (m >= 0 && m < MAX_SENSOR - 1) {
+			s = String(String(m) + ":" + String(sensors[m].name));
+		}
+		else {
+			Serial.print("\r\nError: Device::getModeStr() - invalid mode");
 		}
 	}
 	else {
-		Serial.println("ERROR: Device::getModeStr() - invalid port");
+		Serial.println("\r\nERROR: Device::getModeStr() - invalid port");
 	}
 	return s;
 }
@@ -139,7 +119,7 @@ void Device::setPortName(int portnum, String _n) {
 		strncpy(db.port[portnum].name, _n.c_str(), sizeof(db.port[portnum].name) - 1);
 	}
 	else {
-		Serial.println("Error: Device::setPortName() - invalid port");
+		Serial.println("\r\nError: Device::setPortName() - invalid port");
 	}
 }
 
@@ -151,7 +131,7 @@ String Device::getPortName(int portnum) {
 		return this->db.port[portnum].name;
 	}
 	else {
-		Serial.println("Error: Device::getPortName() - invalid port");
+		Serial.println("\r\nError: Device::getPortName() - invalid port");
 	}
 	return String("undefined");
 }
@@ -164,11 +144,11 @@ double Device::getPortAdj(int portnum, int adjnum) {
 			// fixme this causes the chip to crash -- return db.port[portnum].adj[adjnum];
 		}
 		else {
-			Serial.println("Error: Device::getPortAdj() - invalid adj index");
+			Serial.println("\r\nError: Device::getPortAdj() - invalid adj index");
 		}
 	}
 	else {
-		Serial.println("Error: Device::getPortAdj() - invalid port");
+		Serial.println("\r\nError: Device::getPortAdj() - invalid port");
 	}
 	return 0.0;
 }
@@ -179,11 +159,11 @@ void Device::setPortAdj(int portnum, int adjnum, double v) {
 			db.port[portnum].adj[adjnum] = v;
 		}
 		else {
-			Serial.println("Error: Device::setPortAdj() - invalid adj index");
+			Serial.println("\r\nError: Device::setPortAdj() - invalid adj index");
 		}
 	}
 	else {
-		Serial.println("Error: Device::setPortAdj() - invalid port");
+		Serial.println("\r\nError: Device::setPortAdj() - invalid port");
 	}
 }
 
