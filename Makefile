@@ -8,3 +8,10 @@ FLASH_MODE = qio
 USER_DEFINE= -D_SSID_=\"YourSSID\" -D_WIFI_PASSWORD_=\"YourPassword\"
 include ../ESP8266-Arduino-Makefile/esp8266Arduino.mk
 
+tidy:
+	tidy -upper -modify -wrap 120 -indent \
+	--break-before-br true \
+	--indent-attributes true \
+	--wrap-attributes true \
+	--wrap-sections false \
+	config.html

@@ -15,9 +15,6 @@
 
 extern int ConfigurationChange(void);
 
-t_sensor sensors[MAX_SENSOR] = { { "off", 0 }, { "DHT11", 1 }, { "DHT22", 2 }, { "DS18b20", 3 }, { "Sonar", 4 }, {
-		"Dust", 5 }, { "Sound", 6 } };
-
 // Generic and reused statements
 const char sHTTP_ENDLABEL_BR[] = "></label> <br>";
 const char sHTTP_ENDLABELQ_BR[] = "\"></label><br>";
@@ -94,12 +91,11 @@ void config(void) {
 	String r = String(sHTTP_TOP);
 	server.sendContent(r);
 	// Device Name
-	r = String(String(sHTTP_DEVICE_NAME) + String(dinfo.getDeviceName()) + String(sHTTP_ENDLABELQ_BR));
+	r = String(sHTTP_DEVICE_NAME) + String(dinfo.getDeviceName()) + String(sHTTP_ENDLABELQ_BR);
 	// Thingspeak
-	r += String(
-			String(sHTTP_TS_ENABLE) + String(dinfo.getEnableStr()) + String(sHTTP_ENDLABEL_BR) + String(sHTTP_TS_APIKEY)
-					+ String(dinfo.getcThinkspeakApikey()) + String(sHTTP_ENDLABELQ_BR) + String(sHTTP_TS_IPADDR)
-					+ String(dinfo.getIpaddr()) + String(sHTTP_ENDLABELQ_BR));
+	r += String(sHTTP_TS_ENABLE) + String(dinfo.getEnableStr()) + String(sHTTP_ENDLABEL_BR) + String(sHTTP_TS_APIKEY)
+			+ String(dinfo.getcThinkspeakApikey()) + String(sHTTP_ENDLABELQ_BR) + String(sHTTP_TS_IPADDR)
+			+ String(dinfo.getIpaddr()) + String(sHTTP_ENDLABELQ_BR);
 
 	// Port Configuration Heading
 	r += String(sHTTP_PORT_HEADING);
@@ -115,34 +111,33 @@ void config(void) {
 		else {
 			r = String("");
 		}
-		r = r
-				+ String(
-						String(sHTTP_PORT_NUMBER) + String(i) + String(sHTTP_PORT_NAME) + String(i)
-								+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortName(i))
-								+ String(sHTTP_ENDLABELQ_BR));
+		r += String(sHTTP_PORT_NUMBER) + String(i) + String(sHTTP_PORT_NAME) + String(i) + String(sHTTP_CLOSE_AND_VALUE)
+				+ String(dinfo.getPortName(i)) + String(sHTTP_ENDLABELQ_BR);
 		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
-			r += String(
-					String(sHTTP_PORTADJ_NUMBER) + String(k) + String(sHTTP_PORTADJ_NAME) + String(i) + String(k)
-							+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortAdj(i, k)) + String(sHTTP_ENDLABELQ));
+			r += String(sHTTP_PORTADJ_NUMBER) + String(k) + String(sHTTP_PORTADJ_NAME) + String(i) + String(k)
+					+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortAdj(i, k)) + String(sHTTP_ENDLABELQ);
 		}
 		r += String("<br>");
 		// Port radio buttons
 		for (int j = 0; j < MAX_SENSOR; j++) {
-			r += String(
-					String(sHTTP_PORT_RADIO_START) + String(i) + String(sHTTP_CLOSE_AND_VALUE) + String(sensors[j].name)
-					/*+ String(i)*/+ String(sHTTP_ENDBRACEQ) + String(sensors[j].name));
+			r += String(sHTTP_PORT_RADIO_START) + String(i) + String(sHTTP_CLOSE_AND_VALUE) + String(sensors[j].name);
+			r += String("\" ");
+			if (j == 0) {
+				r += String("checked");
+			}
+			r += String(">") + String(sensors[j].name);
 		}
 		server.sendContent(r + String("<br>"));
 	}
 
-	// End of page
+// End of page
 	unsigned long tdiff = millis() - t0;
 
 	server.sendContent(
 			String(sHTTP_BUTTONS) + String("<pre>time:") + String(tdiff) + String("ms\nConfig:") + String(configChanges)
 					+ String("</pre>") + String(sHTTP_END));
 
-	// Stop client because ...
+// Stop client because ...
 //	server.client().stop();
 }
 
@@ -245,7 +240,7 @@ int ConfigurationChange(void) {
 				}
 				else {
 					if (debug_output) {
-						Serial.print("\nError: Bug - Invalid port #(");
+						Serial.print("\nERROR: Bug - Invalid port #(");
 						Serial.print(n);
 						Serial.print(",");
 						Serial.print(c);
@@ -280,7 +275,7 @@ int ConfigurationChange(void) {
 				}
 				else {
 					if (debug_output) {
-						Serial.print("\nError: Bug - Invalid port #(");
+						Serial.print("\nERROR: Bug - Invalid port #(");
 						Serial.print(n1);
 						Serial.print(",");
 						Serial.print(c1);
@@ -303,21 +298,21 @@ int ConfigurationChange(void) {
 					if (varg.length() > 0) {
 						for (int j = 0; j < MAX_SENSOR; j++) {
 							if (strcmp(varg.c_str(), sensors[j].name) == 0) {
-								dinfo.setPortMode(n1, static_cast<portModes>(sensors[j].id));
+								dinfo.setPortMode(n1, /*static_cast<portModes>(*/sensors[j].id/*)*/);
 								Serial.print("\r\nInfo: Setting mode to ");
-								Serial.println(sensors[j].id);
+								Serial.println(static_cast<int>(sensors[j].id));
 								found = true;
 								break;
 							}
 						}
 						if (!found) {
-							Serial.print("\r\nError: unable to map mode: ");
+							Serial.print("\r\nERROR: unable to map mode: ");
 							Serial.println(varg.c_str());
 						}
 					}
 					else {
 						if (debug_output) {
-							Serial.print("\r\nError: But - Invalid varg mode: (");
+							Serial.print("\r\nERROR: But - Invalid varg mode: (");
 							Serial.print(varg.c_str());
 							Serial.print(") found in ConfigurationChange() - ");
 							Serial.println(sarg.c_str());
@@ -326,7 +321,7 @@ int ConfigurationChange(void) {
 				}
 				else {
 					if (debug_output) {
-						Serial.print("\r\nError: Bug - Invalid port #(");
+						Serial.print("\r\nERROR: Bug - Invalid port #(");
 						Serial.print(n1);
 						Serial.print(",");
 						Serial.print(c1);
@@ -348,19 +343,19 @@ int ConfigurationChange(void) {
 			}
 			found = false;
 		}
-		if (debug_output) {
-			Serial.println("");
-			Serial.println("------- Current RAM BEFORE write to EEPROM --------");
-			Serial.println(dinfo.toString().c_str());
-			Serial.println("---------------------------------------------------");
-		}
+//		if (debug_output) {
+//			Serial.println("");
+//			Serial.println("------- Current RAM BEFORE write to EEPROM --------");
+//			Serial.println(dinfo.toString().c_str());
+//			Serial.println("---------------------------------------------------");
+//		}
 		dinfo.StoreConfigurationIntoEEPROM();
-		if (debug_output) {
-			Serial.println("");
-			Serial.println("------- Current RAM AFTER write to EEPROM --------");
-			Serial.println(dinfo.toString().c_str());
-			Serial.println("--------------------------------------------------");
-		}
+//		if (debug_output) {
+//			Serial.println("");
+//			Serial.println("------- Current RAM AFTER write to EEPROM --------");
+//			Serial.println(dinfo.toString().c_str());
+//			Serial.println("--------------------------------------------------");
+//		}
 	}
 	return server.args();
 }

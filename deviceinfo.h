@@ -22,8 +22,16 @@ const int STRING_LENGTH = 20;
 static bool isValidPort(int portnum);
 
 enum class portModes {
-	undefined, off, dht11, dht22, ds18b20, sonar, dust
+	undefined, off, dht11, dht22, ds18b20, sonar, dust, sound
 };
+
+#define MAX_SENSOR 7
+struct t_sensor {
+	const char* const name;
+	portModes id;
+};
+
+extern t_sensor sensors[];
 
 struct cport {
 	char name[STRING_LENGTH + 1];
@@ -90,6 +98,7 @@ public:
 		return MAX_PORTS;
 	}
 	portModes getPortMode(int portnum);
+//	bool isChecked(int portnum, String portmode
 	void setPortMode(int portnum, portModes _mode);
 	void setPortName(int portnum, String _n);
 	String getPortName(int portnum);

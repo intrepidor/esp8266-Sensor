@@ -12,6 +12,10 @@
 #include "net_config.h"
 #include "main.h"
 
+t_sensor sensors[MAX_SENSOR] = { { "off", portModes::off }, { "DHT11", portModes::dht11 },
+		{ "DHT22", portModes::dht22 }, { "DS18b20", portModes::ds18b20 }, { "Sonar", portModes::sonar }, { "Dust",
+				portModes::dust }, { "Sound", portModes::sound } };
+
 unsigned int validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest) {
 	bool ok = true;
 	unsigned int n = 0;
@@ -65,7 +69,7 @@ void Device::setcDeviceName(const char* newname) {
 		strncpy(db.device.name, newname, sizeof(db.device.name) - 1);
 	}
 	else {
-		Serial.println("\r\nError: setcDeviceName() - null value");
+		Serial.println("\r\nERROR: setcDeviceName() - null value");
 	}
 }
 
@@ -105,7 +109,7 @@ String Device::getModeStr(int portnum) {
 			s = String(String(m) + ":" + String(sensors[m].name));
 		}
 		else {
-			Serial.print("\r\nError: Device::getModeStr() - invalid mode");
+			Serial.print("\r\nERROR: Device::getModeStr() - invalid mode");
 		}
 	}
 	else {
@@ -119,7 +123,7 @@ void Device::setPortName(int portnum, String _n) {
 		strncpy(db.port[portnum].name, _n.c_str(), sizeof(db.port[portnum].name) - 1);
 	}
 	else {
-		Serial.println("\r\nError: Device::setPortName() - invalid port");
+		Serial.println("\r\nERROR: Device::setPortName() - invalid port");
 	}
 }
 
@@ -131,7 +135,7 @@ String Device::getPortName(int portnum) {
 		return this->db.port[portnum].name;
 	}
 	else {
-		Serial.println("\r\nError: Device::getPortName() - invalid port");
+		Serial.println("\r\nERROR: Device::getPortName() - invalid port");
 	}
 	return String("undefined");
 }
@@ -144,11 +148,11 @@ double Device::getPortAdj(int portnum, int adjnum) {
 			// fixme this causes the chip to crash -- return db.port[portnum].adj[adjnum];
 		}
 		else {
-			Serial.println("\r\nError: Device::getPortAdj() - invalid adj index");
+			Serial.println("\r\nERROR: Device::getPortAdj() - invalid adj index");
 		}
 	}
 	else {
-		Serial.println("\r\nError: Device::getPortAdj() - invalid port");
+		Serial.println("\r\nERROR: Device::getPortAdj() - invalid port");
 	}
 	return 0.0;
 }
@@ -159,11 +163,11 @@ void Device::setPortAdj(int portnum, int adjnum, double v) {
 			db.port[portnum].adj[adjnum] = v;
 		}
 		else {
-			Serial.println("\r\nError: Device::setPortAdj() - invalid adj index");
+			Serial.println("\r\nERROR: Device::setPortAdj() - invalid adj index");
 		}
 	}
 	else {
-		Serial.println("\r\nError: Device::setPortAdj() - invalid port");
+		Serial.println("\r\nERROR: Device::setPortAdj() - invalid port");
 	}
 }
 
@@ -172,7 +176,7 @@ void Device::RestoreConfigurationFromEEPROM(void) {
 	for (unsigned int addr = 0; addr < sizeof(db); addr++) {
 		*(pp + addr) = EEPROM.read(static_cast<int>(addr));
 	}
-	Serial.println("Data copied from EEPROM into RAM data structure");
+	Serial.println("\r\nINFO: Data copied from EEPROM into RAM data structure");
 }
 
 bool Device::StoreConfigurationIntoEEPROM(void) {
@@ -181,19 +185,19 @@ bool Device::StoreConfigurationIntoEEPROM(void) {
 	for (unsigned int addr = 0; addr < sizeof(db); addr++) {
 		v = *(pp + addr);
 		EEPROM.write(static_cast<int>(addr), v);
-		if (debug_output) {
-			Serial.write(v);
-		}
+//		if (debug_output) {
+//			Serial.write(v);
+//		}
 	}
-	if (debug_output) Serial.println("");
+//	if (debug_output) Serial.println("");
 
 	if (EEPROM.commit()) {
-		Serial.println("SUCCESS: Write from RAM data structure to EEPROM ok.");
+		Serial.println("\r\nSUCCESS: Write from RAM data structure to EEPROM ok.");
 		RestoreConfigurationFromEEPROM();
 		return true;
 	}
 	else {
-		Serial.println("ERROR: Write to EEPROM failed!");
+		Serial.println("\r\nERROR: Write to EEPROM failed!");
 		return false; // signal error
 	}
 }
