@@ -5,6 +5,7 @@
 #include "network.h"
 #include "Queue.h"
 #include "deviceinfo.h"
+#include "util.h"
 
 extern int task_readpir(unsigned long now);
 extern int task_readtemperature(unsigned long now);
@@ -16,7 +17,7 @@ extern int task_webServer(unsigned long now);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.01\nAllan Inda 2016-Apr-24\n");
+String ProgramInfo("Environment Sensor v0.01\r\nAllan Inda 2016-Apr-24");
 
 // Other
 long count = 0;
@@ -40,6 +41,27 @@ Device dinfo;
 void printMenu(void);
 void printInfo(void);
 
+// ------------------------------------------------------------------------------------
+static const uint8_t SOFTRESETPIN = pD6;
+void reset(void) {
+	/* Write a low to the pin that is physically connected to the RST pin.
+	 * This will force the hardware to reset.
+	 */
+	digitalWrite(SOFTRESETPIN, LOW);
+	pinMode(SOFTRESETPIN, OUTPUT);
+}
+void reset_config(void) {
+	// Setup the external Reset circuit
+	digitalWrite(SOFTRESETPIN, HIGH);
+	/* Make sure the pin is High so it does not reset until we want it to. Do
+	 * this before setting the direction as an output to avoid accidental
+	 * reset during pin configuration. */
+	pinMode(SOFTRESETPIN, OUTPUT);
+	/* Set the pin used to cause a reset as an output. This pin should be
+	 *  physically tied to "RST" pin on ESP-12E. Pulling this pin low will
+	 *  cause the device to reset. */
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //lint -e{1784}   // suppress message about signature conflict between C++ and C
 void loop(void) {
@@ -47,6 +69,9 @@ void loop(void) {
 
 //lint -e{1784}   // suppress message about signature conflict between C++ and C
 void setup(void) {
+
+	// Setup Reset circuit
+	reset_config();
 
 	// Setup GPIO
 	pinMode(PIRPIN, INPUT);   // Initialize the PIR sensor pin as an input
@@ -57,7 +82,7 @@ void setup(void) {
 
 	// Setup Serial port
 	Serial.begin(115200);
-	Serial.println(ProgramInfo.c_str());
+	Serial.println(ProgramInfo);
 
 	// Start EEPROM
 	EEPROM.begin(512);
@@ -113,20 +138,16 @@ void printChipInfo(void) {
 
 void printInfo(void) {
 	// Print useful Information
+	Serial.println(ProgramInfo);
+	Serial.println(String("Device IP: ") + localIPstr());
 	dinfo.printThingspeakInfo();
-	Serial.print(
-			String(String("ESP8266_Device_ID=") + String(dinfo.getDeviceID())).c_str());
+	Serial.print(String("ESP8266_Device_ID=") + String(dinfo.getDeviceID()));
+	Serial.println(String("\r\nFriendly Name: ") + String(dinfo.getDeviceName()));
 	Serial.println(
-			String(
-					String("\r\nFriendly Name: ") + String(dinfo.getDeviceName())
-							+ String("\r\n")).c_str());
-	Serial.println(
-			String(
-					(String("DHT#1=") + String(t1.getstrType()) + String("\r\nDHT#2=")
-							+ String(t2.getstrType()) + String("\r\n"))).c_str());
+			String("\r\nDHT#1=") + String(t1.getstrType()) + String("\r\nDHT#2=")
+					+ String(t2.getstrType()));
 	//printChipInfo();
-	Serial.println("");
-	Serial.println("");
+	Serial.println("\r\n");
 }
 
 void printMenu(void) {
@@ -136,7 +157,7 @@ void printMenu(void) {
 	Serial.println("s  show status");
 	Serial.println("i  show configuration");
 	Serial.println("w  show web URLs");
-	Serial.println("e  show data stringure in EEPROM");
+	Serial.println("e  show data structure in EEPROM");
 	Serial.println("r  show data structure in RAM");
 	Serial.print("d  [");
 	if (debug_output) {
@@ -219,12 +240,12 @@ int task_printstatus(unsigned long now) {
 			case 'i':
 				printInfo();
 				break;
-			case 'r':	// Just dump the contents of the RAM data structure
+			case 'r': // Just dump the contents of the RAM data structure
 				Serial.println("");
 				Serial.println(dinfo.toString().c_str());
 				Serial.println("");
 				break;
-			case 'e':// Read the EEPROM into the RAM data structure, then dump the contents
+			case 'e': // Read the EEPROM into the RAM data structure, then dump the contents
 				Serial.println("");
 				dinfo.RestoreConfigurationFromEEPROM();
 				Serial.println(dinfo.toString().c_str());

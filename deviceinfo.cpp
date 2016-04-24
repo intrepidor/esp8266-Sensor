@@ -209,7 +209,6 @@ void Device::printThingspeakInfo(void) {
 	Serial.println(getcThingspeakHost());
 	Serial.print("API Write  Key: ");
 	Serial.println(getcThinkspeakApikey());
-	Serial.println("");
 }
 
 void Device::updateThingspeak(void) {

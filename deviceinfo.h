@@ -82,7 +82,6 @@ public:
 // Default Constructor
 	Device() {
 		memset(&db, 0, sizeof(db));
-		init();
 	}
 	void init(void);
 	String toString(void);

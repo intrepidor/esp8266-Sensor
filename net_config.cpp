@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "network.h"
+#include "util.h"
 #include "main.h"
 #include "deviceinfo.h"
 #include "net_config.h"
@@ -74,7 +75,10 @@ const char sHTTP_PORT_RADIO_START[] = "<input type=\"radio\" name=\"radport";
 const char sHTTP_BUTTONS[] = ""
 		"<br>"
 		"<input type=\"submit\" name=\"submit\" value=\"submit\">"
-		"<input type=\"submit\" name=\"reboot\" value=\"reboot\"></form>";
+		/*		"<input type=\"submit\" name=\"reboot\" value=\"reboot\">"*/
+		"</form>";
+const char sHTTP_AHREF_START[] = "<a href=\"http://";
+const char sHTTP_AHREF_END[] = "</a>";
 
 void config(void) {
 	// If there was a submit, then process the changes
@@ -141,13 +145,27 @@ void config(void) {
 		server.sendContent(r + String("<br>"));
 	}
 
-// End of page
-	unsigned long tdiff = millis() - t0;
+	// Buttons and links
+	r = String(sHTTP_BUTTONS);
+	r += String(sHTTP_AHREF_START) + String(localIPstr())
+			+ String("\">Show current values<br>") + String(sHTTP_AHREF_END);
+	r += String(sHTTP_AHREF_START) + String(localIPstr())
+			+ String("/value?read=csv\">Show current values in csv format<br>")
+			+ String(sHTTP_AHREF_END);
+	r += String(sHTTP_AHREF_START) + String(localIPstr())
+			+ String("/config\">Configure Device<br>") + String(sHTTP_AHREF_END);
+	r += String(sHTTP_AHREF_START) + String(localIPstr())
+			+ String("/value?read=status\">Show Device Status<br>")
+			+ String(sHTTP_AHREF_END);
+	r += String(sHTTP_AHREF_START) + String(localIPstr())
+			+ String("/value?reset=0\">Reboot<br>") + String(sHTTP_AHREF_END);
+	server.sendContent(r);
 
+	// End of page
+	unsigned long tdiff = millis() - t0;
 	server.sendContent(
-			String(sHTTP_BUTTONS) + String("<pre>time:") + String(tdiff)
-					+ String("ms\nConfig:") + String(configChanges) + String("</pre>")
-					+ String(sHTTP_END));
+			String("<pre>time:") + String(tdiff) + String("ms\nConfig:")
+					+ String(configChanges) + String("</pre>") + String(sHTTP_END));
 
 // Stop client because ...
 //	server.client().stop();

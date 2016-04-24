@@ -8,6 +8,7 @@
 #include "network.h"
 #include "temperature.h"
 #include "main.h"
+#include "util.h"
 #include "deviceinfo.h"
 #include "net_config.h"
 #include "net_value.h"
@@ -121,16 +122,18 @@ void WebWorker(void) {
 void WebPrintInfo(void) {
 	// Describe Webserver access
 	Serial.print("Read Everything: http://");
-	Serial.println(WiFi.localIP());
+	Serial.println(localIPstr());
 
 	Serial.print("Read API:   http://");
-	Serial.print(WiFi.localIP());
+	Serial.print(localIPstr());
 	Serial.println(v);
-	Serial.println("?read=1,2,3      :: read temperature, humidity, heatindex for Sensor #1");
+	Serial.println(
+			"?read=1,2,3      :: read temperature, humidity, heatindex for Sensor #1");
 	Serial.println("?read=4,5,6      :: read same for Sensor #2");
 	Serial.println("?read=7          :: read Motion detector value");
 	Serial.println("?read=api        :: read ThingSpeak API key");
-	Serial.println("?read=rssi       :: read signal strength of AP at the time of connection in dBm");
+	Serial.println(
+			"?read=rssi       :: read signal strength of AP at the time of connection in dBm");
 	Serial.println("?read=deviceid   :: read deviceid number");
 	Serial.println("?read=name       :: read name of device");
 	Serial.println("?read=status     :: read status information for device");
