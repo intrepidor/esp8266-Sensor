@@ -32,7 +32,7 @@ const std::array<portModes, static_cast<int>(portModes::END)> allModes = {portMo
  * value is not copied into the portModes array.
  */
 #endif
-extern t_sensor sensors[];
+extern t_sensor const sensors[];
 
 //-----------------------------------------------------------------------------------
 // Device Class

@@ -13,7 +13,7 @@
 #include "main.h"
 
 //lint -e{26,785} suppress since lint doesn't understand C++11
-t_sensor sensors[static_cast<int>(portModes::END)] = { { "off", portModes::off }, {
+t_sensor const sensors[static_cast<int>(portModes::END)] = { { "off", portModes::off }, {
 		"DHT11", portModes::dht11 }, { "DHT22", portModes::dht22 }, { "DS18b20",
 		portModes::ds18b20 }, { "Sonar", portModes::sonar }, { "Dust", portModes::dust },
 		{ "Sound", portModes::sound } };
