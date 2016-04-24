@@ -8,6 +8,7 @@
 #ifndef DEVICEINFO_H_
 #define DEVICEINFO_H_
 
+//#include <array>
 #include <Arduino.h>
 
 const int CURRENT_CONFIG_VERSION = 123;
@@ -15,23 +16,30 @@ const int CURRENT_CONFIG_VERSION = 123;
 //extern void validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest);
 
 //-----------------------------------------------------------------------------------
+enum class portModes {
+	off = 0, dht11, dht22, ds18b20, sonar, dust, sound, END
+};
+struct t_sensor {
+	const char* const name;
+	portModes id;
+};
+#if 0
+// Comment out because PC Lint is not ready
+const std::array<portModes, static_cast<int>(portModes::END)> allModes = {portModes::off,
+	portModes::dht11, portModes::dht22, portModes::ds18b20, portModes::sonar,
+	portModes::dust, portModes::sound};
+/* The array portModes and the enum portModes must match with one exception, the END
+ * value is not copied into the portModes array.
+ */
+#endif
+extern t_sensor sensors[];
+
+//-----------------------------------------------------------------------------------
 // Device Class
 const int MAX_PORTS = 6;
 const int MAX_ADJ = 3;
 const int STRING_LENGTH = 20;
 static bool isValidPort(int portnum);
-
-enum class portModes {
-	undefined, off, dht11, dht22, ds18b20, sonar, dust, sound
-};
-
-#define MAX_SENSOR 7
-struct t_sensor {
-	const char* const name;
-	portModes id;
-};
-
-extern t_sensor sensors[];
 
 struct cport {
 	char name[STRING_LENGTH + 1];
@@ -62,7 +70,7 @@ private:
 			char enabled;
 			char apikey[STRING_LENGTH + 1];
 			char host[STRING_LENGTH + 1];
-			char ipaddr[16];  // nnn.nnn.nnn.nnn = 4*3+3(dots)+1(nul) = 16 chars; 15 for data, and 1 for terminating nul
+			char ipaddr[16]; // nnn.nnn.nnn.nnn = 4*3+3(dots)+1(nul) = 16 chars; 15 for data, and 1 for terminating nul
 		} thingspeak;
 
 		// Ports
@@ -72,6 +80,7 @@ private:
 public:
 // Default Constructor
 	Device() {
+		memset(&db, 0, sizeof(db));
 		init();
 	}
 	void init(void);
@@ -98,7 +107,6 @@ public:
 		return MAX_PORTS;
 	}
 	portModes getPortMode(int portnum);
-//	bool isChecked(int portnum, String portmode
 	void setPortMode(int portnum, portModes _mode);
 	void setPortName(int portnum, String _n);
 	String getPortName(int portnum);
@@ -125,12 +133,14 @@ public:
 
 	void setThingspeakApikey(const char* _apikey) {
 		if (_apikey) {
-			strncpy(this->db.thingspeak.apikey, _apikey, sizeof(db.thingspeak.apikey) - 1);
+			strncpy(this->db.thingspeak.apikey, _apikey,
+					sizeof(db.thingspeak.apikey) - 1);
 		}
 	}
 	void setThingspeakApikey(String _apikey) {
 		if (_apikey) {
-			strncpy(this->db.thingspeak.apikey, _apikey.c_str(), sizeof(db.thingspeak.apikey) - 1);
+			strncpy(this->db.thingspeak.apikey, _apikey.c_str(),
+					sizeof(db.thingspeak.apikey) - 1);
 		}
 	}
 	String getThinkspeakApikey() const {
@@ -142,7 +152,8 @@ public:
 
 	void setThingspeakHost(const char* _host) {
 		if (_host) {
-			strncpy(this->db.thingspeak.host, _host, sizeof(this->db.thingspeak.host) - 1);
+			strncpy(this->db.thingspeak.host, _host,
+					sizeof(this->db.thingspeak.host) - 1);
 		}
 	}
 	void setThingspeakHost(String _host) {
@@ -160,7 +171,8 @@ public:
 	}
 	void setIpaddr(const char* _ipaddr) {
 		if (_ipaddr) {
-			strncpy(this->db.thingspeak.ipaddr, _ipaddr, sizeof(db.thingspeak.ipaddr) - 1);
+			strncpy(this->db.thingspeak.ipaddr, _ipaddr,
+					sizeof(db.thingspeak.ipaddr) - 1);
 		}
 	}
 	String getIpaddr(void) const {

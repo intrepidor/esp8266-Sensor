@@ -101,6 +101,7 @@ void setup(void) {
 	}
 }
 
+#if 0
 void printChipInfo(void) {
 	//uint32_t fid = spi_flash_get_id();
 	//uint32_t chip = (fid & 0xff00) | ((fid >> 16) & 0xff);
@@ -109,17 +110,22 @@ void printChipInfo(void) {
 	//Serial.print("Chip    : ");
 	//Serial.println(chip);
 }
+#endif
 
 void printInfo(void) {
 	// Print useful Information
 	dinfo.printThingspeakInfo();
-	Serial.print(String(String("ESP8266_Device_ID=") + String(dinfo.getDeviceID())).c_str());
-	Serial.println(String(String("\r\nFriendly Name: ") + String(dinfo.getDeviceName()) + String("\r\n")).c_str());
+	Serial.print(
+			String(String("ESP8266_Device_ID=") + String(dinfo.getDeviceID())).c_str());
 	Serial.println(
 			String(
-					(String("DHT#1=") + String(t1.getstrType()) + String("\r\nDHT#2=") + String(t2.getstrType())
-							+ String("\r\n"))).c_str());
-	printChipInfo();
+					String("\r\nFriendly Name: ") + String(dinfo.getDeviceName())
+							+ String("\r\n")).c_str());
+	Serial.println(
+			String(
+					(String("DHT#1=") + String(t1.getstrType()) + String("\r\nDHT#2=")
+							+ String(t2.getstrType()) + String("\r\n"))).c_str());
+	//printChipInfo();
 	Serial.println("");
 	Serial.println("");
 }
@@ -219,7 +225,7 @@ int task_printstatus(unsigned long now) {
 				Serial.println(dinfo.toString().c_str());
 				Serial.println("");
 				break;
-			case 'e':	// Read the EEPROM into the RAM data structure, then dump the contents
+			case 'e':// Read the EEPROM into the RAM data structure, then dump the contents
 				Serial.println("");
 				dinfo.RestoreConfigurationFromEEPROM();
 				Serial.println(dinfo.toString().c_str());

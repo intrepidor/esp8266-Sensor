@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "network.h"
-//#include "temperature.h"
 #include "main.h"
 #include "deviceinfo.h"
 #include "net_config.h"
@@ -19,7 +18,7 @@ extern int ConfigurationChange(void);
 const char sHTTP_ENDLABEL_BR[] = "></label> <br>";
 const char sHTTP_ENDLABELQ_BR[] = "\"></label><br>";
 const char sHTTP_ENDLABELQ[] = "\"></label>";
-const char sHTTP_ENDBRACEQ[] = "\">";
+//const char sHTTP_ENDBRACEQ[] = "\">";
 const char sHTTP_CLOSE_AND_VALUE[] = "\"  value=\"";
 const char sHTTP_END[] = "</body></html>";
 // ## Header
@@ -52,7 +51,8 @@ const char sHTTP_TS_APIKEY[] = ""
 		"<input type=\"text\" name=\"apikey\" value=\"";
 // print current apikey
 // <ENDLABELQ>
-const char sHTTP_TS_IPADDR[] = "<label>IP address: <input type=\"text\" name=\"ipaddr\" value=\"";
+const char sHTTP_TS_IPADDR[] =
+		"<label>IP address: <input type=\"text\" name=\"ipaddr\" value=\"";
 // print current ipaddress
 // <ENDLABELQ>
 //
@@ -91,11 +91,14 @@ void config(void) {
 	String r = String(sHTTP_TOP);
 	server.sendContent(r);
 	// Device Name
-	r = String(sHTTP_DEVICE_NAME) + String(dinfo.getDeviceName()) + String(sHTTP_ENDLABELQ_BR);
+	r = String(sHTTP_DEVICE_NAME) + String(dinfo.getDeviceName())
+			+ String(sHTTP_ENDLABELQ_BR);
 	// Thingspeak
-	r += String(sHTTP_TS_ENABLE) + String(dinfo.getEnableStr()) + String(sHTTP_ENDLABEL_BR) + String(sHTTP_TS_APIKEY)
-			+ String(dinfo.getcThinkspeakApikey()) + String(sHTTP_ENDLABELQ_BR) + String(sHTTP_TS_IPADDR)
-			+ String(dinfo.getIpaddr()) + String(sHTTP_ENDLABELQ_BR);
+	r += String(sHTTP_TS_ENABLE) + String(dinfo.getEnableStr())
+			+ String(sHTTP_ENDLABEL_BR) + String(sHTTP_TS_APIKEY)
+			+ String(dinfo.getcThinkspeakApikey()) + String(sHTTP_ENDLABELQ_BR)
+			+ String(sHTTP_TS_IPADDR) + String(dinfo.getIpaddr())
+			+ String(sHTTP_ENDLABELQ_BR);
 
 	// Port Configuration Heading
 	r += String(sHTTP_PORT_HEADING);
@@ -111,21 +114,26 @@ void config(void) {
 		else {
 			r = String("");
 		}
-		r += String(sHTTP_PORT_NUMBER) + String(i) + String(sHTTP_PORT_NAME) + String(i) + String(sHTTP_CLOSE_AND_VALUE)
-				+ String(dinfo.getPortName(i)) + String(sHTTP_ENDLABELQ_BR);
+		r += String(sHTTP_PORT_NUMBER) + String(i) + String(sHTTP_PORT_NAME) + String(i)
+				+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortName(i))
+				+ String(sHTTP_ENDLABELQ_BR);
 		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
-			r += String(sHTTP_PORTADJ_NUMBER) + String(k) + String(sHTTP_PORTADJ_NAME) + String(i) + String(k)
-					+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortAdj(i, k)) + String(sHTTP_ENDLABELQ);
+			r += String(sHTTP_PORTADJ_NUMBER) + String(k) + String(sHTTP_PORTADJ_NAME)
+					+ String(i) + String(k) + String(sHTTP_CLOSE_AND_VALUE)
+					+ String(dinfo.getPortAdj(i, k)) + String(sHTTP_ENDLABELQ);
 		}
 		r += String("<br>");
 		// Port radio buttons
-		for (int j = 0; j < MAX_SENSOR; j++) {
-			r += String(sHTTP_PORT_RADIO_START) + String(i) + String(sHTTP_CLOSE_AND_VALUE) + String(sensors[j].name);
+		//lint -e{26,785} suppress since lint doesn't understand C++11
+		for (int j = 0; j < static_cast<int>(portModes::END); j++) {
+			r += String(sHTTP_PORT_RADIO_START) + String(i)
+					+ String(sHTTP_CLOSE_AND_VALUE);
+			r += String(sensors[static_cast<int>(j)].name);
 			r += String("\" ");
-			if (j == 0) {
+			if (dinfo.getPortMode(i) == static_cast<portModes>(j)) {
 				r += String("checked");
 			}
-			r += String(">") + String(sensors[j].name);
+			r += String(">") + String(sensors[static_cast<int>(j)].name);
 		}
 		server.sendContent(r + String("<br>"));
 	}
@@ -134,8 +142,9 @@ void config(void) {
 	unsigned long tdiff = millis() - t0;
 
 	server.sendContent(
-			String(sHTTP_BUTTONS) + String("<pre>time:") + String(tdiff) + String("ms\nConfig:") + String(configChanges)
-					+ String("</pre>") + String(sHTTP_END));
+			String(sHTTP_BUTTONS) + String("<pre>time:") + String(tdiff)
+					+ String("ms\nConfig:") + String(configChanges) + String("</pre>")
+					+ String(sHTTP_END));
 
 // Stop client because ...
 //	server.client().stop();
@@ -294,18 +303,24 @@ int ConfigurationChange(void) {
 					Serial.print(n1);
 				}
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
-					bool found = false;
+					bool found1 = false;
 					if (varg.length() > 0) {
-						for (int j = 0; j < MAX_SENSOR; j++) {
+						//lint -e{26,785} suppress since lint doesn't understand C++11
+						for (int j = 0; j < static_cast<int>(portModes::END); j++) {
 							if (strcmp(varg.c_str(), sensors[j].name) == 0) {
-								dinfo.setPortMode(n1, /*static_cast<portModes>(*/sensors[j].id/*)*/);
-								Serial.print("\r\nInfo: Setting mode to ");
-								Serial.println(static_cast<int>(sensors[j].id));
-								found = true;
+								dinfo.setPortMode(n1, sensors[j].id);
+								if (debug_output) {
+									Serial.print("\r\nInfo: Setting mode to ");
+									Serial.print(static_cast<int>(sensors[j].id));
+									Serial.print("(");
+									Serial.print(sensors[j].name);
+									Serial.println(")");
+								}
+								found1 = true;
 								break;
 							}
 						}
-						if (!found) {
+						if (!found1) {
 							Serial.print("\r\nERROR: unable to map mode: ");
 							Serial.println(varg.c_str());
 						}

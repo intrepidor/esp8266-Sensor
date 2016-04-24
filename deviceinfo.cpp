@@ -9,16 +9,19 @@
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include "deviceinfo.h"
-#include "net_config.h"
+//#include "net_config.h"
 #include "main.h"
 
-t_sensor sensors[MAX_SENSOR] = { { "off", portModes::off }, { "DHT11", portModes::dht11 },
-		{ "DHT22", portModes::dht22 }, { "DS18b20", portModes::ds18b20 }, { "Sonar", portModes::sonar }, { "Dust",
-				portModes::dust }, { "Sound", portModes::sound } };
+//lint -e{26,785} suppress since lint doesn't understand C++11
+t_sensor sensors[static_cast<int>(portModes::END)] = { { "off", portModes::off }, {
+		"DHT11", portModes::dht11 }, { "DHT22", portModes::dht22 }, { "DS18b20",
+		portModes::ds18b20 }, { "Sonar", portModes::sonar }, { "Dust", portModes::dust },
+		{ "Sound", portModes::sound } };
 
-unsigned int validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest) {
+unsigned int validate_string(char* str, const char* const def, unsigned int size,
+		int lowest, int highest) {
 	bool ok = true;
-	unsigned int n = 0;
+	unsigned int n = 0; /*lint -e838 */
 	str[size - 1] = 0;
 	for (n = 0; n < size - 1; n++) {
 		if (str[n] < lowest || str[n] > highest) {
@@ -39,25 +42,34 @@ unsigned int validate_string(char* str, const char* const def, unsigned int size
 
 void Device::init(void) {
 	validate_string(db.device.name, "<not named>", sizeof(db.device.name), 32, 126);
-	validate_string(db.thingspeak.apikey, "<no api key>", sizeof(db.thingspeak.apikey), 48, 95);
+	validate_string(db.thingspeak.apikey, "<no api key>", sizeof(db.thingspeak.apikey),
+			48, 95);
 	validate_string(db.thingspeak.host, "<no host>", sizeof(db.thingspeak.host), 32, 126);
 }
 
 String Device::toString(void) {
 	String s;
 	s = String(
-			String("config_version=") + String(db.config_version) + String("\r\ndevice.name=") + String(getDeviceName())
-					+ String("\r\ndevice.id=") + String(getDeviceID()) + String("\r\nthingspeak.status=")
-					+ String(getThingspeakStatus()) + String("\r\nthingspeak.enable=") + getEnableString()
-					+ String("\r\nTS_apikey=") + getThinkspeakApikey() + String("\r\nthingspeak.host=")
-					+ getThingspeakHost() + String("\r\nthingspeak.ipaddr=") + getIpaddr());
+			String("config_version=") + String(db.config_version)
+					+ String("\r\ndevice.name=") + String(getDeviceName())
+					+ String("\r\ndevice.id=") + String(getDeviceID())
+					+ String("\r\nthingspeak.status=") + String(getThingspeakStatus())
+					+ String("\r\nthingspeak.enable=") + getEnableString()
+					+ String("\r\nTS_apikey=") + getThinkspeakApikey()
+					+ String("\r\nthingspeak.host=") + getThingspeakHost()
+					+ String("\r\nthingspeak.ipaddr=") + getIpaddr());
 	for (int i = 0; i < MAX_PORTS; i++) {
 		s = s
 				+ String(
-						String("\r\nport[") + String(i) + String("].name=") + getPortName(i) + String(", mode=")
-								+ String(getModeStr(i)) + String(", pin=") + String(db.port[i].pin));
+						String("\r\nport[") + String(i) + String("].name=")
+								+ getPortName(i) + String(", mode=")
+								+ String(getModeStr(i)) + String(", pin=")
+								+ String(db.port[i].pin));
 		for (int k = 0; k < MAX_ADJ; k++) {
-			s = s + String(String(", adj[") + String(k) + String("]=") + String(db.port[i].adj[k]));
+			s = s
+					+ String(
+							String(", adj[") + String(k) + String("]=")
+									+ String(db.port[i].adj[k]));
 		}
 	}
 	return s;
@@ -89,7 +101,7 @@ portModes Device::getPortMode(int portnum) {
 		return static_cast<portModes>(db.port[portnum].mode);
 	}
 	else {
-		return portModes::undefined;
+		return portModes::off;
 	}
 }
 void Device::setPortMode(int portnum, portModes _mode) {
@@ -105,7 +117,8 @@ String Device::getModeStr(int portnum) {
 	String s("");
 	if (isValidPort(portnum)) {
 		int m = static_cast<int>(db.port[portnum].mode);
-		if (m >= 0 && m < MAX_SENSOR - 1) {
+		//lint -e{26} suppress since lint doesn't understand C++11
+		if (m >= 0 && m < static_cast<int>(portModes::END)) {
 			s = String(String(m) + ":" + String(sensors[m].name));
 		}
 		else {
@@ -144,7 +157,8 @@ double Device::getPortAdj(int portnum, int adjnum) {
 
 	if (isValidPort(portnum)) {
 		if (adjnum >= 0 && adjnum < getPortAdjMax()) {
-			return static_cast<double>((static_cast<double>(portnum) + 1) * 10 + static_cast<double>(adjnum)); // fixme this line is wrong and temporarily here. Needs to be fixed.
+			return static_cast<double>((static_cast<double>(portnum) + 1) * 10
+					+ static_cast<double>(adjnum)); // fixme this line is wrong and temporarily here. Needs to be fixed.
 			// fixme this causes the chip to crash -- return db.port[portnum].adj[adjnum];
 		}
 		else {
@@ -237,8 +251,8 @@ void Device::updateThingspeak(void) {
 		getStr += "&field7=";
 		getStr += String(PIRcount);
 		client.print(
-				String("GET ") + getStr + " HTTP/1.1\r\n" + "Host: " + getcThingspeakHost() + "\r\n"
-						+ "Connection: close\r\n\r\n");
+				String("GET ") + getStr + " HTTP/1.1\r\n" + "Host: "
+						+ getcThingspeakHost() + "\r\n" + "Connection: close\r\n\r\n");
 		delay(10);
 
 		// Read the response
