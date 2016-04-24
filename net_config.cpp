@@ -114,13 +114,16 @@ void config(void) {
 		else {
 			r = String("");
 		}
+		// Port Name
 		r += String(sHTTP_PORT_NUMBER) + String(i) + String(sHTTP_PORT_NAME) + String(i)
 				+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortName(i))
 				+ String(sHTTP_ENDLABELQ_BR);
+		// Port Adj Numeric Values
 		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
 			r += String(sHTTP_PORTADJ_NUMBER) + String(k) + String(sHTTP_PORTADJ_NAME)
 					+ String(i) + String(k) + String(sHTTP_CLOSE_AND_VALUE)
-					+ String(dinfo.getPortAdj(i, k)) + String(sHTTP_ENDLABELQ);
+					+ String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION)
+					+ String(sHTTP_ENDLABELQ);
 		}
 		r += String("<br>");
 		// Port radio buttons

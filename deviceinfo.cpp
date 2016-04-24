@@ -49,27 +49,20 @@ void Device::init(void) {
 
 String Device::toString(void) {
 	String s;
-	s = String(
-			String("config_version=") + String(db.config_version)
-					+ String("\r\ndevice.name=") + String(getDeviceName())
-					+ String("\r\ndevice.id=") + String(getDeviceID())
-					+ String("\r\nthingspeak.status=") + String(getThingspeakStatus())
-					+ String("\r\nthingspeak.enable=") + getEnableString()
-					+ String("\r\nTS_apikey=") + getThinkspeakApikey()
-					+ String("\r\nthingspeak.host=") + getThingspeakHost()
-					+ String("\r\nthingspeak.ipaddr=") + getIpaddr());
+	s = String("config_version=") + String(db.config_version) + String("\r\ndevice.name=")
+			+ String(getDeviceName()) + String("\r\ndevice.id=") + String(getDeviceID())
+			+ String("\r\nthingspeak.status=") + String(getThingspeakStatus())
+			+ String("\r\nthingspeak.enable=") + getEnableString()
+			+ String("\r\nTS_apikey=") + getThinkspeakApikey()
+			+ String("\r\nthingspeak.host=") + getThingspeakHost()
+			+ String("\r\nthingspeak.ipaddr=") + getIpaddr();
 	for (int i = 0; i < MAX_PORTS; i++) {
-		s = s
-				+ String(
-						String("\r\nport[") + String(i) + String("].name=")
-								+ getPortName(i) + String(", mode=")
-								+ String(getModeStr(i)) + String(", pin=")
-								+ String(db.port[i].pin));
+		s += String("\r\nport[") + String(i) + String("].name=") + getPortName(i)
+				+ String(", mode=") + String(getModeStr(i)) + String(", pin=")
+				+ String(db.port[i].pin);
 		for (int k = 0; k < MAX_ADJ; k++) {
-			s = s
-					+ String(
-							String(", adj[") + String(k) + String("]=")
-									+ String(db.port[i].adj[k]));
+			s += String(", adj[") + String(k) + String("]=");
+			s += String(getPortAdj(i, k), DECIMAL_PRECISION);
 		}
 	}
 	return s;
@@ -142,9 +135,6 @@ void Device::setPortName(int portnum, String _n) {
 
 String Device::getPortName(int portnum) {
 	if (isValidPort(portnum)) {
-		//FIXME unsigned int n = validate_string(db.port[portnum].name, "not_named", sizeof(db.port[portnum].name), 32, 126);
-		//FIXME Serial.print("INFO: getPortName() - n=");
-		//FIXME Serial.println(n);
 		return this->db.port[portnum].name;
 	}
 	else {
@@ -157,9 +147,7 @@ double Device::getPortAdj(int portnum, int adjnum) {
 
 	if (isValidPort(portnum)) {
 		if (adjnum >= 0 && adjnum < getPortAdjMax()) {
-			return static_cast<double>((static_cast<double>(portnum) + 1) * 10
-					+ static_cast<double>(adjnum)); // fixme this line is wrong and temporarily here. Needs to be fixed.
-			// fixme this causes the chip to crash -- return db.port[portnum].adj[adjnum];
+			return this->db.port[portnum].adj[adjnum];
 		}
 		else {
 			Serial.println("\r\nERROR: Device::getPortAdj() - invalid adj index");

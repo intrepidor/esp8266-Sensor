@@ -12,6 +12,7 @@
 #include <Arduino.h>
 
 const int CURRENT_CONFIG_VERSION = 123;
+const int DECIMAL_PRECISION = 5;
 
 //extern void validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest);
 

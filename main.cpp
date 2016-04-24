@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <EEPROM.h>
-//#include <ctype.h>
 #include "main.h"
 #include "temperature.h"
 #include "network.h"
@@ -17,7 +16,7 @@ extern int task_webServer(unsigned long now);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Server v1.22\nAllan Inda 2016-Mar-12\n");
+String ProgramInfo("Environment Sensor v0.01\nAllan Inda 2016-Apr-24\n");
 
 // Other
 long count = 0;
