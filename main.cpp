@@ -42,13 +42,33 @@ void printMenu(void);
 void printInfo(void);
 
 // ------------------------------------------------------------------------------------
-static const uint8_t SOFTRESETPIN = pD5;
+static const uint8_t SOFTRESETPIN = pD0;
 void reset(void) {
+	/* Note on the nodeMCU, pin D0 (aka GPIO16) is connected to the RST pin
+	 * already. So there is nothing more to do than to write LOW on this
+	 * pin whenever you want to reset the nodeMCU.
+	 *
+	 * The reason it's connected is in order to be able to wake up from deep sleep.
+	 * When the esp8266 is put into deep sleep everything but the RTC is powered off.
+	 * You can set a timer in the RTC that toggles GPIO16 when it expires and that
+	 * resets the esp8266 causing it to power up again. This is the only way the
+	 * esp8266 can wake itself up from deep sleep, so it's quite a useful function
+	 * to have. On the esp-03 module there is a tiny jumper to connect GPIO16 to reset
+	 * so one can connect/disconnect it. On the esp-12, since everything is under a
+	 * shield that jumper is evidently not available, so they had to decide one way
+	 * or the other...
+	 */
+
 	/* Write a low to the pin that is physically connected to the RST pin.
 	 * This will force the hardware to reset.
 	 */
-	digitalWrite(SOFTRESETPIN, LOW);
 	pinMode(SOFTRESETPIN, OUTPUT);
+	for (int a = 0; a < 10; a++) {
+		digitalWrite(SOFTRESETPIN, LOW);
+		delay(1000);
+		digitalWrite(SOFTRESETPIN, HIGH);
+		delay(1000);
+	}
 }
 void reset_config(void) {
 	// Setup the external Reset circuit
@@ -56,10 +76,10 @@ void reset_config(void) {
 	/* Make sure the pin is High so it does not reset until we want it to. Do
 	 * this before setting the direction as an output to avoid accidental
 	 * reset during pin configuration. */
-	pinMode(SOFTRESETPIN, OUTPUT);
-	/* Set the pin used to cause a reset as an output. This pin should be
-	 *  physically tied to "RST" pin on ESP-12E. Pulling this pin low will
-	 *  cause the device to reset. */
+	pinMode(SOFTRESETPIN, INPUT);
+	/* Set the pin used to cause a reset as an input. This avoids it reseting
+	 * when we don't want a reset.
+	 */
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
