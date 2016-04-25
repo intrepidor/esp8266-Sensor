@@ -42,7 +42,7 @@ void printMenu(void);
 void printInfo(void);
 
 // ------------------------------------------------------------------------------------
-static const uint8_t SOFTRESETPIN = pD6;
+static const uint8_t SOFTRESETPIN = pD5;
 void reset(void) {
 	/* Write a low to the pin that is physically connected to the RST pin.
 	 * This will force the hardware to reset.
@@ -82,6 +82,7 @@ void setup(void) {
 
 	// Setup Serial port
 	Serial.begin(115200);
+	Serial.println("\r\n");
 	Serial.println(ProgramInfo);
 
 	// Start EEPROM
@@ -89,7 +90,7 @@ void setup(void) {
 	dinfo.RestoreConfigurationFromEEPROM();
 
 	// Configure Objects
-	dinfo.init();
+	//dinfo.init();
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"	// disable warnings about the below strings being "const" while the signatures are non-const

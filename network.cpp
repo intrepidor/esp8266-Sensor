@@ -104,7 +104,7 @@ void WebInit(void) {
 			response += "\nTempOffset#2=" + String(t2.getCalOffset());
 			response += "\nHeatIndex#2=" + String(t2.getHeatindex());
 			response += "\nMotion#1=" + String(PIRcount);
-			response += "\n<a href=\"" + String(WiFi.localIP()) + String("/config\">config</a>");
+			response += "\n";
 			server.send(200, "text/plain", response);
 		});
 
@@ -138,7 +138,7 @@ void WebPrintInfo(void) {
 	Serial.println("?read=name       :: read name of device");
 	Serial.println("?read=status     :: read status information for device");
 	Serial.println("?read=thingspeak :: read thingspeak api codes");
-	Serial.println("?read=sherbet    :: read summary of sensor data");
+	Serial.println("?read=csv        :: read summary of sensor data");
 	Serial.println("?read=offset1    :: read offset1 value");
 	Serial.println("?read=offset2    :: read offset1 value");
 	Serial.println("?offset1=X       :: write offset1 to X");

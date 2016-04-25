@@ -67,7 +67,7 @@ void sendValue(void) {
 		if (sarg == "offset2") {
 			value = String(t2.getCalOffset());
 		}
-		if (sarg == "sherbet") {
+		if (sarg == "csv") {
 			value = String(t1.getTemperature()) + "F ";
 			value += String(t1.getHumidity()) + "%,";
 			value += String(t2.getTemperature()) + "F ";
