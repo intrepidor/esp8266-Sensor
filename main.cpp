@@ -44,10 +44,9 @@ void printInfo(void);
 // ------------------------------------------------------------------------------------
 static const uint8_t SOFTRESETPIN = pD0;
 void reset(void) {
-	/* Note on the nodeMCU, pin D0 (aka GPIO16) is connected to the RST pin
-	 * already. So there is nothing more to do than to write LOW on this
-	 * pin whenever you want to reset the nodeMCU.
-	 *
+	/* Note on the nodeMCU, pin D0 (aka GPIO16) may or may not already be
+	 * connected to the RST pin. If it's not connected, connect via a 10K
+	 * resistor. Do no connect directly.
 	 * The reason it's connected is in order to be able to wake up from deep sleep.
 	 * When the esp8266 is put into deep sleep everything but the RTC is powered off.
 	 * You can set a timer in the RTC that toggles GPIO16 when it expires and that
@@ -62,6 +61,8 @@ void reset(void) {
 	/* Write a low to the pin that is physically connected to the RST pin.
 	 * This will force the hardware to reset.
 	 */
+	Serial.println("Rebooting ... this may take 15 seconds or more.");
+
 	pinMode(SOFTRESETPIN, OUTPUT);
 	for (int a = 0; a < 10; a++) {
 		digitalWrite(SOFTRESETPIN, LOW);

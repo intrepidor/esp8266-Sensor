@@ -80,8 +80,6 @@ void sendValue(void) {
 	bool eeprom_needs_update = false;
 // WRITE API
 	if (server.hasArg("reset")) {
-		Serial.println("Resetting in 4 seconds...");
-		delay(4000);
 		reset();
 	}
 	if (server.hasArg("offset1")) {

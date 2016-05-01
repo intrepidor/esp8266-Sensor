@@ -1,5 +1,4 @@
 /*
- * net_config.cpp
  *
  *  Created on: Jan 30, 2016
  *      Author: Allan Inda
@@ -208,6 +207,7 @@ int ConfigurationChange(void) {
 	 * Radio Port N:		radportN		[OFF|DHT11|DHT22|DS18b20|Sonar|Dust|Sound]N
 	 */
 
+	bool need_reboot = false;
 	if (server.args() > 0) {
 		bool found = false;
 		if (debug_output) {
@@ -330,6 +330,7 @@ int ConfigurationChange(void) {
 						for (int j = 0; j < static_cast<int>(portModes::END); j++) {
 							if (strcmp(varg.c_str(), sensors[j].name) == 0) {
 								dinfo.setPortMode(n1, sensors[j].id);
+								need_reboot = true;
 								if (debug_output) {
 									Serial.print("\r\nInfo: Setting mode to ");
 									Serial.print(static_cast<int>(sensors[j].id));
@@ -379,19 +380,12 @@ int ConfigurationChange(void) {
 			}
 			found = false;
 		}
-//		if (debug_output) {
-//			Serial.println("");
-//			Serial.println("------- Current RAM BEFORE write to EEPROM --------");
-//			Serial.println(dinfo.toString().c_str());
-//			Serial.println("---------------------------------------------------");
-//		}
+
 		dinfo.StoreConfigurationIntoEEPROM();
-//		if (debug_output) {
-//			Serial.println("");
-//			Serial.println("------- Current RAM AFTER write to EEPROM --------");
-//			Serial.println(dinfo.toString().c_str());
-//			Serial.println("--------------------------------------------------");
-//		}
+		if (need_reboot) {
+			reset();
+		}
+
 	}
 	return server.args();
 }
