@@ -68,6 +68,20 @@ String Device::toString(void) {
 	return s;
 }
 
+void Device::printInfo(void) {
+	for (int i = 0; i < dinfo.getPortMax(); i++) {
+		for (int j = 0; j < static_cast<int>(portModes::END); j++) {
+			if (dinfo.getPortMode(i) == static_cast<portModes>(j)) {
+				Serial.print("Port#");
+				Serial.print(i);
+				Serial.print(": ");
+				Serial.println(sensors[static_cast<int>(j)].name);
+			}
+		}
+	}
+	Serial.println("");
+}
+
 void Device::setcDeviceName(const char* newname) {
 	if (newname) {
 		memset(db.device.name, 0, sizeof(db.device.name));

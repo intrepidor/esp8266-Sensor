@@ -17,14 +17,23 @@ extern int task_webServer(unsigned long now);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.01\r\nAllan Inda 2016-Apr-24");
+String ProgramInfo("Environment Sensor v0.01 : Allan Inda 2016-May-19");
 
 // Other
 long count = 0;
 bool debug_output = true;
 
+// Define pins
+const uint8_t PIN_SOFTRESET = D0;
+const uint8_t PIN_BUILTIN_LED = BUILTIN_LED; // D0
+const uint8_t EXT_PORT_0 = D2;
+const uint8_t EXT_PORT_1 = D3;
+const uint8_t EXT_PORT_2 = D4;	// also used for I2C (SDA)
+const uint8_t EXT_PORT_3 = D5;	// also used for I2C (SCL)
+const uint8_t EXT_PORT_4 = A0;
+
 // PIR Sensor
-#define PIRPIN pD1
+const uint8_t PIN_PIRSENSOR = D1;
 int PIRcount = 0;     // current PIR count
 int PIRcountLast = 0; // last PIR count
 
@@ -42,7 +51,6 @@ void printMenu(void);
 void printInfo(void);
 
 // ------------------------------------------------------------------------------------
-static const uint8_t SOFTRESETPIN = pD0;
 void reset(void) {
 	/* Note on the nodeMCU, pin D0 (aka GPIO16) may or may not already be
 	 * connected to the RST pin. If it's not connected, connect via a 10K
@@ -63,21 +71,21 @@ void reset(void) {
 	 */
 	Serial.println("Rebooting ... this may take 15 seconds or more.");
 
-	pinMode(SOFTRESETPIN, OUTPUT);
+	pinMode(PIN_SOFTRESET, OUTPUT);
 	for (int a = 0; a < 10; a++) {
-		digitalWrite(SOFTRESETPIN, LOW);
+		digitalWrite(PIN_SOFTRESET, LOW);
 		delay(1000);
-		digitalWrite(SOFTRESETPIN, HIGH);
+		digitalWrite(PIN_SOFTRESET, HIGH);
 		delay(1000);
 	}
 }
 void reset_config(void) {
 	// Setup the external Reset circuit
-	digitalWrite(SOFTRESETPIN, HIGH);
+	digitalWrite(PIN_SOFTRESET, HIGH);
 	/* Make sure the pin is High so it does not reset until we want it to. Do
 	 * this before setting the direction as an output to avoid accidental
 	 * reset during pin configuration. */
-	pinMode(SOFTRESETPIN, INPUT);
+	pinMode(PIN_SOFTRESET, INPUT);
 	/* Set the pin used to cause a reset as an input. This avoids it reseting
 	 * when we don't want a reset.
 	 */
@@ -95,16 +103,16 @@ void setup(void) {
 	reset_config();
 
 	// Setup GPIO
-	pinMode(PIRPIN, INPUT);   // Initialize the PIR sensor pin as an input
-	pinMode(BUILTIN_LED, OUTPUT);  // Initialize the BUILTIN_LED pin as an output
+	pinMode(PIN_PIRSENSOR, INPUT);   // Initialize the PIR sensor pin as an input
+	pinMode(PIN_BUILTIN_LED, OUTPUT);  // Initialize the BUILTIN_LED pin as an output
 
 	// Signal that setup is proceeding
-	digitalWrite(BUILTIN_LED, BUILTIN_LED_ON);
+	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_ON);
 
 	// Setup Serial port
 	Serial.begin(115200);
-	Serial.println("\r\n");
-	Serial.println(ProgramInfo);
+	//Serial.println("\r\n");
+	//Serial.println(ProgramInfo);
 
 	// Start EEPROM
 	EEPROM.begin(512);
@@ -116,29 +124,40 @@ void setup(void) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"	// disable warnings about the below strings being "const" while the signatures are non-const
 	{
+		for (int i = 0; i < dinfo.getPortMax(); i++) {
+			for (int j = 0; j < static_cast<int>(portModes::END); j++) {
+				if (dinfo.getPortMode(i) == static_cast<portModes>(j)) {
+					Serial.print("Port#");
+					Serial.print(i);
+					Serial.print(": ");
+					Serial.println(sensors[static_cast<int>(j)].name);
+
+				}
+			}
+		}
+
 		//lint --e{1776}   Ignore Info about using string literal in place of char*
-		t1.Init(sensor_technology::dht22, "3", pD3);
-		t2.Init(sensor_technology::dht22, "4", pD4);
+		t1.Init(sensor_technology::dht22, "3", EXT_PORT_0);
+		t2.Init(sensor_technology::dht22, "4", EXT_PORT_1);
 	}
 #pragma GCC diagnostic pop
 
 	// Setup the WebServer
 	WebInit();
+	Serial.println("");
 	printInfo();
-
-	//fixme  dinfo.printInfo();
 
 	Queue myQueue;
 	// scheduleFunction arguments (function pointer, task name, start delay in ms, repeat interval in ms)
 	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
-	// FIXME disable for now -- myQueue.scheduleFunction(task_readtemperature, "Temperature", 1000, 499);
+	myQueue.scheduleFunction(task_readtemperature, "Temperature", 1000, 499);
 	// FIXME disable for now -- myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
 	myQueue.scheduleFunction(task_flashled, "LED", 250, 1000);
 	myQueue.scheduleFunction(task_printstatus, "Status", 2000, 500);
 	myQueue.scheduleFunction(task_webServer, "WebServer", 3000, 1);
 
 	// Signal that setup is done
-	digitalWrite(BUILTIN_LED, BUILTIN_LED_OFF);
+	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_OFF);
 	printMenu();
 
 	for (;;) {
@@ -165,11 +184,8 @@ void printInfo(void) {
 	dinfo.printThingspeakInfo();
 	Serial.print(String("ESP8266_Device_ID=") + String(dinfo.getDeviceID()));
 	Serial.println(String("\r\nFriendly Name: ") + String(dinfo.getDeviceName()));
-	Serial.println(
-			String("\r\nDHT#1=") + String(t1.getstrType()) + String("\r\nDHT#2=")
-					+ String(t2.getstrType()));
+	dinfo.printInfo();
 	//printChipInfo();
-	Serial.println("\r\n");
 }
 
 void printMenu(void) {
@@ -177,7 +193,7 @@ void printMenu(void) {
 	Serial.println("c  show calibration values");
 	Serial.println("m  show menu");
 	Serial.println("s  show status");
-	Serial.println("i  show configuration");
+	Serial.println("i  show High-level configuration");
 	Serial.println("w  show web URLs");
 	Serial.println("e  show data structure in EEPROM");
 	Serial.println("r  show data structure in RAM");
@@ -194,7 +210,7 @@ void printMenu(void) {
 
 int task_readpir(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	if (digitalRead (PIRPIN)) {
+	if (digitalRead(PIN_PIRSENSOR)) {
 		PIRcount++;
 	}
 	return 0;
@@ -202,15 +218,18 @@ int task_readpir(unsigned long now) {
 
 int task_readtemperature(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	if (!t1.read()) {
-		Serial.print("Err sensor #");
-		Serial.print(t1.getPin());
-		Serial.println("");
+	bool r1 = t1.read();
+	bool r2 = t2.read();
+
+	if (!r1) {
+		//Serial.print("Err sensor #");
+		//Serial.print(t1.getPin());
+		//Serial.println("");
 	}
-	if (!t2.read()) {
-		Serial.print("Err sensor #");
-		Serial.print(t2.getPin());
-		Serial.println("");
+	if (!r2) {
+		//Serial.print("Err sensor #");
+		//Serial.print(t2.getPin());
+		//Serial.println("");
 	}
 	return 0;
 }

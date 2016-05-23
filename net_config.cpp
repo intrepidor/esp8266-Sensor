@@ -57,7 +57,7 @@ const char sHTTP_TS_IPADDR[] =
 // <ENDLABELQ>
 //
 // ## Port Configuration
-const char sHTTP_PORT_HEADING[] = "<p><b>Port Configuration</b></p>";
+const char sHTTP_PORT_HEADING[] = "<br>"; //"<p><b>Port Configuration</b></p>";
 const char sHTTP_PORT_NUMBER[] = "<label>Port#";
 const char sHTTP_PORT_NAME[] = "<input type=\"text\" name=\"port";
 const char sHTTP_PORTADJ_NUMBER[] = "<label>Adj#";

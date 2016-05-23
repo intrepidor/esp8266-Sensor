@@ -101,6 +101,7 @@ public:
 	void setDeviceID(int newID) {
 		this->db.device.id = newID;
 	}
+	void printInfo(void);
 //--------------------------------------------------------
 // Ports
 	int getPortMax(void) {

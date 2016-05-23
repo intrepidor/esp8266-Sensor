@@ -12,19 +12,6 @@
 #include "temperature.h"
 #include "deviceinfo.h"
 
-// NodeMCU 1.0 pinout
-static const uint8_t pD0 = 16;
-static const uint8_t pD1 = 5;
-static const uint8_t pD2 = 4;
-static const uint8_t pD3 = 0;
-static const uint8_t pD4 = 2;
-static const uint8_t pD5 = 14;
-static const uint8_t pD6 = 12;
-static const uint8_t pD7 = 13;
-static const uint8_t pD8 = 15;
-static const uint8_t pD9 = 3;
-static const uint8_t pD10 = 1;
-
 extern void reset(void);
 extern long count;
 extern int PIRcount;
@@ -33,6 +20,15 @@ extern bool debug_output;
 extern Device dinfo;
 extern TemperatureSensor t1;
 extern TemperatureSensor t2;
+
+extern const uint8_t PIN_SOFTRESET;
+extern const uint8_t PIN_BUILTIN_LED;
+extern const uint8_t PIN_PIRSENSOR;
+extern const uint8_t EXT_PORT_0;
+extern const uint8_t EXT_PORT_1;
+extern const uint8_t EXT_PORT_2;
+extern const uint8_t EXT_PORT_3;
+extern const uint8_t EXT_PORT_4;
 
 //extern void printChipInfo(void);
 extern uint32_t spi_flash_get_id(void);

@@ -57,7 +57,7 @@ const char* TemperatureSensor::getstrType(void) {
 			return "DHT11";
 			break;
 		case sensor_technology::dht22:
-			return "DHT11";
+			return "DHT22";
 			break;
 		case sensor_technology::ds18b22:
 			return "DS18b22";
