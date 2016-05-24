@@ -18,7 +18,30 @@ const int DECIMAL_PRECISION = 5;
 
 //-----------------------------------------------------------------------------------
 enum class portModes {
-	off = 0, dht11, dht22, ds18b20, sonar, dust, sound, END
+	off = 0,
+// 1 digital
+	dht11,
+	dht22,
+	ds18b20,
+	sonar,
+	sound,
+	reed,
+	hcs501,
+	hcsr505,
+// 1 digital + 1 analog
+	dust,
+	rain,
+	soil,
+	soundh,
+	methane,
+// I2C
+	gy68,
+	gy30,
+	lcd1601,
+// serial
+	rfid,
+	marquee,
+	END
 };
 struct t_sensor {
 	const char* const name;
@@ -37,7 +60,7 @@ extern t_sensor const sensors[];
 
 //-----------------------------------------------------------------------------------
 // Device Class
-const int MAX_PORTS = 6;
+const int MAX_PORTS = 4;
 const int MAX_ADJ = 3;
 const int STRING_LENGTH = 20;
 static bool isValidPort(int portnum);

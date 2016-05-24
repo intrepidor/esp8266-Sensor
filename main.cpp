@@ -23,19 +23,25 @@ String ProgramInfo("Environment Sensor v0.01 : Allan Inda 2016-May-19");
 long count = 0;
 bool debug_output = true;
 
-// Define pins
-const uint8_t PIN_SOFTRESET = D0;
-const uint8_t PIN_BUILTIN_LED = BUILTIN_LED; // D0
-const uint8_t EXT_PORT_0 = D2;
-const uint8_t EXT_PORT_1 = D3;
-const uint8_t EXT_PORT_2 = D4;	// also used for I2C (SDA)
-const uint8_t EXT_PORT_3 = D5;	// also used for I2C (SCL)
-const uint8_t EXT_PORT_4 = A0;
-
 // PIR Sensor
-const uint8_t PIN_PIRSENSOR = D1;
 int PIRcount = 0;     // current PIR count
 int PIRcountLast = 0; // last PIR count
+const uint8_t PIN_PIRSENSOR = D1;
+
+// Reset and LED
+const uint8_t PIN_SOFTRESET = D0;
+const uint8_t PIN_BUILTIN_LED = BUILTIN_LED; // D0
+
+// Port Pins
+const uint8_t DIGITAL_PIN_1 = D2;
+const uint8_t DIGITAL_PIN_2 = D3;
+const uint8_t DIGITAL_PIN_3 = D6;
+const uint8_t DIGITAL_PIN_4 = D7;
+const uint8_t DIGITAL_PIN_5 = D8;
+
+const uint8_t ANALOG_PIN = A0;
+const uint8_t I2C_SDA_PIN = D4;
+const uint8_t I2C_SCL_PIN = D5;
 
 // LED on the ESP board
 #define BUILTIN_LED_ON LOW
@@ -49,6 +55,7 @@ Device dinfo;
 // Information
 void printMenu(void);
 void printInfo(void);
+void ConfigurePorts(void);
 
 // ------------------------------------------------------------------------------------
 void reset(void) {
@@ -92,6 +99,86 @@ void reset_config(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
+void ConfigurePorts(void) {
+	// Each port has access to a predefined subset of the following pin types, and for
+	//    each port, the pin assignments may differ, and some will be the same.
+	struct {
+		int digital = -1;
+		int analog = -1;
+		int sda = -1;
+		int scl = -1;
+	} pins;
+
+	// Loop through each of the ports
+	for (int portNumber = 0; portNumber < dinfo.getPortMax(); portNumber++) {
+		// Get the pins used for this port
+		switch (portNumber) {
+			case 0: // port#0
+				pins.digital = DIGITAL_PIN_1;
+				pins.analog = ANALOG_PIN;
+				pins.sda = I2C_SDA_PIN;
+				pins.scl = I2C_SCL_PIN;
+				;
+				break;
+			case 1: // port#1
+				pins.digital = DIGITAL_PIN_2;
+				pins.analog = ANALOG_PIN;
+				pins.sda = I2C_SDA_PIN;
+				pins.scl = I2C_SCL_PIN;
+				break;
+			case 2: // port#2
+				pins.digital = DIGITAL_PIN_3;
+				pins.analog = ANALOG_PIN;
+				pins.sda = I2C_SDA_PIN;
+				pins.scl = I2C_SCL_PIN;
+				break;
+			case 3: // port#3
+				pins.digital = DIGITAL_PIN_4;
+				pins.analog = ANALOG_PIN;
+				pins.sda = I2C_SDA_PIN;
+				pins.scl = I2C_SCL_PIN;
+				break;
+		}
+		// Figure out the configuration of the port
+		for (int portType = 0; portType < static_cast<int>(portModes::END); portType++) {
+			// loop through each of the port setting types until finding a match
+			if (dinfo.getPortMode(portNumber) == static_cast<portModes>(portType)) {
+				// found the setting
+				Serial.print("Port#");
+				Serial.print(portNumber);
+				Serial.print(": ");
+				Serial.println(sensors[static_cast<int>(portType)].name);
+				switch (portType) {
+					case static_cast<int>(portModes::off):
+						break;
+					case static_cast<int>(portModes::dht11):
+						break;
+					case static_cast<int>(portModes::dht22):
+						break;
+					case static_cast<int>(portModes::ds18b20):
+						break;
+					case static_cast<int>(portModes::sonar):
+						break;
+					case static_cast<int>(portModes::dust):
+						break;
+					case static_cast<int>(portModes::sound):
+						break;
+				}
+			}
+		}
+	}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"	// disable warnings about the below strings being "const" while the signatures are non-const
+	{
+		//lint --e{1776}   Ignore Info about using string literal in place of char*
+		t1.Init(sensor_technology::dht22, "3", DIGITAL_PIN_1);
+		t2.Init(sensor_technology::dht22, "4", DIGITAL_PIN_2);
+	}
+#pragma GCC diagnostic pop
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 //lint -e{1784}   // suppress message about signature conflict between C++ and C
 void loop(void) {
 }
@@ -121,26 +208,7 @@ void setup(void) {
 	// Configure Objects
 	//dinfo.init();
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wwrite-strings"	// disable warnings about the below strings being "const" while the signatures are non-const
-	{
-		for (int i = 0; i < dinfo.getPortMax(); i++) {
-			for (int j = 0; j < static_cast<int>(portModes::END); j++) {
-				if (dinfo.getPortMode(i) == static_cast<portModes>(j)) {
-					Serial.print("Port#");
-					Serial.print(i);
-					Serial.print(": ");
-					Serial.println(sensors[static_cast<int>(j)].name);
-
-				}
-			}
-		}
-
-		//lint --e{1776}   Ignore Info about using string literal in place of char*
-		t1.Init(sensor_technology::dht22, "3", EXT_PORT_0);
-		t2.Init(sensor_technology::dht22, "4", EXT_PORT_1);
-	}
-#pragma GCC diagnostic pop
+	ConfigurePorts();
 
 	// Setup the WebServer
 	WebInit();

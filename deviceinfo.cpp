@@ -13,10 +13,29 @@
 #include "main.h"
 
 //lint -e{26,785} suppress since lint doesn't understand C++11
-t_sensor const sensors[static_cast<int>(portModes::END)] = { { "off", portModes::off }, {
-		"DHT11", portModes::dht11 }, { "DHT22", portModes::dht22 }, { "DS18b20",
-		portModes::ds18b20 }, { "Sonar", portModes::sonar }, { "Dust", portModes::dust },
-		{ "Sound", portModes::sound } };
+t_sensor const sensors[static_cast<int>(portModes::END)] = { { "off", portModes::off },
+// One Digital IO
+		{ "DHT11", portModes::dht11 },
+		{ "DHT22", portModes::dht22 },
+		{ "DS18b20", portModes::ds18b20 },
+		{ "Sonar", portModes::sonar },
+		{ "Sound", portModes::sound },
+		{ "Reed", portModes::reed },
+		{ "HCS501", portModes::hcs501 },
+		{ "HCSR505", portModes::hcsr505 },
+		// One Digital IO and/or one ADC
+		{ "Dust", portModes::dust },
+		{ "Rain", portModes::rain },
+		{ "Soil", portModes::soil },
+		{ "SoundH", portModes::soundh },
+		{ "Methane", portModes::methane },
+		// IC2 Devices
+		{ "GY68", portModes::gy68 },
+		{ "GY30", portModes::gy30 },
+		{ "LCD1602", portModes::lcd1601 },
+		// Serial
+		{ "RFID", portModes::rfid },
+		{ "Marquee", portModes::marquee } };
 
 unsigned int validate_string(char* str, const char* const def, unsigned int size,
 		int lowest, int highest) {
