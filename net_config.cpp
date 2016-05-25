@@ -131,15 +131,15 @@ void config(void) {
 		r += String("<br>");
 		// Port radio buttons
 		//lint -e{26,785} suppress since lint doesn't understand C++11
-		for (int j = 0; j < static_cast<int>(portModes::END); j++) {
+		for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
 			r += String(sHTTP_PORT_RADIO_START) + String(i)
 					+ String(sHTTP_CLOSE_AND_VALUE);
-			r += String(sensors[static_cast<int>(j)].name);
+			r += String(sensorList[static_cast<int>(j)].name);
 			r += String("\" ");
-			if (dinfo.getPortMode(i) == static_cast<portModes>(j)) {
+			if (dinfo.getPortMode(i) == static_cast<sensorModule>(j)) {
 				r += String("checked");
 			}
-			r += String(">") + String(sensors[static_cast<int>(j)].name);
+			r += String(">") + String(sensorList[static_cast<int>(j)].name);
 		}
 		server.sendContent(r + String("<br>"));
 	}
@@ -327,15 +327,15 @@ int ConfigurationChange(void) {
 					bool found1 = false;
 					if (varg.length() > 0) {
 						//lint -e{26,785} suppress since lint doesn't understand C++11
-						for (int j = 0; j < static_cast<int>(portModes::END); j++) {
-							if (strcmp(varg.c_str(), sensors[j].name) == 0) {
-								dinfo.setPortMode(n1, sensors[j].id);
+						for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
+							if (strcmp(varg.c_str(), sensorList[j].name) == 0) {
+								dinfo.setPortMode(n1, sensorList[j].id);
 								need_reboot = true;
 								if (debug_output) {
 									Serial.print("\r\nInfo: Setting mode to ");
-									Serial.print(static_cast<int>(sensors[j].id));
+									Serial.print(static_cast<int>(sensorList[j].id));
 									Serial.print("(");
-									Serial.print(sensors[j].name);
+									Serial.print(sensorList[j].name);
 									Serial.println(")");
 								}
 								found1 = true;

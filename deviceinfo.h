@@ -10,53 +10,12 @@
 
 //#include <array>
 #include <Arduino.h>
+#include "sensor.h"
 
 const int CURRENT_CONFIG_VERSION = 123;
 const int DECIMAL_PRECISION = 5;
 
 //extern void validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest);
-
-//-----------------------------------------------------------------------------------
-enum class portModes {
-	off = 0,
-// 1 digital
-	dht11,
-	dht22,
-	ds18b20,
-	sonar,
-	sound,
-	reed,
-	hcs501,
-	hcsr505,
-// 1 digital + 1 analog
-	dust,
-	rain,
-	soil,
-	soundh,
-	methane,
-// I2C
-	gy68,
-	gy30,
-	lcd1601,
-// serial
-	rfid,
-	marquee,
-	END
-};
-struct t_sensor {
-	const char* const name;
-	portModes id;
-};
-#if 0
-// Comment out because PC Lint is not ready
-const std::array<portModes, static_cast<int>(portModes::END)> allModes = {portModes::off,
-	portModes::dht11, portModes::dht22, portModes::ds18b20, portModes::sonar,
-	portModes::dust, portModes::sound};
-/* The array portModes and the enum portModes must match with one exception, the END
- * value is not copied into the portModes array.
- */
-#endif
-extern t_sensor const sensors[];
 
 //-----------------------------------------------------------------------------------
 // Device Class
@@ -67,7 +26,7 @@ static bool isValidPort(int portnum);
 
 struct cport {
 	char name[STRING_LENGTH + 1];
-	portModes mode;
+	sensorModule mode;
 	int pin;
 	double adj[MAX_ADJ];
 };
@@ -130,8 +89,8 @@ public:
 	int getPortMax(void) {
 		return MAX_PORTS;
 	}
-	portModes getPortMode(int portnum);
-	void setPortMode(int portnum, portModes _mode);
+	sensorModule getPortMode(int portnum);
+	void setPortMode(int portnum, sensorModule _mode);
 	void setPortName(int portnum, String _n);
 	String getPortName(int portnum);
 	int getPortAdjMax(void) {

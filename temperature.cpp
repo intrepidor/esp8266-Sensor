@@ -2,9 +2,8 @@
 //#include <EEPROM.h>
 #include "temperature.h"
 
-void TemperatureSensor::Init(sensor_technology _type, char* _name, uint8_t _pin) {
+void TemperatureSensor::Init(sensor_technology _type, uint8_t _pin) {
 	type = _type;
-	name = _name;
 	pin = _pin;
 	switch (type) {
 		case sensor_technology::dht11:
@@ -32,9 +31,7 @@ void TemperatureSensor::readCalibrationData(void) {
 //    cal_offset = (float) (cal / 10.0);
 }
 void TemperatureSensor::printCalibrationData(void) {
-	Serial.print("Temp ");
-	Serial.print(name);
-	Serial.print(" Offset: ");
+	Serial.print("Temp Offset: ");
 	Serial.print(String(cal_offset));
 	Serial.println(" *F)");
 }
@@ -99,8 +96,6 @@ bool TemperatureSensor::readDHT(void) {
 		if (isnan(humidity) || isnan(temperature)) {
 			return false;   // read failed
 		}
-		heatindex = dht->computeHeatIndex(temperature, humidity);
-		return true;    // read successful
 	}
 	return false;       // error: DHT object not created
 }

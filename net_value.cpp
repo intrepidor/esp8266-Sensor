@@ -25,17 +25,11 @@ void sendValue(void) {
 		if (sarg == "2") {
 			value = String(t1.getHumidity());
 		}
-		if (sarg == "3") {
-			value = String(t1.getHeatindex());
-		}
 		if (sarg == "4") {
 			value = String(t2.getTemperature());
 		}
 		if (sarg == "5") {
 			value = String(t2.getHumidity());
-		}
-		if (sarg == "6") {
-			value = String(t2.getHeatindex());
 		}
 		if (sarg == "7") {
 			value = String(PIRcount);

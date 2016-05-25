@@ -98,11 +98,9 @@ void WebInit(void) {
 			response += "\nHumidity#1=" + String(t1.getHumidity());
 			response += "\nTemperature#1=" + String(t1.getTemperature());
 			response += "\nTempOffset#1=" + String(t1.getCalOffset());
-			response += "\nHeatIndex#1=" + String(t1.getHeatindex());
 			response += "\nHumidity#2=" + String(t2.getHumidity());
 			response += "\nTemperature#2=" + String(t2.getTemperature());
 			response += "\nTempOffset#2=" + String(t2.getCalOffset());
-			response += "\nHeatIndex#2=" + String(t2.getHeatindex());
 			response += "\nMotion#1=" + String(PIRcount);
 			response += "\n";
 			server.send(200, "text/plain", response);
@@ -127,9 +125,8 @@ void WebPrintInfo(void) {
 	Serial.print("Read API:   http://");
 	Serial.print(localIPstr());
 	Serial.println(v);
-	Serial.println(
-			"?read=1,2,3      :: read temperature, humidity, heatindex for Sensor #1");
-	Serial.println("?read=4,5,6      :: read same for Sensor #2");
+	Serial.println("?read=1,2        :: read temperature, humidity for Sensor #1");
+	Serial.println("?read=4,5        :: read temperature, humidity for Sensor #2");
 	Serial.println("?read=7          :: read Motion detector value");
 	Serial.println("?read=api        :: read ThingSpeak API key");
 	Serial.println(

@@ -48,8 +48,7 @@ const uint8_t I2C_SCL_PIN = D5;
 #define BUILTIN_LED_OFF HIGH
 
 // Create Objects
-TemperatureSensor t1;
-TemperatureSensor t2;
+TemperatureSensor t1, t2, t3, t4;	// DHT11 and DHT22
 Device dinfo;
 
 // Information
@@ -102,80 +101,132 @@ void reset_config(void) {
 void ConfigurePorts(void) {
 	// Each port has access to a predefined subset of the following pin types, and for
 	//    each port, the pin assignments may differ, and some will be the same.
-	struct {
-		int digital = -1;
-		int analog = -1;
-		int sda = -1;
-		int scl = -1;
-	} pins;
+	Pins p;
 
 	// Loop through each of the ports
 	for (int portNumber = 0; portNumber < dinfo.getPortMax(); portNumber++) {
 		// Get the pins used for this port
 		switch (portNumber) {
 			case 0: // port#0
-				pins.digital = DIGITAL_PIN_1;
-				pins.analog = ANALOG_PIN;
-				pins.sda = I2C_SDA_PIN;
-				pins.scl = I2C_SCL_PIN;
+				p.digital = DIGITAL_PIN_1;
+				p.analog = ANALOG_PIN;
+				p.sda = I2C_SDA_PIN;
+				p.scl = I2C_SCL_PIN;
 				;
 				break;
 			case 1: // port#1
-				pins.digital = DIGITAL_PIN_2;
-				pins.analog = ANALOG_PIN;
-				pins.sda = I2C_SDA_PIN;
-				pins.scl = I2C_SCL_PIN;
+				p.digital = DIGITAL_PIN_2;
+				p.analog = ANALOG_PIN;
+				p.sda = I2C_SDA_PIN;
+				p.scl = I2C_SCL_PIN;
 				break;
 			case 2: // port#2
-				pins.digital = DIGITAL_PIN_3;
-				pins.analog = ANALOG_PIN;
-				pins.sda = I2C_SDA_PIN;
-				pins.scl = I2C_SCL_PIN;
+				p.digital = DIGITAL_PIN_3;
+				p.analog = ANALOG_PIN;
+				p.sda = I2C_SDA_PIN;
+				p.scl = I2C_SCL_PIN;
 				break;
 			case 3: // port#3
-				pins.digital = DIGITAL_PIN_4;
-				pins.analog = ANALOG_PIN;
-				pins.sda = I2C_SDA_PIN;
-				pins.scl = I2C_SCL_PIN;
+				p.digital = DIGITAL_PIN_4;
+				p.analog = ANALOG_PIN;
+				p.sda = I2C_SDA_PIN;
+				p.scl = I2C_SCL_PIN;
+				break;
+			default:
+				Serial.println(
+						"BUG: ConfigurePorts() - port number out of range in switch");
 				break;
 		}
 		// Figure out the configuration of the port
-		for (int portType = 0; portType < static_cast<int>(portModes::END); portType++) {
+		for (int portType = 0; portType < static_cast<int>(sensorModule::END);
+				portType++) {
 			// loop through each of the port setting types until finding a match
-			if (dinfo.getPortMode(portNumber) == static_cast<portModes>(portType)) {
+			if (dinfo.getPortMode(portNumber) == static_cast<sensorModule>(portType)) {
+				char name[20];
+				strncpy(name, sensorList[static_cast<int>(portType)].name, 19);
+				name[19] = 0;
 				// found the setting
-				Serial.print("Port#");
+				Serial.print("Configuring Port#");
 				Serial.print(portNumber);
 				Serial.print(": ");
-				Serial.println(sensors[static_cast<int>(portType)].name);
+				Serial.println(name);
+
 				switch (portType) {
-					case static_cast<int>(portModes::off):
+					case static_cast<int>(sensorModule::off):
 						break;
-					case static_cast<int>(portModes::dht11):
+					case static_cast<int>(sensorModule::dht11):
+						switch (portNumber) {
+							case 0:
+								t1.Init(sensor_technology::dht11, p.digital);
+								break;
+							case 1:
+								t2.Init(sensor_technology::dht11, p.digital);
+								break;
+							case 2:
+								t3.Init(sensor_technology::dht11, p.digital);
+								break;
+							case 3:
+								t4.Init(sensor_technology::dht11, p.digital);
+								break;
+						}
 						break;
-					case static_cast<int>(portModes::dht22):
+					case static_cast<int>(sensorModule::dht22):
+						switch (portNumber) {
+							case 0:
+								t1.Init(sensor_technology::dht22, p.digital);
+								break;
+							case 1:
+								t2.Init(sensor_technology::dht22, p.digital);
+								break;
+							case 2:
+								t3.Init(sensor_technology::dht22, p.digital);
+								break;
+							case 3:
+								t4.Init(sensor_technology::dht22, p.digital);
+								break;
+						}
+
 						break;
-					case static_cast<int>(portModes::ds18b20):
+					case static_cast<int>(sensorModule::ds18b20):
 						break;
-					case static_cast<int>(portModes::sonar):
+					case static_cast<int>(sensorModule::sonar):
 						break;
-					case static_cast<int>(portModes::dust):
+					case static_cast<int>(sensorModule::sound):
 						break;
-					case static_cast<int>(portModes::sound):
+					case static_cast<int>(sensorModule::reed):
+						break;
+					case static_cast<int>(sensorModule::hcs501):
+						break;
+					case static_cast<int>(sensorModule::hcsr505):
+						break;
+					case static_cast<int>(sensorModule::dust):
+						break;
+					case static_cast<int>(sensorModule::rain):
+						break;
+					case static_cast<int>(sensorModule::soil):
+						break;
+					case static_cast<int>(sensorModule::soundh):
+						break;
+					case static_cast<int>(sensorModule::methane):
+						break;
+					case static_cast<int>(sensorModule::gy68):
+						break;
+					case static_cast<int>(sensorModule::gy30):
+						break;
+					case static_cast<int>(sensorModule::lcd1602):
+						break;
+					case static_cast<int>(sensorModule::rfid):
+						break;
+					case static_cast<int>(sensorModule::marquee):
+						break;
+					default:
+						Serial.println(
+								"BUG: ConfigurePorts() - Sensor Module not found in switch");
 						break;
 				}
 			}
 		}
 	}
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wwrite-strings"	// disable warnings about the below strings being "const" while the signatures are non-const
-	{
-		//lint --e{1776}   Ignore Info about using string literal in place of char*
-		t1.Init(sensor_technology::dht22, "3", DIGITAL_PIN_1);
-		t2.Init(sensor_technology::dht22, "4", DIGITAL_PIN_2);
-	}
-#pragma GCC diagnostic pop
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -186,45 +237,45 @@ void loop(void) {
 //lint -e{1784}   // suppress message about signature conflict between C++ and C
 void setup(void) {
 
-	// Setup Reset circuit
+// Setup Reset circuit
 	reset_config();
 
-	// Setup GPIO
+// Setup GPIO
 	pinMode(PIN_PIRSENSOR, INPUT);   // Initialize the PIR sensor pin as an input
 	pinMode(PIN_BUILTIN_LED, OUTPUT);  // Initialize the BUILTIN_LED pin as an output
 
-	// Signal that setup is proceeding
+// Signal that setup is proceeding
 	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_ON);
 
-	// Setup Serial port
+// Setup Serial port
 	Serial.begin(115200);
-	//Serial.println("\r\n");
-	//Serial.println(ProgramInfo);
+//Serial.println("\r\n");
+//Serial.println(ProgramInfo);
 
-	// Start EEPROM
+// Start EEPROM
 	EEPROM.begin(512);
 	dinfo.RestoreConfigurationFromEEPROM();
 
-	// Configure Objects
-	//dinfo.init();
+// Configure Objects
+//dinfo.init();
 
 	ConfigurePorts();
 
-	// Setup the WebServer
+// Setup the WebServer
 	WebInit();
 	Serial.println("");
 	printInfo();
 
 	Queue myQueue;
-	// scheduleFunction arguments (function pointer, task name, start delay in ms, repeat interval in ms)
+// scheduleFunction arguments (function pointer, task name, start delay in ms, repeat interval in ms)
 	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
 	myQueue.scheduleFunction(task_readtemperature, "Temperature", 1000, 499);
-	// FIXME disable for now -- myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
+// FIXME disable for now -- myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
 	myQueue.scheduleFunction(task_flashled, "LED", 250, 1000);
 	myQueue.scheduleFunction(task_printstatus, "Status", 2000, 500);
 	myQueue.scheduleFunction(task_webServer, "WebServer", 3000, 1);
 
-	// Signal that setup is done
+// Signal that setup is done
 	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_OFF);
 	printMenu();
 
@@ -236,24 +287,24 @@ void setup(void) {
 
 #if 0
 void printChipInfo(void) {
-	//uint32_t fid = spi_flash_get_id();
-	//uint32_t chip = (fid & 0xff00) | ((fid >> 16) & 0xff);
-	//Serial.print("Flash id: ");
-	//Serial.println(fid);
-	//Serial.print("Chip    : ");
-	//Serial.println(chip);
+//uint32_t fid = spi_flash_get_id();
+//uint32_t chip = (fid & 0xff00) | ((fid >> 16) & 0xff);
+//Serial.print("Flash id: ");
+//Serial.println(fid);
+//Serial.print("Chip    : ");
+//Serial.println(chip);
 }
 #endif
 
 void printInfo(void) {
-	// Print useful Information
+// Print useful Information
 	Serial.println(ProgramInfo);
 	Serial.println(String("Device IP: ") + localIPstr());
 	dinfo.printThingspeakInfo();
 	Serial.print(String("ESP8266_Device_ID=") + String(dinfo.getDeviceID()));
 	Serial.println(String("\r\nFriendly Name: ") + String(dinfo.getDeviceName()));
 	dinfo.printInfo();
-	//printChipInfo();
+//printChipInfo();
 }
 
 void printMenu(void) {
@@ -361,7 +412,7 @@ int task_printstatus(unsigned long now) {
 				Serial.println("");
 				break;
 			case 's':
-				Serial.println("CNT\tRH%\tTemp1*C\tHIdx*C\tRH%\tTemp2*C\tHIdx*C\tMotion");
+				Serial.println("CNT\tRH%\tTemp1*C\tRH%\tTemp2*C\tMotion");
 				Serial.print("#,");
 				Serial.print(count);
 				Serial.print(",\t");
@@ -369,13 +420,9 @@ int task_printstatus(unsigned long now) {
 				Serial.print(",\t");
 				Serial.print(t1.getTemperature());
 				Serial.print(",\t");
-				Serial.print(t1.getHeatindex());
-				Serial.print(",\t");
 				Serial.print(t2.getHumidity());
 				Serial.print(",\t");
 				Serial.print(t2.getTemperature());
-				Serial.print(",\t");
-				Serial.print(t2.getHeatindex());
 				Serial.print(",\t");
 				Serial.print(PIRcount);
 				Serial.print(",\t");
