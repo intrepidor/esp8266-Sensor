@@ -138,9 +138,11 @@ void ConfigurePorts(void) {
 				break;
 		}
 		// Figure out the configuration of the port
+		//lint -e{26} suppress error false error about the static_cast
 		for (int portType = 0; portType < static_cast<int>(sensorModule::END);
 				portType++) {
 			// loop through each of the port setting types until finding a match
+			//lint -e{26} suppress error false error about the static_cast
 			if (dinfo.getPortMode(portNumber) == static_cast<sensorModule>(portType)) {
 				char name[20];
 				strncpy(name, sensorList[static_cast<int>(portType)].name, 19);
@@ -150,7 +152,7 @@ void ConfigurePorts(void) {
 				Serial.print(portNumber);
 				Serial.print(": ");
 				Serial.println(name);
-
+				//lint -e{30, 142} suppress error due to lint not understanding enum classes
 				switch (portType) {
 					case static_cast<int>(sensorModule::off):
 						break;
@@ -168,8 +170,13 @@ void ConfigurePorts(void) {
 							case 3:
 								t4.Init(sensor_technology::dht11, p.digital);
 								break;
+							default:
+								Serial.println(
+										"BUG: ConfigurePorts() dht11 - Invalid portType");
+								break;
 						}
 						break;
+						//lint -e{26} suppress error false error about the static_cast
 					case static_cast<int>(sensorModule::dht22):
 						switch (portNumber) {
 							case 0:
@@ -183,6 +190,10 @@ void ConfigurePorts(void) {
 								break;
 							case 3:
 								t4.Init(sensor_technology::dht22, p.digital);
+								break;
+							default:
+								Serial.println(
+										"BUG: ConfigurePorts() dht22 - Invalid portNumber");
 								break;
 						}
 

@@ -15,3 +15,8 @@ tidy:
 	--wrap-attributes true \
 	--wrap-sections false \
 	config.html
+
+lint-easy: _LINT.TMP
+	./lint easy.lnt *.c*
+
+	

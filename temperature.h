@@ -19,7 +19,7 @@ private:
 	float humidity;
 	float temperature;
 	float cal_offset;
-	uint8_t pin;    // Use standard Arduino pin names
+	int pin;    // Use standard Arduino pin names
 	sensor_technology type;
 	DHT* dht;
 	bool readDHT(void);
@@ -31,7 +31,7 @@ public:
 					type(sensor_technology::undefined) {
 		dht = nullptr;
 	}
-	void Init(sensor_technology _type, uint8_t _pin);
+	void Init(sensor_technology _type, int _pin);
 	void readCalibrationData(void);
 	bool writeCalibrationData(void); // returns TRUE for no error, FALSE otherwise
 	void printCalibrationData(void);
@@ -42,7 +42,7 @@ public:
 		return humidity;
 	}
 
-	uint8_t getPin() const {
+	int getPin() const {
 		return pin;
 	}
 

@@ -2,17 +2,17 @@
 //#include <EEPROM.h>
 #include "temperature.h"
 
-void TemperatureSensor::Init(sensor_technology _type, uint8_t _pin) {
+void TemperatureSensor::Init(sensor_technology _type, int _pin) {
 	type = _type;
 	pin = _pin;
 	switch (type) {
 		case sensor_technology::dht11:
-			dht = new DHT(pin, DHT11);
+			dht = new DHT(static_cast<uint8_t>(pin), DHT11);
 			delay(2000);
 			dht->begin();
 			break;
 		case sensor_technology::dht22:
-			dht = new DHT(pin, DHT22);
+			dht = new DHT(static_cast<uint8_t>(pin), DHT22);
 			delay(2000);
 			dht->begin();
 			break;

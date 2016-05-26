@@ -65,6 +65,7 @@ String Device::toString(void) {
 
 void Device::printInfo(void) {
 	for (int i = 0; i < dinfo.getPortMax(); i++) {
+		//lint -e{26} suppress error false error about the sensorModule
 		for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
 			if (dinfo.getPortMode(i) == static_cast<sensorModule>(j)) {
 				Serial.print("Port#");
@@ -119,7 +120,7 @@ String Device::getModeStr(int portnum) {
 	String s("");
 	if (isValidPort(portnum)) {
 		int m = static_cast<int>(db.port[portnum].mode);
-		//lint -e{26} suppress since lint doesn't understand C++11
+		//lint -e{26} suppress since lint doesn't understand sensorModule C++11
 		if (m >= 0 && m < static_cast<int>(sensorModule::END)) {
 			s = String(String(m) + ":" + String(sensorList[m].name));
 		}
