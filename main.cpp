@@ -17,7 +17,7 @@ extern int task_webServer(unsigned long now);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.01 : Allan Inda 2016-May-19");
+String ProgramInfo("Environment Sensor v0.01 : Allan Inda 2016-May-25");
 
 // Other
 long count = 0;
@@ -101,7 +101,7 @@ void reset_config(void) {
 void ConfigurePorts(void) {
 	// Each port has access to a predefined subset of the following pin types, and for
 	//    each port, the pin assignments may differ, and some will be the same.
-	Pins p;
+	SensorPins p;
 
 	// Loop through each of the ports
 	for (int portNumber = 0; portNumber < dinfo.getPortMax(); portNumber++) {
@@ -159,16 +159,16 @@ void ConfigurePorts(void) {
 					case static_cast<int>(sensorModule::dht11):
 						switch (portNumber) {
 							case 0:
-								t1.Init(sensor_technology::dht11, p.digital);
+								t1.init(sensorModule::dht11, p);
 								break;
 							case 1:
-								t2.Init(sensor_technology::dht11, p.digital);
+								t2.init(sensorModule::dht11, p);
 								break;
 							case 2:
-								t3.Init(sensor_technology::dht11, p.digital);
+								t3.init(sensorModule::dht11, p);
 								break;
 							case 3:
-								t4.Init(sensor_technology::dht11, p.digital);
+								t4.init(sensorModule::dht11, p);
 								break;
 							default:
 								Serial.println(
@@ -180,16 +180,16 @@ void ConfigurePorts(void) {
 					case static_cast<int>(sensorModule::dht22):
 						switch (portNumber) {
 							case 0:
-								t1.Init(sensor_technology::dht22, p.digital);
+								t1.init(sensorModule::dht22, p);
 								break;
 							case 1:
-								t2.Init(sensor_technology::dht22, p.digital);
+								t2.init(sensorModule::dht22, p);
 								break;
 							case 2:
-								t3.Init(sensor_technology::dht22, p.digital);
+								t3.init(sensorModule::dht22, p);
 								break;
 							case 3:
-								t4.Init(sensor_technology::dht22, p.digital);
+								t4.init(sensorModule::dht22, p);
 								break;
 							default:
 								Serial.println(
@@ -348,8 +348,8 @@ int task_readpir(unsigned long now) {
 
 int task_readtemperature(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	bool r1 = t1.read();
-	bool r2 = t2.read();
+	bool r1 = t1.TempRead();
+	bool r2 = t2.TempRead();
 
 	if (!r1) {
 		//Serial.print("Err sensor #");

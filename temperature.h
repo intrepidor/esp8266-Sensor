@@ -9,56 +9,53 @@
 #define TEMPERATURE_H_
 
 #include <DHT.h>
+#include "sensor.h"
 
 enum class sensor_technology {
 	undefined, dht11, dht22, ds18b22
 };
 
-class TemperatureSensor {
+class TemperatureSensor: public Sensor {
 private:
 	float humidity;
 	float temperature;
 	float cal_offset;
-	int pin;    // Use standard Arduino pin names
-	sensor_technology type;
 	DHT* dht;
 	bool readDHT(void);
-	bool readDS18b22(void);
+	bool readDS18b20(void);
 
 public:
-	TemperatureSensor()
-			: humidity(0), temperature(0), cal_offset(0), pin(0),
-					type(sensor_technology::undefined) {
+	~TemperatureSensor() {
 		dht = nullptr;
 	}
-	void Init(sensor_technology _type, int _pin);
+	TemperatureSensor() {
+		dht = nullptr;
+	}
+
+	// Interface Functions (virtual in Sensor class)
+	void init(sensorModule, SensorPins&);
+	void acquire(void);
+	float compute(void);
+
+	//
 	void readCalibrationData(void);
 	bool writeCalibrationData(void); // returns TRUE for no error, FALSE otherwise
 	void printCalibrationData(void);
-	bool read(void);
-	const char* getstrType(void);
+	bool TempRead(void);
 
-	float getHumidity() const {
+	float getHumidity() const { // FIXME move to Sensor class
 		return humidity;
 	}
 
-	int getPin() const {
-		return pin;
-	}
-
-	float getTemperature() const {
+	float getTemperature() const { // FIXME move to Sensor class
 		return temperature;
 	}
 
-	sensor_technology getType() const {
-		return type;
-	}
-
-	float getCalOffset() const {
+	float getCalOffset() const { // FIXME move to Sensor class
 		return cal_offset;
 	}
 
-	void setCalOffset(float calOffset) {
+	void setCalOffset(float calOffset) { // FIXME move to Sensor class
 		cal_offset = calOffset;
 	}
 };

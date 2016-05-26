@@ -49,14 +49,20 @@ enum class subcode {
 	value1, value2, cal1, cal2, cal3
 };
 
-class Pins {
+class SensorPins {
 public:
 	int digital;
 	int analog;
 	int sda;
 	int scl;
-	Pins()
+	SensorPins()
 			: digital(-1), analog(-1), sda(-1), scl(-1) {
+	}
+	void setPins(SensorPins p) {
+		digital = p.digital;
+		analog = p.analog;
+		sda = p.sda;
+		scl = p.scl;
 	}
 };
 
@@ -65,6 +71,8 @@ public:
 	float v;
 	bool enabled;
 	char name[10];
+	~SensorValue() { /* nothing to descruct */
+	}
 	SensorValue()
 			: v(0), enabled(false) {
 		std::memset(name, 0, 10);
@@ -78,13 +86,40 @@ private:
 	SensorValue cal1;
 	SensorValue cal2;
 	SensorValue cal3;
+	sensorModule module;
+	SensorPins pins;
 
 public:
-//	void Sensor(void);
-	virtual ~Sensor() = 0;
-	virtual void init(sensorModule, Pins&) = 0;
+	~Sensor() { /* nothing to destruct */
+	}
+	Sensor(void) {
+		this->module = sensorModule::off;
+		// SensorValue's have their own constructor
+		// SensorPins has its own constructor
+	}
+
+	virtual void init(sensorModule, SensorPins&) = 0;
 	virtual void acquire(void) = 0;
-	virtual float compute(Pins&) = 0;
+	virtual float compute(void) = 0;
+
+	sensorModule getType() const {
+		return this->module;
+	}
+
+	void setPins(SensorPins p) {
+		this->pins.setPins(p);
+	}
+	int getDigitalPin(void) {
+		return this->pins.digital;
+	}
+
+	void setModule(sensorModule m) {
+		this->module = m;
+	}
+	sensorModule getModule(void) {
+		return this->module;
+	}
+	const char* getModule_cstr(void);
 
 	void init_values(void);
 	float read(subcode);

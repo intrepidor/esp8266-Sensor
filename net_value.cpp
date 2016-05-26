@@ -122,11 +122,11 @@ void sendValue(void) {
 	if (eeprom_needs_update) {
 		if (!t1.writeCalibrationData()) {
 			Serial.print("Error: Write failed for calibration data for sensor #");
-			Serial.println(t1.getPin());
+			Serial.println(t1.getDigitalPin());
 		}
 		if (!t2.writeCalibrationData()) {
 			Serial.print("Error: Write failed for calibration data for sensor #");
-			Serial.println(t2.getPin());
+			Serial.println(t2.getDigitalPin());
 		}
 	}
 }

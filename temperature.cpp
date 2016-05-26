@@ -2,28 +2,39 @@
 //#include <EEPROM.h>
 #include "temperature.h"
 
-void TemperatureSensor::Init(sensor_technology _type, int _pin) {
-	type = _type;
-	pin = _pin;
-	switch (type) {
-		case sensor_technology::dht11:
-			dht = new DHT(static_cast<uint8_t>(pin), DHT11);
+void TemperatureSensor::init(sensorModule m, SensorPins& p) {
+	this->setModule(m);
+	this->setPins(p);
+	switch (m) {
+		case sensorModule::dht11:
+			dht = new DHT(static_cast<uint8_t>(p.digital), DHT11);
 			delay(2000);
 			dht->begin();
 			break;
-		case sensor_technology::dht22:
-			dht = new DHT(static_cast<uint8_t>(pin), DHT22);
+		case sensorModule::dht22:
+			dht = new DHT(static_cast<uint8_t>(p.digital), DHT22);
 			delay(2000);
 			dht->begin();
 			break;
-		case sensor_technology::ds18b22:
+		case sensorModule::ds18b20:
 			break;
-		case sensor_technology::undefined:
 		default:
 			break;
 	}
 	readCalibrationData();
-	//printCalibrationData();
+}
+
+void TemperatureSensor::acquire(void) {
+	if (this->getModule() == sensorModule::ds18b20) {
+		readDS18b20();
+	}
+	else {
+		readDHT();
+	}
+}
+
+float TemperatureSensor::compute(void) {
+	return -1.0;
 }
 
 void TemperatureSensor::readCalibrationData(void) {
@@ -48,34 +59,15 @@ bool TemperatureSensor::writeCalibrationData(void) {
 //    }
 }
 
-const char* TemperatureSensor::getstrType(void) {
-	switch (type) {
-		case sensor_technology::dht11:
-			return "DHT11";
-			break;
-		case sensor_technology::dht22:
-			return "DHT22";
-			break;
-		case sensor_technology::ds18b22:
-			return "DS18b22";
-			break;
-		case sensor_technology::undefined:
-		default:
-			break;
-	}
-	return "unknown";
-}
-
-bool TemperatureSensor::read(void) {
-	switch (type) {
-		case sensor_technology::dht11:
-		case sensor_technology::dht22:
+bool TemperatureSensor::TempRead(void) {
+	switch (getModule()) {
+		case sensorModule::dht11:
+		case sensorModule::dht22:
 			return readDHT();
 			break;
-		case sensor_technology::ds18b22:
-			return readDS18b22();
+		case sensorModule::ds18b20:
+			return readDS18b20();
 			break;
-		case sensor_technology::undefined:
 		default:
 			return false;
 			break;
@@ -83,13 +75,13 @@ bool TemperatureSensor::read(void) {
 	return false;
 }
 
-bool TemperatureSensor::readDS18b22(void) {
+bool TemperatureSensor::readDS18b20(void) {
 	return false;
 }
 
 bool TemperatureSensor::readDHT(void) {
 //lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
-	// Reading temperature or humidity takes about 250 milliseconds!
+// Reading temperature or humidity takes about 250 milliseconds!
 	if (dht) {
 		humidity = dht->readHumidity();
 		temperature = dht->readTemperature(true) + cal_offset;
