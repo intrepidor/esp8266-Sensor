@@ -85,9 +85,9 @@ void sendValue(void) {
 		Serial.println(f);
 
 		if (f > -9.9 && f < 9.9) {
-			t1.setCalOffset(f);
-			Serial.print("Setting offset1 to ");
-			Serial.println(String(t1.getCalOffset()));
+			//t1.setCalOffset(f);
+			//Serial.print("Setting offset1 to ");
+			//Serial.println(String(t1.getCalOffset()));
 			eeprom_needs_update = true;
 		}
 		else {
@@ -104,9 +104,9 @@ void sendValue(void) {
 		Serial.println(f);
 
 		if (f > -9.9 && f < 9.9) {
-			t2.setCalOffset(f);
-			Serial.print("Setting offset2 to ");
-			Serial.println(String(t2.getCalOffset()));
+			//t2.setCalOffset(f);
+			//Serial.print("Setting offset2 to ");
+			//Serial.println(String(t2.getCalOffset()));
 			eeprom_needs_update = true;
 		}
 		else {

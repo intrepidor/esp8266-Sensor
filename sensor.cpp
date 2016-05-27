@@ -5,6 +5,7 @@
  *      Author: allan
  */
 
+#include <Arduino.h>
 #include "sensor.h"
 
 //lint -e{26,785} suppress since lint doesn't understand C++11
@@ -105,3 +106,98 @@ const char* Sensor::getModule_cstr(void) {
 	return "unknown";
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+// Values
+///////////////////////////////////////////////////////////////////////////////////////
+bool Sensor::isValueIndexValid(int _index) {
+	if (_index >= 0 && _index < VALUE_COUNT) {
+		return true;
+	}
+	Serial.println("BUG: isValueIndexValid() index out of bounds");
+	return false;
+}
+
+bool Sensor::setValueName(int _index, String name) {
+	if (isValueIndexValid(_index)) {
+		value[_index].name = name;
+		return true;
+	}
+	return false;
+}
+
+String Sensor::getValueName(int _index) {
+	if (isValueIndexValid(_index)) {
+		return value[_index].name;
+	}
+	return String("");
+}
+
+bool Sensor::getValueEnable(int _index) {
+	if (isValueIndexValid(_index)) {
+		return value[_index].enabled;
+	}
+	return false;
+}
+
+float Sensor::getValue(int _index) {
+	if (isValueIndexValid(_index)) {
+		return value[_index].v;
+	}
+	return NAN;
+}
+
+bool Sensor::setValue(int _index, float v) {
+	if (isValueIndexValid(_index)) {
+		value[_index].v = v;
+		return true;
+	}
+	return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+// Cals
+///////////////////////////////////////////////////////////////////////////////////////
+bool Sensor::isCalIndexValid(int _index) {
+	if (_index >= 0 && _index < VALUE_COUNT) {
+		return true;
+	}
+	Serial.println("BUG: isCalIndexValid() index out of bounds");
+	return false;
+}
+
+bool Sensor::setCalName(int _index, String name) {
+	if (isCalIndexValid(_index)) {
+		cal[_index].name = name;
+		return true;
+	}
+	return false;
+}
+
+String Sensor::getCalName(int _index) {
+	if (isCalIndexValid(_index)) {
+		return cal[_index].name;
+	}
+	return String("");
+}
+
+bool Sensor::getCalEnable(int _index) {
+	if (isCalIndexValid(_index)) {
+		return cal[_index].enabled;
+	}
+	return false;
+}
+
+float Sensor::getCal(int _index) {
+	if (isCalIndexValid(_index)) {
+		return cal[_index].v;
+	}
+	return NAN;
+}
+
+bool Sensor::setCal(int _index, float v) {
+	if (isCalIndexValid(_index)) {
+		cal[_index].v = v;
+		return true;
+	}
+	return false;
+}

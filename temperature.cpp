@@ -33,17 +33,13 @@ void TemperatureSensor::acquire(void) {
 	}
 }
 
-float TemperatureSensor::compute(void) {
-	return -1.0;
-}
-
 void TemperatureSensor::readCalibrationData(void) {
 //    signed char cal = static_cast<signed char>(EEPROM.read(pin + eeprom_byte_offset));
 //    cal_offset = (float) (cal / 10.0);
 }
 void TemperatureSensor::printCalibrationData(void) {
 	Serial.print("Temp Offset: ");
-	Serial.print(String(cal_offset));
+	Serial.print(String(getCal(CAL_INDEX_OFFSET)));
 	Serial.println(" *F)");
 }
 
@@ -83,9 +79,11 @@ bool TemperatureSensor::readDHT(void) {
 //lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
 // Reading temperature or humidity takes about 250 milliseconds!
 	if (dht) {
-		humidity = dht->readHumidity();
-		temperature = dht->readTemperature(true) + cal_offset;
-		if (isnan(humidity) || isnan(temperature)) {
+		float h = dht->readHumidity();
+		float t = dht->readTemperature(true) + getCal(CAL_INDEX_OFFSET);
+		setTemperature(t);
+		setHumidity(h);
+		if (isnan(h) || isnan(t)) {
 			return false;   // read failed
 		}
 	}

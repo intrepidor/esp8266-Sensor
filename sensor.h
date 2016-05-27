@@ -2,6 +2,7 @@
 #ifndef _SENSOR_H_
 #define _SENSOR_H_
 
+#include <Arduino.h>
 #include <cstring>
 
 enum class sensorModule {
@@ -70,42 +71,36 @@ class SensorValue {
 public:
 	float v;
 	bool enabled;
-	char name[10];
-	~SensorValue() { /* nothing to descruct */
+	String name;
+	~SensorValue() { /* nothing to destroy */
 	}
 	SensorValue()
-			: v(0), enabled(false) {
-		std::memset(name, 0, 10);
+			: v(0), enabled(false), name("") {
 	}
 };
 
+const int VALUE_COUNT = 2;
+const int CALIB_COUNT = 3;
+
 class Sensor {
 private:
-	SensorValue value1;
-	SensorValue value2;
-	SensorValue cal1;
-	SensorValue cal2;
-	SensorValue cal3;
+	SensorValue value[VALUE_COUNT];
+	SensorValue cal[CALIB_COUNT];
 	sensorModule module;
 	SensorPins pins;
 
 public:
-	~Sensor() { /* nothing to destruct */
+	~Sensor() { /* nothing to destroy */
 	}
 	Sensor(void) {
 		this->module = sensorModule::off;
 		// SensorValue's have their own constructor
 		// SensorPins has its own constructor
 	}
-
 	virtual void init(sensorModule, SensorPins&) = 0;
 	virtual void acquire(void) = 0;
-	virtual float compute(void) = 0;
 
-	sensorModule getType() const {
-		return this->module;
-	}
-
+	// pins
 	void setPins(SensorPins p) {
 		this->pins.setPins(p);
 	}
@@ -113,14 +108,35 @@ public:
 		return this->pins.digital;
 	}
 
+	// module
 	void setModule(sensorModule m) {
 		this->module = m;
 	}
 	sensorModule getModule(void) {
 		return this->module;
 	}
+	sensorModule getType() const {
+		return this->module;
+	}
 	const char* getModule_cstr(void);
 
+	// values
+	bool isValueIndexValid(int index);
+	bool setValueName(int index, String name);
+	String getValueName(int index);
+	bool getValueEnable(int index);
+	float getValue(int index);
+	bool setValue(int index, float v);
+
+	// cals
+	bool isCalIndexValid(int index);
+	bool setCalName(int index, String name);
+	String getCalName(int index);
+	bool getCalEnable(int index);
+	float getCal(int index);
+	bool setCal(int index, float v);
+
+	//
 	void init_values(void);
 	float read(subcode);
 	void write(subcode, float value);

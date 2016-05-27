@@ -138,8 +138,8 @@ void WebPrintInfo(void) {
 	Serial.println("?read=csv        :: read summary of sensor data");
 	Serial.println("?read=offset1    :: read offset1 value");
 	Serial.println("?read=offset2    :: read offset1 value");
-	Serial.println("?offset1=X       :: write offset1 to X");
-	Serial.println("?offset2=X       :: write offset2 to X");
+	//Serial.println("?offset1=X       :: write offset1 to X");
+	//Serial.println("?offset2=X       :: write offset2 to X");
 	Serial.println("?reset=0         :: reset device");
 	Serial.println("");
 }
