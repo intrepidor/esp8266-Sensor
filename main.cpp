@@ -348,8 +348,8 @@ int task_readpir(unsigned long now) {
 
 int task_readtemperature(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	bool r1 = t1.TempRead();
-	bool r2 = t2.TempRead();
+	bool r1 = t1.acquire();
+	bool r2 = t2.acquire();
 
 	if (!r1) {
 		//Serial.print("Err sensor #");
@@ -423,6 +423,7 @@ int task_printstatus(unsigned long now) {
 				Serial.println("");
 				break;
 			case 's':
+				Serial.println("Measured Values ---------------- ");
 				Serial.println("CNT\tRH%\tTemp1*C\tRH%\tTemp2*C\tMotion");
 				Serial.print("#,");
 				Serial.print(count);
@@ -440,8 +441,9 @@ int task_printstatus(unsigned long now) {
 				Serial.println(PIRcountLast);
 				break;
 			case 'c':
-				t1.printCalibrationData();
-				t2.printCalibrationData();
+				Serial.println("Calibration Data");
+				t1.printCals();
+				t2.printCals();
 				break;
 			case 'w':
 				WebPrintInfo();

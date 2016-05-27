@@ -139,6 +139,13 @@ bool Sensor::getValueEnable(int _index) {
 	return false;
 }
 
+bool Sensor::setValueEnable(int _index, bool _b) {
+	if (isValueIndexValid(_index)) {
+		value[_index].enabled = _b;
+	}
+	return false;
+}
+
 float Sensor::getValue(int _index) {
 	if (isValueIndexValid(_index)) {
 		return value[_index].v;
@@ -152,6 +159,17 @@ bool Sensor::setValue(int _index, float v) {
 		return true;
 	}
 	return false;
+}
+
+void Sensor::printValues(void) {
+	for (int i = 0; i < VALUE_COUNT; i++) {
+		if (value[i].enabled) {
+			Serial.print("Val[");
+			Serial.print(i);
+			Serial.print("]=");
+			Serial.println(getValue(i));
+		}
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -187,6 +205,13 @@ bool Sensor::getCalEnable(int _index) {
 	return false;
 }
 
+bool Sensor::setCalEnable(int _index, bool _b) {
+	if (isCalIndexValid(_index)) {
+		cal[_index].enabled = _b;
+	}
+	return false;
+}
+
 float Sensor::getCal(int _index) {
 	if (isCalIndexValid(_index)) {
 		return cal[_index].v;
@@ -201,3 +226,15 @@ bool Sensor::setCal(int _index, float v) {
 	}
 	return false;
 }
+
+void Sensor::printCals(void) {
+	for (int i = 0; i < CALIB_COUNT; i++) {
+		if (cal[i].enabled) {
+			Serial.print("Cal[");
+			Serial.print(i);
+			Serial.print("]=");
+			Serial.println(getCal(i));
+		}
+	}
+}
+

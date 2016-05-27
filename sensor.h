@@ -98,7 +98,7 @@ public:
 		// SensorPins has its own constructor
 	}
 	virtual void init(sensorModule, SensorPins&) = 0;
-	virtual void acquire(void) = 0;
+	virtual bool acquire(void) = 0;
 
 	// pins
 	void setPins(SensorPins p) {
@@ -125,16 +125,20 @@ public:
 	bool setValueName(int index, String name);
 	String getValueName(int index);
 	bool getValueEnable(int index);
+	bool setValueEnable(int index, bool b);
 	float getValue(int index);
 	bool setValue(int index, float v);
+	void printValues(void);
 
 	// cals
 	bool isCalIndexValid(int index);
 	bool setCalName(int index, String name);
 	String getCalName(int index);
 	bool getCalEnable(int index);
+	bool setCalEnable(int index, bool b);
 	float getCal(int index);
 	bool setCal(int index, float v);
+	void printCals(void);
 
 	//
 	void init_values(void);

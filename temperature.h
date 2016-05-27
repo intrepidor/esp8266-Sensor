@@ -11,16 +11,15 @@
 #include <DHT.h>
 #include "sensor.h"
 
-const int VALUE_INDEX_TEMPERATURE = 0;
-const int VALUE_INDEX_HUMIDITY = 1;
-const int CAL_INDEX_OFFSET = 0;
+const int TEMP_VALUE_INDEX_TEMPERATURE = 0;
+const int TEMP_VALUE_INDEX_HUMIDITY = 1;
+const int TEMP_CAL_INDEX_OFFSET = 0;
+const int TEMP_CAL_INDEX_UNUSED1 = 1;
+const int TEMP_CAL_INDEX_UNUSED2 = 2;
 
 class TemperatureSensor: public Sensor {
 private:
 	DHT* dht;
-	bool readDHT(void);
-	bool readDS18b20(void);
-
 public:
 	~TemperatureSensor() {
 		dht = nullptr;
@@ -31,43 +30,37 @@ public:
 
 	// Interface Functions (virtual in Sensor class)
 	void init(sensorModule, SensorPins&);
-	void acquire(void);
-	float compute(void);
+	bool acquire(void);
 
-	//
-	void readCalibrationData(void); // FIXME move to Sensor class
-	bool writeCalibrationData(void); // returns TRUE for no error, FALSE otherwise
-	void printCalibrationData(void); // FIXME move to Sensor class
-	bool TempRead(void); // FIXME move to Sensor class
-
+	// getters and setters
 	float getHumidity() {
-		float v = getValue(VALUE_INDEX_HUMIDITY);
+		float v = getValue(TEMP_VALUE_INDEX_HUMIDITY);
 		//Serial.print("getHumidity()=");
 		//Serial.println(v);
 		return v;
 	}
 
 	float getTemperature() {
-		float v = getValue(VALUE_INDEX_TEMPERATURE);
+		float v = getValue(TEMP_VALUE_INDEX_TEMPERATURE);
 		//Serial.print("getTemperature()=");
 		//Serial.println(v);
 		return v;
 	}
 
 	void setHumidity(float v) {
-		setValue(VALUE_INDEX_HUMIDITY, v);
+		setValue(TEMP_VALUE_INDEX_HUMIDITY, v);
 		//Serial.print("setHumidity()=");
 		//Serial.println(v);
 	}
 
 	void setTemperature(float v) {
-		setValue(VALUE_INDEX_TEMPERATURE, v);
+		setValue(TEMP_VALUE_INDEX_TEMPERATURE, v);
 		//Serial.print("setTemperature()=");
 		//Serial.println(v);
 	}
 
 	float getCalOffset() {
-		return getCal(CAL_INDEX_OFFSET);
+		return getCal(TEMP_CAL_INDEX_OFFSET);
 	}
 };
 
