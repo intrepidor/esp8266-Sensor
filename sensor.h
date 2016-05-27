@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <cstring>
 
+//-------------------------------------------------------------------
 enum class sensorModule {
 	off = 0,
 // 1 digital
@@ -35,21 +36,9 @@ struct t_sensor {
 	const char* const name;
 	sensorModule id;
 };
-#if 0
-// Comment out because PC Lint is not ready
-const std::array<sensorModule, static_cast<int>(sensorModule::END)> allModes = {sensorModule::off,
-	sensorModule::dht11, sensorModule::dht22, sensorModule::ds18b20, sensorModule::sonar,
-	sensorModule::dust, sensorModule::sound};
-/* The array portModes and the enum portModes must match with one exception, the END
- * value is not copied into the portModes array.
- */
-#endif
 extern t_sensor const sensorList[];
 
-enum class subcode {
-	value1, value2, cal1, cal2, cal3
-};
-
+//-------------------------------------------------------------------
 class SensorPins {
 public:
 	int digital;
@@ -67,6 +56,7 @@ public:
 	}
 };
 
+//-------------------------------------------------------------------
 class SensorValue {
 public:
 	float v;
@@ -79,9 +69,13 @@ public:
 	}
 };
 
+//-------------------------------------------------------------------
 const int VALUE_COUNT = 2;
 const int CALIB_COUNT = 3;
+int getValueCount(void);
+int getCalCount(void);
 
+//-------------------------------------------------------------------
 class Sensor {
 private:
 	SensorValue value[VALUE_COUNT];
@@ -139,13 +133,17 @@ public:
 	float getCal(int index);
 	bool setCal(int index, float v);
 	void printCals(void);
-
-	//
-	void init_values(void);
-	float read(subcode);
-	void write(subcode, float value);
-	void print(void);
 };
+
+#if 0
+// Comment out because PC Lint is not ready
+const std::array<sensorModule, static_cast<int>(sensorModule::END)> allModes = {sensorModule::off,
+	sensorModule::dht11, sensorModule::dht22, sensorModule::ds18b20, sensorModule::sonar,
+	sensorModule::dust, sensorModule::sound};
+/* The array portModes and the enum portModes must match with one exception, the END
+ * value is not copied into the portModes array.
+ */
+#endif
 
 #endif
 

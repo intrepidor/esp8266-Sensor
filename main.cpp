@@ -424,21 +424,40 @@ int task_printstatus(unsigned long now) {
 				break;
 			case 's':
 				Serial.println("Measured Values ---------------- ");
-				Serial.println("CNT\tRH%\tTemp1*C\tRH%\tTemp2*C\tMotion");
-				Serial.print("#,");
+				Serial.print("CNT\tMotion\tLast\t");
+				for (int v = 0; v < getValueCount(); v++) {
+					if (t1.getValueEnable(v)) {
+						Serial.print(t1.getValueName(v));
+						Serial.print("\t");
+					}
+				}
+				for (int v = 0; v < getValueCount(); v++) {
+					if (t2.getValueEnable(v)) {
+						Serial.print(t2.getValueName(v));
+						Serial.print("\t");
+					}
+				}
+				Serial.println("");
+				Serial.print("#");
 				Serial.print(count);
-				Serial.print(",\t");
-				Serial.print(t1.getHumidity());
-				Serial.print(",\t");
-				Serial.print(t1.getTemperature());
-				Serial.print(",\t");
-				Serial.print(t2.getHumidity());
-				Serial.print(",\t");
-				Serial.print(t2.getTemperature());
-				Serial.print(",\t");
+				Serial.print("\t");
 				Serial.print(PIRcount);
-				Serial.print(",\t");
-				Serial.println(PIRcountLast);
+				Serial.print("\t");
+				Serial.print(PIRcountLast);
+				Serial.print("\t");
+				for (int v = 0; v < getValueCount(); v++) {
+					if (t1.getValueEnable(v)) {
+						Serial.print(t1.getValue(v));
+						Serial.print("\t");
+					}
+				}
+				for (int v = 0; v < getValueCount(); v++) {
+					if (t2.getValueEnable(v)) {
+						Serial.print(t2.getValue(v));
+						Serial.print("\t");
+					}
+				}
+				Serial.println("");
 				break;
 			case 'c':
 				Serial.println("Calibration Data");
