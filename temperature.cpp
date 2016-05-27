@@ -36,7 +36,7 @@ bool TemperatureSensor::acquire(void) {
 		return false;
 	}
 	else {
-		//lin t -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
+		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht) {
 			float h = dht->readHumidity();
