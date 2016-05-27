@@ -160,15 +160,19 @@ void ConfigurePorts(void) {
 						switch (portNumber) {
 							case 0:
 								t1.init(sensorModule::dht11, p);
+								t1.setName("DHT11_1");
 								break;
 							case 1:
 								t2.init(sensorModule::dht11, p);
+								t2.setName("DHT11_2");
 								break;
 							case 2:
 								t3.init(sensorModule::dht11, p);
+								t3.setName("DHT11_3");
 								break;
 							case 3:
 								t4.init(sensorModule::dht11, p);
+								t4.setName("DHT11_4");
 								break;
 							default:
 								Serial.println(
@@ -181,15 +185,19 @@ void ConfigurePorts(void) {
 						switch (portNumber) {
 							case 0:
 								t1.init(sensorModule::dht22, p);
+								t1.setName("DHT22_1");
 								break;
 							case 1:
 								t2.init(sensorModule::dht22, p);
+								t2.setName("DHT22_2");
 								break;
 							case 2:
 								t3.init(sensorModule::dht22, p);
+								t3.setName("DHT22_3");
 								break;
 							case 3:
 								t4.init(sensorModule::dht22, p);
+								t4.setName("DHT22_4");
 								break;
 							default:
 								Serial.println(
@@ -321,6 +329,7 @@ void printInfo(void) {
 void printMenu(void) {
 	Serial.println("MENU ----------------------");
 	Serial.println("c  show calibration values");
+	Serial.println("v  show measured values");
 	Serial.println("m  show menu");
 	Serial.println("s  show status");
 	Serial.println("i  show High-level configuration");
@@ -462,6 +471,11 @@ int task_printstatus(unsigned long now) {
 				Serial.println("Calibration Data");
 				t1.printCals();
 				t2.printCals();
+				break;
+			case 'v':
+				Serial.println("Value Data");
+				t1.printValues();
+				t2.printValues();
 				break;
 			case 'w':
 				WebPrintInfo();

@@ -189,9 +189,14 @@ bool Sensor::setValue(int _index, float v) {
 }
 
 void Sensor::printValues(void) {
+	Serial.print("Sensor: ");
+	if (getName().length() > 0) {
+		Serial.print(getName());
+	}
+	Serial.println("");
 	for (int i = 0; i < VALUE_COUNT; i++) {
 		if (value[i].enabled) {
-			Serial.print("Val[");
+			Serial.print("   Val[");
 			Serial.print(i);
 			Serial.print("]=");
 			Serial.println(getValue(i));
@@ -255,9 +260,14 @@ bool Sensor::setCal(int _index, float v) {
 }
 
 void Sensor::printCals(void) {
+	Serial.print("Sensor: ");
+	if (getName().length() > 0) {
+		Serial.print(getName());
+	}
+	Serial.println("");
 	for (int i = 0; i < CALIB_COUNT; i++) {
 		if (cal[i].enabled) {
-			Serial.print("Cal[");
+			Serial.print("   Cal[");
 			Serial.print(i);
 			Serial.print(",");
 			Serial.print(cal[i].name);

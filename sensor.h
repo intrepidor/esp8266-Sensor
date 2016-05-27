@@ -78,6 +78,7 @@ int getCalCount(void);
 //-------------------------------------------------------------------
 class Sensor {
 private:
+	String sensorName;
 	SensorValue value[VALUE_COUNT];
 	SensorValue cal[CALIB_COUNT];
 	sensorModule module;
@@ -93,6 +94,14 @@ public:
 	}
 	virtual void init(sensorModule, SensorPins&) = 0;
 	virtual bool acquire(void) = 0;
+
+	// General
+	String getName(void) {
+		return sensorName;
+	}
+	void setName(String _name) {
+		sensorName = _name;
+	}
 
 	// pins
 	void setPins(SensorPins p) {
