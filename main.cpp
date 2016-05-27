@@ -423,7 +423,6 @@ int task_printstatus(unsigned long now) {
 				Serial.println("");
 				break;
 			case 's':
-				Serial.println("Measured Values ---------------- ");
 				Serial.print("CNT\tMotion\tLast\t");
 				for (int v = 0; v < getValueCount(); v++) {
 					if (t1.getValueEnable(v)) {

@@ -259,6 +259,8 @@ void Sensor::printCals(void) {
 		if (cal[i].enabled) {
 			Serial.print("Cal[");
 			Serial.print(i);
+			Serial.print(",");
+			Serial.print(cal[i].name);
 			Serial.print("]=");
 			Serial.println(getCal(i));
 		}
