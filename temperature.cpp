@@ -5,8 +5,18 @@
 void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	setModule(m);
 	setPins(p);
-	setCalEnable(TEMP_CAL_INDEX_OFFSET, true);
-	setCalName(TEMP_CAL_INDEX_OFFSET, "offset");
+	setCalEnable(TEMP_CAL_INDEX_TEMP_SLOPE, true);
+	setCalName(TEMP_CAL_INDEX_TEMP_SLOPE, "temp_slope");
+
+	setCalEnable(TEMP_CAL_INDEX_TEMP_OFFSET, true);
+	setCalName(TEMP_CAL_INDEX_TEMP_OFFSET, "temp_offset");
+
+	setCalEnable(TEMP_CAL_INDEX_HUMIDITY_SLOPE, true);
+	setCalName(TEMP_CAL_INDEX_HUMIDITY_SLOPE, "humidity_slope");
+
+	setCalEnable(TEMP_CAL_INDEX_HUMIDITY_OFFSET, true);
+	setCalName(TEMP_CAL_INDEX_HUMIDITY_OFFSET, "humidity_offset");
+
 	setValueEnable(TEMP_VALUE_INDEX_TEMPERATURE, true);
 	setValueName(TEMP_VALUE_INDEX_TEMPERATURE, "tempC");
 	setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, true);
@@ -39,7 +49,7 @@ bool TemperatureSensor::acquire(void) {
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht) {
 			float h = dht->readHumidity();
-			float t = dht->readTemperature(true) + getCal(TEMP_CAL_INDEX_OFFSET);
+			float t = dht->readTemperature(true) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
 			setTemperature(t);
 			setHumidity(h);
 			if (isnan(h) || isnan(t)) {

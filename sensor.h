@@ -72,7 +72,7 @@ public:
 
 //-------------------------------------------------------------------
 const int VALUE_COUNT = 2;
-const int CALIB_COUNT = 3;
+const int CALIB_COUNT = 4;	// should be the same as MAX_ADJ
 int getValueCount(void);
 int getCalCount(void);
 
@@ -88,6 +88,7 @@ private:
 public:
 	~Sensor() { /* nothing to destroy */
 	}
+	// CONSIDER creating a constructor that includes the init parameters, then call init via the constructor
 	Sensor(void) {
 		this->module = sensorModule::off;
 		// SensorValue's have their own constructor
@@ -144,8 +145,6 @@ public:
 	bool setCal(int index, float v);
 	void printCals(void);
 };
-
-extern void loadCalsFromEEPROMtoSensor(Sensor& s, int portNumber);
 
 #if 0
 // Comment out because PC Lint is not ready

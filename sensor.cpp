@@ -57,10 +57,6 @@ int getCalCount(void) {
 	return CALIB_COUNT;
 }
 
-void loadCalsFromEEPROMtoSensor(Sensor& s, int portNumber) {
-
-}
-
 String c_getModuleName(sensorModule sm) {
 	switch (sm) {
 		// 1 digital

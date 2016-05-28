@@ -51,10 +51,10 @@ String Device::toString(void) {
 			+ String("\r\nTS_apikey=") + getThinkspeakApikey()
 			+ String("\r\nthingspeak.host=") + getThingspeakHost()
 			+ String("\r\nthingspeak.ipaddr=") + getIpaddr();
-	for (int i = 0; i < MAX_PORTS; i++) {
+	for (int i = 0; i < getPortMax(); i++) {
 		s += String("\r\nport[") + String(i) + String("].name=") + getPortName(i)
-				+ String(", mode=") + String(getModeStr(i)) + String(", pin=")
-				+ String(db.port[i].pin);
+				+ String(", mode=") + String(getModeStr(i));
+//		s += String(", pin=") + String(db.port[i].pin);
 		for (int k = 0; k < MAX_ADJ; k++) {
 			s += String(", adj[") + String(k) + String("]=");
 			s += String(getPortAdj(i, k), DECIMAL_PRECISION);

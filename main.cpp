@@ -19,7 +19,7 @@ extern int task_webServer(unsigned long now);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.01 : Allan Inda 2016-May-25");
+String ProgramInfo("Environment Sensor v0.01 : Allan Inda 2016-May-27");
 
 // Other
 long count = 0;
@@ -228,6 +228,18 @@ void ConfigurePorts(void) {
 				}
 			} // if (portMode ...)
 		} // for (portType ...)
+
+		// Now that the Sensor object likely exists, copy the calibration data to it.
+		if (portNumber >= 0 && portNumber < SENSOR_COUNT) {
+			if (sensors[portNumber] /* make sure it exists*/) {
+				// copy each of the multiple calibration values into the sensor
+				for (int i = 0; i < getCalCount() && i < dinfo.getPortMax(); i++) {
+					sensors[portNumber]->setCal(i,
+							static_cast<float>(dinfo.getPortAdj(portNumber, i)));
+				}
+			}
+		}
+
 	} // for (portNumber ...)
 }
 
@@ -339,15 +351,15 @@ int task_readpir(unsigned long now) {
 
 int task_acquire(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	int r = 0;
+	unsigned int r = 0;
 	for (int i = 0; i < SENSOR_COUNT; i++) {
 		if (sensors[i]) {
 			if (sensors[i]->acquire()) {
-				r |= (1 << i);
+				r |= (1U << i);
 			}
 		}
 	}
-	return r;
+	return static_cast<int>(r);
 }
 
 int task_updatethingspeak(unsigned long now) {

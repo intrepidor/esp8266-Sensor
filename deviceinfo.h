@@ -10,7 +10,6 @@
 
 //#include <array>
 #include <Arduino.h>
-
 #include "sensor.h"
 
 const int CURRENT_CONFIG_VERSION = 123;
@@ -19,7 +18,7 @@ const int DECIMAL_PRECISION = 5;
 //-----------------------------------------------------------------------------------
 // Device Class
 const int MAX_PORTS = 4;
-const int MAX_ADJ = 3;
+const int MAX_ADJ = 4;
 const int STRING_LENGTH = 20;
 
 static bool isValidPort(int portnum);
@@ -86,7 +85,7 @@ public:
 	void printInfo(void);
 //--------------------------------------------------------
 // Ports
-	int getPortMax(void) {
+	int getPortMax(void) {	// CONSIDER making this static
 		return MAX_PORTS;
 	}
 	sensorModule getPortMode(int portnum);

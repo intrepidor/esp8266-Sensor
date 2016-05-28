@@ -14,9 +14,11 @@
 
 const int TEMP_VALUE_INDEX_TEMPERATURE = 0;
 const int TEMP_VALUE_INDEX_HUMIDITY = 1;
-const int TEMP_CAL_INDEX_OFFSET = 0;
-const int TEMP_CAL_INDEX_UNUSED1 = 1;
-const int TEMP_CAL_INDEX_UNUSED2 = 2;
+
+const int TEMP_CAL_INDEX_TEMP_SLOPE = 0;
+const int TEMP_CAL_INDEX_TEMP_OFFSET = 1;
+const int TEMP_CAL_INDEX_HUMIDITY_SLOPE = 2;
+const int TEMP_CAL_INDEX_HUMIDITY_OFFSET = 3;
 
 class TemperatureSensor: public Sensor {
 private:
@@ -62,7 +64,7 @@ public:
 	}
 
 	float getCalOffset() {
-		return getCal(TEMP_CAL_INDEX_OFFSET);
+		return getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
 	}
 };
 
