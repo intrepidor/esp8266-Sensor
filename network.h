@@ -20,9 +20,9 @@
 extern int32_t rssi;
 extern const char* const factory_default_ssid;
 extern ESP8266WebServer server;
+extern String uri_v;
 
 void WebInit(void);
 void WebWorker(void);
-void WebPrintInfo(void);
 
 #endif /* NETWORK_H_ */

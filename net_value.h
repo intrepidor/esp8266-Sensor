@@ -4,6 +4,7 @@
 #include "network.h"
 
 extern void sendValue(void);
+void WebPrintInfo(void);
 
 #endif // NET_VALUE_H
 

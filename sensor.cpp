@@ -209,7 +209,7 @@ const char* Sensor::getModule_cstr(void) {
 // Values
 ///////////////////////////////////////////////////////////////////////////////////////
 bool Sensor::isValueIndexValid(int _index) {
-	if (_index >= 0 && _index < VALUE_COUNT) {
+	if (_index >= 0 && _index < getValueCount()) {
 		return true;
 	}
 	Serial.println("BUG: isValueIndexValid() index out of bounds");
@@ -266,21 +266,24 @@ void Sensor::printValues(void) {
 		Serial.print(getName());
 	}
 	Serial.println("");
-	for (int i = 0; i < VALUE_COUNT; i++) {
+	for (int i = 0; i < getValueCount(); i++) {
 		if (value[i].enabled) {
 			Serial.print("   Val[");
 			Serial.print(i);
+			Serial.print(",");
+			Serial.print(value[i].name);
 			Serial.print("]=");
 			Serial.println(getValue(i));
 		}
 	}
+	Serial.println("");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 // Cals
 ///////////////////////////////////////////////////////////////////////////////////////
 bool Sensor::isCalIndexValid(int _index) {
-	if (_index >= 0 && _index < VALUE_COUNT) {
+	if (_index >= 0 && _index < getCalCount()) {
 		return true;
 	}
 	Serial.println("BUG: isCalIndexValid() index out of bounds");
@@ -337,7 +340,7 @@ void Sensor::printCals(void) {
 		Serial.print(getName());
 	}
 	Serial.println("");
-	for (int i = 0; i < CALIB_COUNT; i++) {
+	for (int i = 0; i < getCalCount(); i++) {
 		if (cal[i].enabled) {
 			Serial.print("   Cal[");
 			Serial.print(i);
@@ -347,5 +350,6 @@ void Sensor::printCals(void) {
 			Serial.println(getCal(i));
 		}
 	}
+	Serial.println("");
 }
 

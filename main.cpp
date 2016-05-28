@@ -3,6 +3,7 @@
 #include "main.h"
 #include "temperature.h"
 #include "network.h"
+#include "net_value.h"
 #include "Queue.h"
 #include "deviceinfo.h"
 #include "sensor.h"
@@ -108,8 +109,8 @@ void ConfigurePorts(void) {
 	// Loop through each of the ports
 	for (int portNumber = 0; portNumber < dinfo.getPortMax(); portNumber++) {
 		// Get the pins used for this port
-		Serial.print("portNumber=");
-		Serial.println(portNumber);
+		//Serial.print("portNumber=");
+		//Serial.println(portNumber);
 		switch (portNumber) {
 			case 0: // port#0
 				p.digital = DIGITAL_PIN_1;
@@ -169,13 +170,11 @@ void ConfigurePorts(void) {
 							sensors[portNumber] = new TemperatureSensor();
 							sensors[portNumber]->init(sensorModule::dht11, p);
 							sensors[portNumber]->setName("DHT11");
-							Serial.println("Created DHT11");
 							break;
 						case static_cast<int>(sensorModule::dht22):
 							sensors[portNumber] = new TemperatureSensor;
 							sensors[portNumber]->init(sensorModule::dht22, p);
 							sensors[portNumber]->setName("DHT22");
-							Serial.println("Created DHT22");
 							break;
 //						case static_cast<int>(sensorModule::ds18b20):
 //							sensors[portNumber] = new TemperatureSensor;
@@ -218,7 +217,7 @@ void ConfigurePorts(void) {
 							sensors[portNumber]->setName("DHT11");
 							Serial.println(
 									"BUG: ConfigurePorts() - sensorModule not found in switch");
-							Serial.println(" ... Creating DHT11 instead.");
+							Serial.println(" ... Created DHT11 instead.");
 							break;
 					} // switch (portType)
 				} // if (portNumber...)
@@ -251,7 +250,7 @@ void setup(void) {
 
 // Setup Serial port
 	Serial.begin(115200);
-	delay(3000); // Give the terminal emulator a chance to start before sending something to the serial port
+	delay(2000); // Give the terminal emulator a chance to start before sending something to the serial port
 
 //Serial.println("\r\n");
 //Serial.println(ProgramInfo);
@@ -381,9 +380,13 @@ int task_flashled(unsigned long now) {
 int task_printstatus(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
 	count++;
+	static bool need_new_heading = true;
 
 	if (Serial.available() > 0) {
 		char ch = static_cast<char>(Serial.read());
+		if (ch != 's') {
+			need_new_heading = true;
+		}
 		switch (ch) {
 			case 'm':
 				printMenu();
@@ -413,20 +416,23 @@ int task_printstatus(unsigned long now) {
 				Serial.println("");
 				break;
 			case 's':
-				Serial.print("CNT\tMotion\tLast\t");
-				for (int v = 0; v < getValueCount(); v++) {
-					if (sensors[0]->getValueEnable(v)) {
-						Serial.print(sensors[0]->getValueName(v));
-						Serial.print("\t");
+				// Display the heading
+				if (need_new_heading) {
+					need_new_heading = false;
+					Serial.print("CNT\tMotion\tLast\t");
+					for (int s = 0; s < SENSOR_COUNT; s++) {
+						if (sensors[s]) {
+							for (int v = 0; v < getValueCount(); v++) {
+								if (sensors[s]->getValueEnable(v)) {
+									Serial.print(sensors[s]->getValueName(v));
+									Serial.print("\t");
+								}
+							}
+						}
 					}
+					Serial.println("");
 				}
-				for (int v = 0; v < getValueCount(); v++) {
-					if (sensors[1]->getValueEnable(v)) {
-						Serial.print(sensors[1]->getValueName(v));
-						Serial.print("\t");
-					}
-				}
-				Serial.println("");
+				// Display the Data
 				Serial.print("#");
 				Serial.print(count);
 				Serial.print("\t");
@@ -434,16 +440,14 @@ int task_printstatus(unsigned long now) {
 				Serial.print("\t");
 				Serial.print(PIRcountLast);
 				Serial.print("\t");
-				for (int v = 0; v < getValueCount(); v++) {
-					if (sensors[0]->getValueEnable(v)) {
-						Serial.print(sensors[0]->getValue(v));
-						Serial.print("\t");
-					}
-				}
-				for (int v = 0; v < getValueCount(); v++) {
-					if (sensors[1]->getValueEnable(v)) {
-						Serial.print(sensors[1]->getValue(v));
-						Serial.print("\t");
+				for (int s = 0; s < SENSOR_COUNT; s++) {
+					if (sensors[s]) {
+						for (int v = 0; v < getValueCount(); v++) {
+							if (sensors[s]->getValueEnable(v)) {
+								Serial.print(sensors[s]->getValue(v));
+								Serial.print("\t");
+							}
+						}
 					}
 				}
 				Serial.println("");
@@ -473,7 +477,6 @@ int task_printstatus(unsigned long now) {
 				break;
 		}
 	}
-
 	return 0;
 }
 

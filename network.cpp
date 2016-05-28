@@ -8,7 +8,6 @@
 #include "network.h"
 #include "temperature.h"
 #include "main.h"
-#include "util.h"
 #include "deviceinfo.h"
 #include "net_config.h"
 #include "net_value.h"
@@ -16,7 +15,7 @@
 const char* const factory_default_ssid = "ssid";
 ESP8266WebServer server(80);
 int32_t rssi = 0;
-String v("/value");
+String uri_v("/value");
 
 void WebInit(void) {
 // There are problems with linting ESP8266WebServer, specifically the 'on' member function.
@@ -92,22 +91,21 @@ void WebInit(void) {
 	});
 
 	server.on("/", []() {
-		String response(""); // FIXME status1.c_str());
-			response += "";// FIXME status2 + status3;
-			response += "\nCount=" + String(count);
-			response += "\nHumidity#1=" + String(sensors[0]->getValue(1));
-			response += "\nTemperature#1=" + String(sensors[0]->getValue(0));
-			response += "\nTempOffset#1=" + String(sensors[0]->getCal(0));
-			response += "\nHumidity#2=" + String(sensors[1]->getValue(1));
-			response += "\nTemperature#2=" + String(sensors[1]->getValue(0));
-			response += "\nTempOffset#2=" + String(sensors[1]->getCal(0));
-			response += "\nMotion#1=" + String(PIRcount);
-			response += "\n";
-			server.send(200, "text/plain", response);
-		});
+		String response("");
+		response += "\nCount=" + String(count);
+		response += "\nHumidity#1=" + String(sensors[0]->getValue(1));
+		response += "\nTemperature#1=" + String(sensors[0]->getValue(0));
+		response += "\nTempOffset#1=" + String(sensors[0]->getCal(0));
+		response += "\nHumidity#2=" + String(sensors[1]->getValue(1));
+		response += "\nTemperature#2=" + String(sensors[1]->getValue(0));
+		response += "\nTempOffset#2=" + String(sensors[1]->getCal(0));
+		response += "\nMotion#1=" + String(PIRcount);
+		response += "\n";
+		server.send(200, "text/plain", response);
+	});
 
 	server.on("/config", config);
-	server.on(v.c_str(), sendValue);
+	server.on(uri_v.c_str(), sendValue);
 
 	server.begin();
 	Serial.println("Web server started");
@@ -117,29 +115,3 @@ void WebWorker(void) {
 	server.handleClient();
 }
 
-void WebPrintInfo(void) {
-	// Describe Webserver access
-	Serial.print("Read Everything: http://");
-	Serial.println(localIPstr());
-
-	Serial.print("Read API:   http://");
-	Serial.print(localIPstr());
-	Serial.println(v);
-	Serial.println("?read=1,2        :: read temperature, humidity for Sensor #1");
-	Serial.println("?read=4,5        :: read temperature, humidity for Sensor #2");
-	Serial.println("?read=7          :: read Motion detector value");
-	Serial.println("?read=api        :: read ThingSpeak API key");
-	Serial.println(
-			"?read=rssi       :: read signal strength of AP at the time of connection in dBm");
-	Serial.println("?read=deviceid   :: read deviceid number");
-	Serial.println("?read=name       :: read name of device");
-	Serial.println("?read=status     :: read status information for device");
-	Serial.println("?read=thingspeak :: read thingspeak api codes");
-	Serial.println("?read=csv        :: read summary of sensor data");
-	Serial.println("?read=offset1    :: read offset1 value");
-	Serial.println("?read=offset2    :: read offset1 value");
-	//Serial.println("?offset1=X       :: write offset1 to X");
-	//Serial.println("?offset2=X       :: write offset2 to X");
-	Serial.println("?reset=0         :: reset device");
-	Serial.println("");
-}
