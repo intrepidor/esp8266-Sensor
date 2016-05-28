@@ -234,13 +234,13 @@ void Device::updateThingspeak(void) {
 		String getStr = "/update?api_key=";
 		getStr += getThinkspeakApikey();
 		getStr += "&field1=";
-		//FIXME TEMP		getStr += String(sensors[0]->getValue(0));
+		getStr += String(sensors[0]->getValue(0));
 		getStr += "&field2=";
-		//FIXME TEMP		getStr += String(sensors[0]->getValue(1));
+		getStr += String(sensors[0]->getValue(1));
 		getStr += "&field3=";
-		//FIXME TEMP		getStr += String(sensors[1]->getValue(0));
+		getStr += String(sensors[1]->getValue(0));
 		getStr += "&field5=";
-		//FIXME TEMP		getStr += String(sensors[1]->getValue(0));
+		getStr += String(sensors[1]->getValue(0));
 		getStr += "&field6=";
 		getStr += String(PIRcount);
 		client.print(

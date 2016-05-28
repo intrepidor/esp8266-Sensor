@@ -28,7 +28,6 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 		default:
 			break;
 	}
-	// FIXME readCalibrationData();
 }
 
 bool TemperatureSensor::acquire(void) {

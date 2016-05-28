@@ -9,7 +9,7 @@
 #include "util.h"
 
 extern int task_readpir(unsigned long now);
-extern int task_readtemperature(unsigned long now);
+extern int task_acquire(unsigned long now);
 extern int task_updatethingspeak(unsigned long now);
 extern int task_flashled(unsigned long now);
 extern int task_printstatus(unsigned long now);
@@ -273,7 +273,7 @@ void setup(void) {
 	Queue myQueue;
 // scheduleFunction arguments (function pointer, task name, start delay in ms, repeat interval in ms)
 	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
-	myQueue.scheduleFunction(task_readtemperature, "Temperature", 1000, 499);
+	myQueue.scheduleFunction(task_acquire, "Temperature", 1000, 499);
 // FIXME disable for now -- myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
 	myQueue.scheduleFunction(task_flashled, "LED", 250, 1000);
 	myQueue.scheduleFunction(task_printstatus, "Status", 2000, 500);
@@ -341,22 +341,17 @@ int task_readpir(unsigned long now) {
 	return 0;
 }
 
-int task_readtemperature(unsigned long now) {
+int task_acquire(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	//FIXME TEMP	bool r1 = sensors[0]->acquire();
-	//FIXME TEMP	bool r2 = sensors[1]->acquire();
-
-//	if (!r1) {
-//		//Serial.print("Err sensor #");
-//		//Serial.print(t1.getPin());
-//		//Serial.println("");
-//	}
-//	if (!r2) {
-//		//Serial.print("Err sensor #");
-//		//Serial.print(t2.getPin());
-//		//Serial.println("");
-//	}
-	return 0;
+	int r = 0;
+	for (int i = 0; i < SENSOR_COUNT; i++) {
+		if (sensors[i]) {
+			if (sensors[i]->acquire()) {
+				r |= (1 << i);
+			}
+		}
+	}
+	return r;
 }
 
 int task_updatethingspeak(unsigned long now) {

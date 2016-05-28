@@ -19,4 +19,6 @@ tidy:
 lint-easy: _LINT.TMP
 	./lint easy.lnt *.c*
 
+m: upload
+	minicom
 	
