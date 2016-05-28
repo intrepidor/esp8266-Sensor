@@ -8,12 +8,13 @@
 #include "deviceinfo.h"
 #include "sensor.h"
 #include "util.h"
+#include <Esp.h>
 
 extern int task_readpir(unsigned long now);
 extern int task_acquire(unsigned long now);
 extern int task_updatethingspeak(unsigned long now);
 extern int task_flashled(unsigned long now);
-extern int task_printstatus(unsigned long now);
+extern int task_serialport_menu(unsigned long now);
 extern int task_webServer(unsigned long now);
 
 // -----------------------
@@ -56,10 +57,24 @@ Device dinfo;
 
 // Information
 void printMenu(void);
+void printExtendedMenu(void);
 void printInfo(void);
 void ConfigurePorts(void);
+void reset_config(void);
 
 // ------------------------------------------------------------------------------------
+void reset_config(void) {
+	// Setup the external Reset circuit
+	digitalWrite(PIN_SOFTRESET, HIGH);
+	/* Make sure the pin is High so it does not reset until we want it to. Do
+	 * this before setting the direction as an output to avoid accidental
+	 * reset during pin configuration. */
+	pinMode(PIN_SOFTRESET, INPUT);
+	/* Set the pin used to cause a reset as an input. This avoids it reseting
+	 * when we don't want a reset.
+	 */
+}
+
 void reset(void) {
 	/* Note on the nodeMCU, pin D0 (aka GPIO16) may or may not already be
 	 * connected to the RST pin. If it's not connected, connect via a 10K
@@ -78,26 +93,17 @@ void reset(void) {
 	/* Write a low to the pin that is physically connected to the RST pin.
 	 * This will force the hardware to reset.
 	 */
+	reset_config();
 	Serial.println("Rebooting ... this may take 15 seconds or more.");
+	ESP.restart();
 
-	pinMode(PIN_SOFTRESET, OUTPUT);
-	for (int a = 0; a < 10; a++) {
-		digitalWrite(PIN_SOFTRESET, LOW);
-		delay(1000);
-		digitalWrite(PIN_SOFTRESET, HIGH);
-		delay(1000);
-	}
-}
-void reset_config(void) {
-	// Setup the external Reset circuit
-	digitalWrite(PIN_SOFTRESET, HIGH);
-	/* Make sure the pin is High so it does not reset until we want it to. Do
-	 * this before setting the direction as an output to avoid accidental
-	 * reset during pin configuration. */
-	pinMode(PIN_SOFTRESET, INPUT);
-	/* Set the pin used to cause a reset as an input. This avoids it reseting
-	 * when we don't want a reset.
-	 */
+//	pinMode(PIN_SOFTRESET, OUTPUT);
+//	for (int a = 0; a < 10; a++) {
+//		digitalWrite(PIN_SOFTRESET, LOW);
+//		delay(1000);
+//		digitalWrite(PIN_SOFTRESET, HIGH);
+//		delay(1000);
+//	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,16 +144,14 @@ void ConfigurePorts(void) {
 				p.scl = I2C_SCL_PIN;
 				break;
 			default:
-				Serial.print(
-						"BUG: ConfigurePorts() - port number out of range in switch -");
+				Serial.print("BUG: ConfigurePorts() - port number out of range in switch -");
 				Serial.println(portNumber);
 				break;
 		}
 
 		// Figure out the configuration of the port
 		//lint -e{26} suppress error false error about the static_cast
-		for (int portType = 0; portType < static_cast<int>(sensorModule::END);
-				portType++) {
+		for (int portType = 0; portType < static_cast<int>(sensorModule::END); portType++) {
 			// loop through each of the port setting types until finding a match
 			//lint -e{26} suppress error false error about the static_cast
 			if (dinfo.getPortMode(portNumber) == static_cast<sensorModule>(portType)) {
@@ -160,8 +164,7 @@ void ConfigurePorts(void) {
 				Serial.print(", name= ");
 				Serial.print(name);
 				Serial.print(", type=");
-				Serial.println(
-						c_getModuleName(static_cast<sensorModule>(portType)).c_str());
+				Serial.println(c_getModuleName(static_cast<sensorModule>(portType)).c_str());
 				//lint -e{30, 142} suppress error due to lint not understanding enum classes
 				if (portNumber >= 0 && portNumber < SENSOR_COUNT) {
 					switch (portType) {
@@ -270,21 +273,20 @@ void setup(void) {
 
 // Setup the WebServer
 	WebInit();
-	Serial.println("");
 
-	// Configure Objects
+// Configure Objects
 	//dinfo.init(); // commented out -- causes EEPROM to get reset, not sure why
 	ConfigurePorts();
 	printInfo();
 
-	// Configure Scheduler
+// Configure Scheduler
 	Queue myQueue;
-// scheduleFunction arguments (function pointer, task name, start delay in ms, repeat interval in ms)
+	// scheduleFunction (function pointer, task name, start delay in ms, repeat interval in ms)
 	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
 	myQueue.scheduleFunction(task_acquire, "Temperature", 1000, 499);
-// FIXME disable for now -- myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
+	myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
 	myQueue.scheduleFunction(task_flashled, "LED", 250, 1000);
-	myQueue.scheduleFunction(task_printstatus, "Status", 2000, 500);
+	myQueue.scheduleFunction(task_serialport_menu, "Status", 2000, 500);
 	myQueue.scheduleFunction(task_webServer, "WebServer", 3000, 1);
 
 // Signal that setup is done
@@ -297,17 +299,6 @@ void setup(void) {
 	}
 }
 
-#if 0
-void printChipInfo(void) {
-	uint32_t fid = spi_flash_get_id();
-	uint32_t chip = (fid & 0xff00) | ((fid >> 16) & 0xff);
-	Serial.print("Flash id: ");
-	Serial.println(fid);
-	Serial.print("Chip    : ");
-	Serial.println(chip);
-}
-#endif
-
 void printInfo(void) {
 // Print useful Information
 	Serial.println(ProgramInfo);
@@ -316,33 +307,10 @@ void printInfo(void) {
 	Serial.print(String("ESP8266_Device_ID=") + String(dinfo.getDeviceID()));
 	Serial.println(String("\r\nFriendly Name: ") + String(dinfo.getDeviceName()));
 	dinfo.printInfo();
-//printChipInfo();
-}
-
-void printMenu(void) {
-	Serial.println("MENU ----------------------");
-	Serial.println("c  show calibration values");
-	Serial.println("v  show measured values");
-	Serial.println("m  show menu");
-	Serial.println("s  show status");
-	Serial.println("i  show High-level configuration");
-	Serial.println("w  show web URLs");
-	Serial.println("e  show data structure in EEPROM");
-	Serial.println("r  show data structure in RAM");
-	Serial.print("d  [");
-	if (debug_output) {
-		Serial.print("ON");
-	}
-	else {
-		Serial.print("OFF");
-	}
-	Serial.println("] toggle debug output to serial port");
-	Serial.println("");
 }
 
 int task_readpir(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-
 	if (digitalRead(PIN_PIRSENSOR)) {
 		PIRcount++;
 	}
@@ -386,7 +354,39 @@ int task_flashled(unsigned long now) {
 	return 0;
 }
 
-int task_printstatus(unsigned long now) {
+void printMenu(void) {
+	Serial.println("MENU ----------------------");
+	Serial.println("?  show this menu");
+	Serial.println("i  show High-level configuration");
+	Serial.println("c  show calibration values");
+	Serial.println("m  show measured values");
+	Serial.println("s  show status");
+	Serial.println("w  show web URLs");
+	Serial.println("z  Extended menu");
+	Serial.println("");
+}
+
+void printExtendedMenu(void) {
+	Serial.println("MENU EXTENDED -------------");
+	Serial.println("E  show data structure in EEPROM");
+	Serial.println("M  show data structure in RAM");
+	Serial.println("R  show reason for last reset");
+	Serial.println("I  show ESP information");
+	Serial.println("Q  reset()");
+	Serial.println("W  EspClass::reset()");
+	Serial.println("A  EspClass::restart()");
+	Serial.print("D  [");
+	if (debug_output) {
+		Serial.print("ON");
+	}
+	else {
+		Serial.print("OFF");
+	}
+	Serial.println("] toggle debug output to serial port");
+	Serial.println("");
+}
+
+int task_serialport_menu(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
 	count++;
 	static bool need_new_heading = true;
@@ -397,32 +397,14 @@ int task_printstatus(unsigned long now) {
 			need_new_heading = true;
 		}
 		switch (ch) {
-			case 'm':
+			case '?':
 				printMenu();
 				break;
-			case 'd':
-				if (debug_output) {
-					debug_output = false;
-					Serial.println("Debug Disabled");
-				}
-				else {
-					debug_output = true;
-					Serial.println("Debug Enabled");
-				}
+			case 'z':
+				printExtendedMenu();
 				break;
 			case 'i':
 				printInfo();
-				break;
-			case 'r': // Just dump the contents of the RAM data structure
-				Serial.println("");
-				Serial.println(dinfo.toString().c_str());
-				Serial.println("");
-				break;
-			case 'e': // Read the EEPROM into the RAM data structure, then dump the contents
-				Serial.println("");
-				dinfo.RestoreConfigurationFromEEPROM();
-				Serial.println(dinfo.toString().c_str());
-				Serial.println("");
 				break;
 			case 's':
 				// Display the heading
@@ -469,7 +451,7 @@ int task_printstatus(unsigned long now) {
 					}
 				}
 				break;
-			case 'v':
+			case 'm':
 				Serial.println("Value Data");
 				for (int i = 0; i < SENSOR_COUNT; i++) {
 					if (sensors[i]) {
@@ -479,6 +461,98 @@ int task_printstatus(unsigned long now) {
 				break;
 			case 'w':
 				WebPrintInfo();
+				break;
+///// Extended Menu ////
+			case 'D':
+				if (debug_output) {
+					debug_output = false;
+					Serial.println("Debug Disabled");
+				}
+				else {
+					debug_output = true;
+					Serial.println("Debug Enabled");
+				}
+				break;
+			case 'E': // Read the EEPROM into the RAM data structure, then dump the contents
+				Serial.println("");
+				dinfo.RestoreConfigurationFromEEPROM();
+				Serial.println(dinfo.toString().c_str());
+				Serial.println("");
+				break;
+			case 'M': // Just dump the contents of the RAM data structure
+				Serial.println("");
+				Serial.println(dinfo.toString().c_str());
+				Serial.println("");
+				break;
+			case 'I':
+				Serial.print("CycleCount:\t\t");
+				Serial.println(ESP.getCycleCount());
+				Serial.print("Vcc:\t\t\t");
+				Serial.println(ESP.getVcc());
+				Serial.print("FreeHeap:\t\t");
+				Serial.println(ESP.getFreeHeap(), HEX);
+				Serial.print("ChipId:\t\t\t");
+				Serial.println(ESP.getChipId(), HEX);
+				Serial.print("SdkVersion:\t\t");
+				Serial.println(ESP.getSdkVersion());
+				Serial.print("BootVersion:\t\t");
+				Serial.println(ESP.getBootVersion());
+				Serial.print("BootMode:\t\t");
+				Serial.println(ESP.getBootMode());
+				Serial.print("CpuFreqMHz:\t\t");
+				Serial.println(ESP.getCpuFreqMHz());
+				Serial.print("FlashChipId:\t\t");
+				Serial.println(ESP.getFlashChipId(), HEX);
+				Serial.print("FlashChipRealSize[Mbit]:");
+				Serial.println(ESP.getFlashChipRealSize(), HEX);
+				Serial.print("FlashChipSize [MBit]:\t");
+				Serial.println(ESP.getFlashChipSize(), HEX);
+				Serial.print("FlashChipSpeed [Hz]:\t");
+				Serial.println(ESP.getFlashChipSpeed());
+				Serial.print("FlashChipMode:\t\t");
+				switch (ESP.getFlashChipMode()) {
+					case FM_QIO:
+						Serial.println("QIO");
+						break;
+					case FM_QOUT:
+						Serial.println("QOUT");
+						break;
+					case FM_DIO:
+						Serial.println("DIO");
+						break;
+					case FM_DOUT:
+						Serial.println("DOUT");
+						break;
+					case FM_UNKNOWN:
+					default:
+						Serial.println("Unknown");
+						break;
+				}
+				Serial.print("FlashChipSizeByChipId:\t");
+				Serial.println(ESP.getFlashChipSizeByChipId(), HEX);
+				Serial.print("SketchSize [Bytes]:\t");
+				Serial.println(ESP.getSketchSize(), HEX);
+				Serial.print("FreeSketchSpace [Bytes]:");
+				Serial.println(ESP.getFreeSketchSpace(), HEX);
+				Serial.println("");
+				break;
+			case 'R':
+				Serial.print("Last Reset --> ");
+				Serial.println(ESP.getResetInfo());
+				break;
+			case 'Q':
+				Serial.println("Calling reset() in 2 seconds ...");
+				reset();
+				break;
+			case 'W':
+				Serial.println("Calling EspClass::reset() in 2 seconds ...");
+				delay(2000);
+				ESP.reset();
+				break;
+			case 'A':
+				Serial.println("Calling EspClass::restart() in 2 seconds ...");
+				delay(2000);
+				ESP.restart();
 				break;
 			default:
 				Serial.print("Unknown command: ");
