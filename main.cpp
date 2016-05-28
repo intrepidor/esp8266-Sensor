@@ -160,7 +160,8 @@ void ConfigurePorts(void) {
 				Serial.print(", name= ");
 				Serial.print(name);
 				Serial.print(", type=");
-				Serial.println(getModule_cstr(static_cast<sensorModule>(portType)));
+				Serial.println(
+						c_getModuleName(static_cast<sensorModule>(portType)).c_str());
 				//lint -e{30, 142} suppress error due to lint not understanding enum classes
 				if (portNumber >= 0 && portNumber < SENSOR_COUNT) {
 					switch (portType) {
@@ -250,10 +251,6 @@ void setup(void) {
 
 // Setup Serial port
 	Serial.begin(115200);
-	delay(2000); // Give the terminal emulator a chance to start before sending something to the serial port
-
-//Serial.println("\r\n");
-//Serial.println(ProgramInfo);
 
 // Start EEPROM
 	EEPROM.begin(512);
@@ -264,7 +261,7 @@ void setup(void) {
 	Serial.println("");
 
 	// Configure Objects
-	//dinfo.init();
+	//dinfo.init(); // commented out -- causes EEPROM to get reset, not sure why
 	ConfigurePorts();
 	printInfo();
 
@@ -290,12 +287,12 @@ void setup(void) {
 
 #if 0
 void printChipInfo(void) {
-//uint32_t fid = spi_flash_get_id();
-//uint32_t chip = (fid & 0xff00) | ((fid >> 16) & 0xff);
-//Serial.print("Flash id: ");
-//Serial.println(fid);
-//Serial.print("Chip    : ");
-//Serial.println(chip);
+	uint32_t fid = spi_flash_get_id();
+	uint32_t chip = (fid & 0xff00) | ((fid >> 16) & 0xff);
+	Serial.print("Flash id: ");
+	Serial.println(fid);
+	Serial.print("Chip    : ");
+	Serial.println(chip);
 }
 #endif
 

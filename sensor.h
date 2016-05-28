@@ -37,7 +37,7 @@ struct t_sensor {
 	sensorModule id;
 };
 extern t_sensor const sensorList[];
-extern const char* getModule_cstr(sensorModule sm);
+extern String c_getModuleName(sensorModule sm);
 
 //-------------------------------------------------------------------
 class SensorPins {
@@ -122,7 +122,7 @@ public:
 	sensorModule getType() const {
 		return this->module;
 	}
-	const char* getModule_cstr(void);
+	String getModuleName(void);
 
 	// values
 	bool isValueIndexValid(int index);
@@ -144,6 +144,8 @@ public:
 	bool setCal(int index, float v);
 	void printCals(void);
 };
+
+extern void loadCalsFromEEPROMtoSensor(Sensor& s, int portNumber);
 
 #if 0
 // Comment out because PC Lint is not ready

@@ -233,6 +233,7 @@ void Device::updateThingspeak(void) {
 		// Send message to Thingspeak
 		String getStr = "/update?api_key=";
 		getStr += getThinkspeakApikey();
+		// FIXME this needs rewriting to use the whole sensors array
 		getStr += "&field1=";
 		getStr += String(sensors[0]->getValue(0));
 		getStr += "&field2=";

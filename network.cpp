@@ -92,17 +92,18 @@ void WebInit(void) {
 
 	server.on("/", []() {
 		String response("");
-		response += "\nCount=" + String(count);
-		response += "\nHumidity#1=" + String(sensors[0]->getValue(1));
-		response += "\nTemperature#1=" + String(sensors[0]->getValue(0));
-		response += "\nTempOffset#1=" + String(sensors[0]->getCal(0));
-		response += "\nHumidity#2=" + String(sensors[1]->getValue(1));
-		response += "\nTemperature#2=" + String(sensors[1]->getValue(0));
-		response += "\nTempOffset#2=" + String(sensors[1]->getCal(0));
-		response += "\nMotion#1=" + String(PIRcount);
-		response += "\n";
-		server.send(200, "text/plain", response);
-	});
+		// FIXME -- this needs to be rewritten to use the whole sensors array
+			response += "\nCount=" + String(count);
+			response += "\nHumidity#1=" + String(sensors[0]->getValue(1));
+			response += "\nTemperature#1=" + String(sensors[0]->getValue(0));
+			response += "\nTempOffset#1=" + String(sensors[0]->getCal(0));
+			response += "\nHumidity#2=" + String(sensors[1]->getValue(1));
+			response += "\nTemperature#2=" + String(sensors[1]->getValue(0));
+			response += "\nTempOffset#2=" + String(sensors[1]->getCal(0));
+			response += "\nMotion#1=" + String(PIRcount);
+			response += "\n";
+			server.send(200, "text/plain", response);
+		});
 
 	server.on("/config", config);
 	server.on(uri_v.c_str(), sendValue);

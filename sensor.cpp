@@ -57,72 +57,76 @@ int getCalCount(void) {
 	return CALIB_COUNT;
 }
 
-const char* getModule_cstr(sensorModule sm) {
+void loadCalsFromEEPROMtoSensor(Sensor& s, int portNumber) {
+
+}
+
+String c_getModuleName(sensorModule sm) {
 	switch (sm) {
 		// 1 digital
 		case sensorModule::dht11:
-			return "DHT11";
+			return String("DHT11");
 			break;
 		case sensorModule::dht22:
-			return "DHT22";
+			return String("DHT22");
 			break;
 		case sensorModule::ds18b20:
-			return "DS18b20";
+			return String("DS18b20");
 			break;
 		case sensorModule::sonar:
-			return "Sonar";
+			return String("Sonar");
 			break;
 		case sensorModule::sound:
-			return "Sound";
+			return String("Sound");
 			break;
 		case sensorModule::reed:
-			return "Reed";
+			return String("Reed");
 			break;
 		case sensorModule::hcs501:
-			return "HCS501";
+			return String("HCS501");
 			break;
 		case sensorModule::hcsr505:
-			return "HCSR505";
+			return String("HCSR505");
 			break;
 			// 1 digital + 1 analog
 		case sensorModule::dust:
-			return "Dust";
+			return String("Dust");
 			break;
 		case sensorModule::rain:
-			return "Rain";
+			return String("Rain");
 			break;
 		case sensorModule::soil:
-			return "Soil";
+			return String("Soil");
 			break;
 		case sensorModule::soundh:
-			return "SoundH";
+			return String("SoundH");
 			break;
 		case sensorModule::methane:
-			return "Methane";
+			return String("Methane");
 			break;
 			// I2C
 		case sensorModule::gy68:
-			return "GY68";
+			return String("GY68");
 			break;
 		case sensorModule::gy30:
-			return "GY30";
+			return String("GY30");
 			break;
 		case sensorModule::lcd1602:
-			return "LCD1602";
+			return String("LCD1602");
 			break;
 			// serial
 		case sensorModule::rfid:
-			return "RFID";
+			return String("RFID");
 			break;
 		case sensorModule::marquee:
-			return "Marquee";
+			return String("Marquee");
 			break;
 			// None
 		case sensorModule::off:
-			return "OFF";
+			return String("OFF");
 			break;
 		default:
-			return "unknown";
+			return String("unknown");
 			break;
 	}
 	return "unknown";
@@ -134,80 +138,13 @@ const char* getModule_cstr(sensorModule sm) {
 //
 ///////////////////////////////////////////////////////////////////////////
 
-const char* Sensor::getModule_cstr(void) {
-	switch (this->getModule()) {
-		// 1 digital
-		case sensorModule::dht11:
-			return "DHT11";
-			break;
-		case sensorModule::dht22:
-			return "DHT22";
-			break;
-		case sensorModule::ds18b20:
-			return "DS18b20";
-			break;
-		case sensorModule::sonar:
-			return "Sonar";
-			break;
-		case sensorModule::sound:
-			return "Sound";
-			break;
-		case sensorModule::reed:
-			return "Reed";
-			break;
-		case sensorModule::hcs501:
-			return "HCS501";
-			break;
-		case sensorModule::hcsr505:
-			return "HCSR505";
-			break;
-			// 1 digital + 1 analog
-		case sensorModule::dust:
-			return "Dust";
-			break;
-		case sensorModule::rain:
-			return "Rain";
-			break;
-		case sensorModule::soil:
-			return "Soil";
-			break;
-		case sensorModule::soundh:
-			return "SoundH";
-			break;
-		case sensorModule::methane:
-			return "Methane";
-			break;
-			// I2C
-		case sensorModule::gy68:
-			return "GY68";
-			break;
-		case sensorModule::gy30:
-			return "GY30";
-			break;
-		case sensorModule::lcd1602:
-			return "LCD1602";
-			break;
-			// serial
-		case sensorModule::rfid:
-			return "RFID";
-			break;
-		case sensorModule::marquee:
-			return "Marquee";
-			break;
-			// None
-		case sensorModule::off:
-			return "OFF";
-			break;
-		default:
-			return "unknown";
-			break;
-	}
-	return "unknown";
+String Sensor::getModuleName(void) {
+	return c_getModuleName(this->getModule());
 }
 
-///////////////////////////////////////////////////////////////////////////////////////
+//--------------------------------
 // Values
-///////////////////////////////////////////////////////////////////////////////////////
+//--------------------------------
 bool Sensor::isValueIndexValid(int _index) {
 	if (_index >= 0 && _index < getValueCount()) {
 		return true;
@@ -279,9 +216,9 @@ void Sensor::printValues(void) {
 	Serial.println("");
 }
 
-///////////////////////////////////////////////////////////////////////////////////////
+//--------------------------------
 // Cals
-///////////////////////////////////////////////////////////////////////////////////////
+//--------------------------------
 bool Sensor::isCalIndexValid(int _index) {
 	if (_index >= 0 && _index < getCalCount()) {
 		return true;
