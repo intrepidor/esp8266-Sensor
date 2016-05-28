@@ -95,12 +95,12 @@ void WebInit(void) {
 		String response(""); // FIXME status1.c_str());
 			response += "";// FIXME status2 + status3;
 			response += "\nCount=" + String(count);
-			response += "\nHumidity#1=" + String(t1.getHumidity());
-			response += "\nTemperature#1=" + String(t1.getTemperature());
-			response += "\nTempOffset#1=" + String(t1.getCalOffset());
-			response += "\nHumidity#2=" + String(t2.getHumidity());
-			response += "\nTemperature#2=" + String(t2.getTemperature());
-			response += "\nTempOffset#2=" + String(t2.getCalOffset());
+			//FIXME TEMP			response += "\nHumidity#1=" + String(sensors[0]->getValue(1));
+			//FIXME TEMP			response += "\nTemperature#1=" + String(sensors[0]->getValue(0));
+			//FIXME TEMP			response += "\nTempOffset#1=" + String(sensors[0]->getCal(0));
+			//FIXME TEMP			response += "\nHumidity#2=" + String(sensors[1]->getValue(1));
+			//FIXME TEMP			response += "\nTemperature#2=" + String(sensors[1]->getValue(0));
+			//FIXME TEMP			response += "\nTempOffset#2=" + String(sensors[1]->getCal(0));
 			response += "\nMotion#1=" + String(PIRcount);
 			response += "\n";
 			server.send(200, "text/plain", response);

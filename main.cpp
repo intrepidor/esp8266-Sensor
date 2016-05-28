@@ -5,6 +5,7 @@
 #include "network.h"
 #include "Queue.h"
 #include "deviceinfo.h"
+#include "sensor.h"
 #include "util.h"
 
 extern int task_readpir(unsigned long now);
@@ -48,7 +49,8 @@ const uint8_t I2C_SCL_PIN = D5;
 #define BUILTIN_LED_OFF HIGH
 
 // Create Objects
-TemperatureSensor t1, t2, t3, t4;	// DHT11 and DHT22
+const int SENSOR_COUNT = 4; // should be at least equal to the value of MAX_PORTS
+Sensor* sensors[SENSOR_COUNT] = { nullptr, nullptr, nullptr, nullptr };
 Device dinfo;
 
 // Information
@@ -106,6 +108,8 @@ void ConfigurePorts(void) {
 	// Loop through each of the ports
 	for (int portNumber = 0; portNumber < dinfo.getPortMax(); portNumber++) {
 		// Get the pins used for this port
+		Serial.print("portNumber=");
+		Serial.println(portNumber);
 		switch (portNumber) {
 			case 0: // port#0
 				p.digital = DIGITAL_PIN_1;
@@ -133,10 +137,12 @@ void ConfigurePorts(void) {
 				p.scl = I2C_SCL_PIN;
 				break;
 			default:
-				Serial.println(
-						"BUG: ConfigurePorts() - port number out of range in switch");
+				Serial.print(
+						"BUG: ConfigurePorts() - port number out of range in switch -");
+				Serial.println(portNumber);
 				break;
 		}
+
 		// Figure out the configuration of the port
 		//lint -e{26} suppress error false error about the static_cast
 		for (int portType = 0; portType < static_cast<int>(sensorModule::END);
@@ -150,102 +156,79 @@ void ConfigurePorts(void) {
 				// found the setting
 				Serial.print("Configuring Port#");
 				Serial.print(portNumber);
-				Serial.print(": ");
-				Serial.println(name);
+				Serial.print(", name= ");
+				Serial.print(name);
+				Serial.print(", type=");
+				Serial.println(getModule_cstr(static_cast<sensorModule>(portType)));
 				//lint -e{30, 142} suppress error due to lint not understanding enum classes
-				switch (portType) {
-					case static_cast<int>(sensorModule::off):
-						break;
-					case static_cast<int>(sensorModule::dht11):
-						switch (portNumber) {
-							case 0:
-								t1.init(sensorModule::dht11, p);
-								t1.setName("DHT11_1");
-								break;
-							case 1:
-								t2.init(sensorModule::dht11, p);
-								t2.setName("DHT11_2");
-								break;
-							case 2:
-								t3.init(sensorModule::dht11, p);
-								t3.setName("DHT11_3");
-								break;
-							case 3:
-								t4.init(sensorModule::dht11, p);
-								t4.setName("DHT11_4");
-								break;
-							default:
-								Serial.println(
-										"BUG: ConfigurePorts() dht11 - Invalid portType");
-								break;
-						}
-						break;
-						//lint -e{26} suppress error false error about the static_cast
-					case static_cast<int>(sensorModule::dht22):
-						switch (portNumber) {
-							case 0:
-								t1.init(sensorModule::dht22, p);
-								t1.setName("DHT22_1");
-								break;
-							case 1:
-								t2.init(sensorModule::dht22, p);
-								t2.setName("DHT22_2");
-								break;
-							case 2:
-								t3.init(sensorModule::dht22, p);
-								t3.setName("DHT22_3");
-								break;
-							case 3:
-								t4.init(sensorModule::dht22, p);
-								t4.setName("DHT22_4");
-								break;
-							default:
-								Serial.println(
-										"BUG: ConfigurePorts() dht22 - Invalid portNumber");
-								break;
-						}
-
-						break;
-					case static_cast<int>(sensorModule::ds18b20):
-						break;
-					case static_cast<int>(sensorModule::sonar):
-						break;
-					case static_cast<int>(sensorModule::sound):
-						break;
-					case static_cast<int>(sensorModule::reed):
-						break;
-					case static_cast<int>(sensorModule::hcs501):
-						break;
-					case static_cast<int>(sensorModule::hcsr505):
-						break;
-					case static_cast<int>(sensorModule::dust):
-						break;
-					case static_cast<int>(sensorModule::rain):
-						break;
-					case static_cast<int>(sensorModule::soil):
-						break;
-					case static_cast<int>(sensorModule::soundh):
-						break;
-					case static_cast<int>(sensorModule::methane):
-						break;
-					case static_cast<int>(sensorModule::gy68):
-						break;
-					case static_cast<int>(sensorModule::gy30):
-						break;
-					case static_cast<int>(sensorModule::lcd1602):
-						break;
-					case static_cast<int>(sensorModule::rfid):
-						break;
-					case static_cast<int>(sensorModule::marquee):
-						break;
-					default:
-						Serial.println(
-								"BUG: ConfigurePorts() - Sensor Module not found in switch");
-						break;
+				if (portNumber >= 0 && portNumber < SENSOR_COUNT) {
+					switch (portType) {
+//						case static_cast<int>(sensorModule::off):
+//							break;
+						case static_cast<int>(sensorModule::dht11):
+							sensors[portNumber] = new TemperatureSensor();
+							sensors[portNumber]->init(sensorModule::dht11, p);
+							sensors[portNumber]->setName("DHT11");
+							Serial.println("Created DHT11");
+							break;
+						case static_cast<int>(sensorModule::dht22):
+							sensors[portNumber] = new TemperatureSensor;
+							sensors[portNumber]->init(sensorModule::dht22, p);
+							sensors[portNumber]->setName("DHT22");
+							Serial.println("Created DHT22");
+							break;
+//						case static_cast<int>(sensorModule::ds18b20):
+//							sensors[portNumber] = new TemperatureSensor;
+//							sensors[portNumber]->init(sensorModule::ds18b20, p);
+//							sensors[portNumber]->setName("DS18b20");
+//							break;
+//						case static_cast<int>(sensorModule::sonar):
+//							break;
+//						case static_cast<int>(sensorModule::sound):
+//							break;
+//						case static_cast<int>(sensorModule::reed):
+//							break;
+//						case static_cast<int>(sensorModule::hcs501):
+//							break;
+//						case static_cast<int>(sensorModule::hcsr505):
+//							break;
+//						case static_cast<int>(sensorModule::dust):
+//							break;
+//						case static_cast<int>(sensorModule::rain):
+//							break;
+//						case static_cast<int>(sensorModule::soil):
+//							break;
+//						case static_cast<int>(sensorModule::soundh):
+//							break;
+//						case static_cast<int>(sensorModule::methane):
+//							break;
+//						case static_cast<int>(sensorModule::gy68):
+//							break;
+//						case static_cast<int>(sensorModule::gy30):
+//							break;
+//						case static_cast<int>(sensorModule::lcd1602):
+//							break;
+//						case static_cast<int>(sensorModule::rfid):
+//							break;
+//						case static_cast<int>(sensorModule::marquee):
+//							break;
+						default:
+							sensors[portNumber] = new TemperatureSensor();
+							sensors[portNumber]->init(sensorModule::dht11, p);
+							sensors[portNumber]->setName("DHT11");
+							Serial.println(
+									"BUG: ConfigurePorts() - sensorModule not found in switch");
+							Serial.println(" ... Creating DHT11 instead.");
+							break;
+					} // switch (portType)
+				} // if (portNumber...)
+				else {
+					Serial.print("BUG: ConfigurePort() - portNumber out of range - ");
+					Serial.println(portNumber);
 				}
-			}
-		}
-	}
+			} // if (portMode ...)
+		} // for (portType ...)
+	} // for (portNumber ...)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,14 +243,16 @@ void setup(void) {
 	reset_config();
 
 // Setup GPIO
-	pinMode(PIN_PIRSENSOR, INPUT);   // Initialize the PIR sensor pin as an input
-	pinMode(PIN_BUILTIN_LED, OUTPUT);  // Initialize the BUILTIN_LED pin as an output
+	pinMode(PIN_PIRSENSOR, INPUT);			// Initialize the PIR sensor pin as an input
+	pinMode(PIN_BUILTIN_LED, OUTPUT);		// Initialize the BUILTIN_LED pin as an output
 
 // Signal that setup is proceeding
 	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_ON);
 
 // Setup Serial port
 	Serial.begin(115200);
+	delay(3000); // Give the terminal emulator a chance to start before sending something to the serial port
+
 //Serial.println("\r\n");
 //Serial.println(ProgramInfo);
 
@@ -275,16 +260,16 @@ void setup(void) {
 	EEPROM.begin(512);
 	dinfo.RestoreConfigurationFromEEPROM();
 
-// Configure Objects
-//dinfo.init();
-
-	ConfigurePorts();
-
 // Setup the WebServer
 	WebInit();
 	Serial.println("");
+
+	// Configure Objects
+	//dinfo.init();
+	ConfigurePorts();
 	printInfo();
 
+	// Configure Scheduler
 	Queue myQueue;
 // scheduleFunction arguments (function pointer, task name, start delay in ms, repeat interval in ms)
 	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
@@ -349,6 +334,7 @@ void printMenu(void) {
 
 int task_readpir(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
+
 	if (digitalRead(PIN_PIRSENSOR)) {
 		PIRcount++;
 	}
@@ -357,19 +343,19 @@ int task_readpir(unsigned long now) {
 
 int task_readtemperature(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	bool r1 = t1.acquire();
-	bool r2 = t2.acquire();
+	//FIXME TEMP	bool r1 = sensors[0]->acquire();
+	//FIXME TEMP	bool r2 = sensors[1]->acquire();
 
-	if (!r1) {
-		//Serial.print("Err sensor #");
-		//Serial.print(t1.getPin());
-		//Serial.println("");
-	}
-	if (!r2) {
-		//Serial.print("Err sensor #");
-		//Serial.print(t2.getPin());
-		//Serial.println("");
-	}
+//	if (!r1) {
+//		//Serial.print("Err sensor #");
+//		//Serial.print(t1.getPin());
+//		//Serial.println("");
+//	}
+//	if (!r2) {
+//		//Serial.print("Err sensor #");
+//		//Serial.print(t2.getPin());
+//		//Serial.println("");
+//	}
 	return 0;
 }
 
@@ -434,14 +420,14 @@ int task_printstatus(unsigned long now) {
 			case 's':
 				Serial.print("CNT\tMotion\tLast\t");
 				for (int v = 0; v < getValueCount(); v++) {
-					if (t1.getValueEnable(v)) {
-						Serial.print(t1.getValueName(v));
+					if (sensors[0]->getValueEnable(v)) {
+						Serial.print(sensors[0]->getValueName(v));
 						Serial.print("\t");
 					}
 				}
 				for (int v = 0; v < getValueCount(); v++) {
-					if (t2.getValueEnable(v)) {
-						Serial.print(t2.getValueName(v));
+					if (sensors[1]->getValueEnable(v)) {
+						Serial.print(sensors[1]->getValueName(v));
 						Serial.print("\t");
 					}
 				}
@@ -454,14 +440,14 @@ int task_printstatus(unsigned long now) {
 				Serial.print(PIRcountLast);
 				Serial.print("\t");
 				for (int v = 0; v < getValueCount(); v++) {
-					if (t1.getValueEnable(v)) {
-						Serial.print(t1.getValue(v));
+					if (sensors[0]->getValueEnable(v)) {
+						Serial.print(sensors[0]->getValue(v));
 						Serial.print("\t");
 					}
 				}
 				for (int v = 0; v < getValueCount(); v++) {
-					if (t2.getValueEnable(v)) {
-						Serial.print(t2.getValue(v));
+					if (sensors[1]->getValueEnable(v)) {
+						Serial.print(sensors[1]->getValue(v));
 						Serial.print("\t");
 					}
 				}
@@ -469,13 +455,19 @@ int task_printstatus(unsigned long now) {
 				break;
 			case 'c':
 				Serial.println("Calibration Data");
-				t1.printCals();
-				t2.printCals();
+				for (int i = 0; i < SENSOR_COUNT; i++) {
+					if (sensors[i]) {
+						sensors[i]->printCals();
+					}
+				}
 				break;
 			case 'v':
 				Serial.println("Value Data");
-				t1.printValues();
-				t2.printValues();
+				for (int i = 0; i < SENSOR_COUNT; i++) {
+					if (sensors[i]) {
+						sensors[i]->printValues();
+					}
+				}
 				break;
 			case 'w':
 				WebPrintInfo();

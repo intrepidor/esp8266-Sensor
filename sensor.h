@@ -37,6 +37,7 @@ struct t_sensor {
 	sensorModule id;
 };
 extern t_sensor const sensorList[];
+extern const char* getModule_cstr(sensorModule sm);
 
 //-------------------------------------------------------------------
 class SensorPins {

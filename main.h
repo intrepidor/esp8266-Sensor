@@ -17,9 +17,10 @@ extern long count;
 extern int PIRcount;
 extern bool debug_output;
 
+extern const int SENSOR_COUNT;
+extern Sensor* sensors[];
+
 extern Device dinfo;
-extern TemperatureSensor t1;
-extern TemperatureSensor t2;
 
 extern const uint8_t PIN_SOFTRESET;
 extern const uint8_t PIN_BUILTIN_LED;

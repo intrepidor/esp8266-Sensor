@@ -20,16 +20,16 @@ void sendValue(void) {
 	if (arg) {
 		String sarg = server.arg("read");
 		if (sarg == "1") {
-			value = String(t1.getTemperature());
+			value = String(sensors[0]->getValue(0));
 		}
 		if (sarg == "2") {
-			value = String(t1.getHumidity());
+			value = String(sensors[0]->getValue(1));
 		}
 		if (sarg == "4") {
-			value = String(t2.getTemperature());
+			value = String(sensors[1]->getValue(0));
 		}
 		if (sarg == "5") {
-			value = String(t2.getHumidity());
+			value = String(sensors[1]->getValue(1));
 		}
 		if (sarg == "7") {
 			value = String(PIRcount);
@@ -56,16 +56,16 @@ void sendValue(void) {
 			value = String(rssi);
 		}
 		if (sarg == "offset1") {
-			value = String(t1.getCalOffset());
+			value = String(sensors[0]->getCal(0));
 		}
 		if (sarg == "offset2") {
-			value = String(t2.getCalOffset());
+			value = String(sensors[1]->getCal(0));
 		}
 		if (sarg == "csv") {
-			value = String(t1.getTemperature()) + "F ";
-			value += String(t1.getHumidity()) + "%,";
-			value += String(t2.getTemperature()) + "F ";
-			value += String(t2.getHumidity()) + "%,";
+			value = String(sensors[0]->getValue(0)) + "F ";
+			value += String(sensors[0]->getValue(1)) + "%,";
+			value += String(sensors[1]->getValue(0)) + "F ";
+			value += String(sensors[1]->getValue(1)) + "%,";
 			value += String(PIRcount) + ",";
 			value += String(dinfo.getThingspeakStatus());
 		}

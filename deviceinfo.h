@@ -10,18 +10,18 @@
 
 //#include <array>
 #include <Arduino.h>
+
 #include "sensor.h"
 
 const int CURRENT_CONFIG_VERSION = 123;
 const int DECIMAL_PRECISION = 5;
-
-//extern void validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest);
 
 //-----------------------------------------------------------------------------------
 // Device Class
 const int MAX_PORTS = 4;
 const int MAX_ADJ = 3;
 const int STRING_LENGTH = 20;
+
 static bool isValidPort(int portnum);
 
 struct cport {

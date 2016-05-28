@@ -8,10 +8,10 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
-#include "sensor.h"
 #include "deviceinfo.h"
 //#include "net_config.h"
 #include "main.h"
+#include "sensor.h"
 
 unsigned int validate_string(char* str, const char* const def, unsigned int size,
 		int lowest, int highest) {
@@ -234,13 +234,13 @@ void Device::updateThingspeak(void) {
 		String getStr = "/update?api_key=";
 		getStr += getThinkspeakApikey();
 		getStr += "&field1=";
-		getStr += String(t1.getTemperature());
+		//FIXME TEMP		getStr += String(sensors[0]->getValue(0));
 		getStr += "&field2=";
-		getStr += String(t1.getHumidity());
+		//FIXME TEMP		getStr += String(sensors[0]->getValue(1));
 		getStr += "&field3=";
-		getStr += String(t2.getTemperature());
+		//FIXME TEMP		getStr += String(sensors[1]->getValue(0));
 		getStr += "&field5=";
-		getStr += String(t2.getHumidity());
+		//FIXME TEMP		getStr += String(sensors[1]->getValue(0));
 		getStr += "&field6=";
 		getStr += String(PIRcount);
 		client.print(

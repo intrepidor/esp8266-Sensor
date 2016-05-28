@@ -9,6 +9,7 @@
 #define TEMPERATURE_H_
 
 #include <DHT.h>
+
 #include "sensor.h"
 
 const int TEMP_VALUE_INDEX_TEMPERATURE = 0;
@@ -24,6 +25,7 @@ public:
 	~TemperatureSensor() {
 		dht = nullptr;
 	}
+
 	TemperatureSensor() {
 		dht = nullptr;
 	}

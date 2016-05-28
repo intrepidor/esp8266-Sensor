@@ -5,8 +5,9 @@
  *      Author: allan
  */
 
-#include <Arduino.h>
 #include "sensor.h"
+
+#include <Arduino.h>
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -54,6 +55,77 @@ int getValueCount(void) {
 }
 int getCalCount(void) {
 	return CALIB_COUNT;
+}
+
+const char* getModule_cstr(sensorModule sm) {
+	switch (sm) {
+		// 1 digital
+		case sensorModule::dht11:
+			return "DHT11";
+			break;
+		case sensorModule::dht22:
+			return "DHT22";
+			break;
+		case sensorModule::ds18b20:
+			return "DS18b20";
+			break;
+		case sensorModule::sonar:
+			return "Sonar";
+			break;
+		case sensorModule::sound:
+			return "Sound";
+			break;
+		case sensorModule::reed:
+			return "Reed";
+			break;
+		case sensorModule::hcs501:
+			return "HCS501";
+			break;
+		case sensorModule::hcsr505:
+			return "HCSR505";
+			break;
+			// 1 digital + 1 analog
+		case sensorModule::dust:
+			return "Dust";
+			break;
+		case sensorModule::rain:
+			return "Rain";
+			break;
+		case sensorModule::soil:
+			return "Soil";
+			break;
+		case sensorModule::soundh:
+			return "SoundH";
+			break;
+		case sensorModule::methane:
+			return "Methane";
+			break;
+			// I2C
+		case sensorModule::gy68:
+			return "GY68";
+			break;
+		case sensorModule::gy30:
+			return "GY30";
+			break;
+		case sensorModule::lcd1602:
+			return "LCD1602";
+			break;
+			// serial
+		case sensorModule::rfid:
+			return "RFID";
+			break;
+		case sensorModule::marquee:
+			return "Marquee";
+			break;
+			// None
+		case sensorModule::off:
+			return "OFF";
+			break;
+		default:
+			return "unknown";
+			break;
+	}
+	return "unknown";
 }
 
 ///////////////////////////////////////////////////////////////////////////
