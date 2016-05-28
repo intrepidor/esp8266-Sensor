@@ -42,19 +42,26 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 
 bool TemperatureSensor::acquire(void) {
 	if (getModule() == sensorModule::ds18b20) {
-		return false;
+		return false; // FIXME not yet implemented
 	}
 	else {
 		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht) {
 			float h = dht->readHumidity();
-			float t = dht->readTemperature(true) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
+			float t = dht->readTemperature(true);
+
+			if (isnan(h) || isnan(t)) {
+				return false;   // error: read failed
+			}
+
+			h = h * getCal(TEMP_CAL_INDEX_HUMIDITY_SLOPE)
+					+ getCal(TEMP_CAL_INDEX_HUMIDITY_OFFSET);
+			t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE)
+					+ getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
+
 			setTemperature(t);
 			setHumidity(h);
-			if (isnan(h) || isnan(t)) {
-				return false;   // read failed
-			}
 		}
 		return false;       // error: DHT object not created
 	}
