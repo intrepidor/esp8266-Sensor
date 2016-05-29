@@ -19,17 +19,17 @@ String getReadAPIString(String eol) {
 	r += "  api        :: ThingSpeak API key" + eol;
 	r += "  rssi       :: AP signal strength in dBm at connect time" + eol;
 	r += "  id         :: Device ID number" + eol;
-	r += "  name       :: Name of device" + eol;
-	r += "  thingspeak :: Thingspeak api codes" + eol;
-	r += "  csv        :: Summary of sensor data" + eol;
-	r += "  status     :: Device status" + eol;
+	r += "  name       :: Device Name" + eol;
+	r += "  thingspeak :: Last Thingspeak http return value" + eol;
 	return r;
 }
 
 String WebPrintInfo(String eol) {
 	// Describe Webserver access
 	String r = "Configure Device: http://" + localIPstr() + "/config" + eol;
-	r += "Read Measured Data: http://" + localIPstr() + eol;
+	r += "Show Measured Data: http://" + localIPstr() + eol;
+	r += "Show Device Status: http://" + localIPstr() + "/status" + eol;
+	r += "Show current values in csv format: http://" + localIPstr() + "/csv" + eol;
 	r += "Reboot: http://" + localIPstr() + "/reboot" + eol;
 	r += getReadAPIString(nl);
 	return r;
@@ -67,31 +67,6 @@ void sendValue(void) {
 		if (sarg == "thingspeak") {
 			found = true;
 			value = String(dinfo.getThingspeakStatus());
-		}
-		if (sarg == "status") {
-			found = true;
-			value = "," + dinfo.toString(",<br>");
-		}
-		if (sarg == "csv") {
-			found = true;
-			value = ",pir=" + String(PIRcount) + ",pirlast=" + String(PIRcountLast) + ",";
-			for (int i = 0; i < SENSOR_COUNT; i++) {
-				if (sensors[i]) {
-					for (int j = 0; j < getValueCount(); j++) {
-						if (sensors[i]->getValueEnable(j)) {
-							value += String("val") + String(i) + String(j) + "="
-									+ String(sensors[i]->getValue(j)) + ",";
-						}
-					} // for j
-					for (int j = 0; j < getCalCount(); j++) {
-						if (sensors[i]->getCalEnable(j)) {
-							value += String("cal") + String(i) + String(j) + "="
-									+ String(sensors[i]->getCal(j)) + ",";
-						}
-					} // for j
-				} // for i
-			}
-			value += "ts=" + String(dinfo.getThingspeakStatus()) + ",";
 		}
 		if (!found) {
 			value = "Unknown command.<br><br>Use one of the following:<br>" + getReadAPIString("<br>");

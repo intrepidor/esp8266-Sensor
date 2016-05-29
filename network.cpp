@@ -112,7 +112,36 @@ void WebInit(void) {
 		server.send(200, "text/plain", response);
 	});
 
+	server.on("/csv", []() {
+		String response("");
+		response = ",pir=" + String(PIRcount) + ",pirlast=" + String(PIRcountLast) + ",";
+		for (int i = 0; i < SENSOR_COUNT; i++) {
+			if (sensors[i]) {
+
+				for (int j = 0; j < getValueCount(); j++) {
+					if (sensors[i]->getValueEnable(j)) {
+						response += String("val") + String(i) + String(j) + "="
+						+ String(sensors[i]->getValue(j)) + ",";
+					}
+				}
+
+				for (int j = 0; j < getCalCount(); j++) {
+					if (sensors[i]->getCalEnable(j)) {
+						response += String("cal") + String(i) + String(j) + "="
+						+ String(sensors[i]->getCal(j)) + ",";
+					}
+				}
+			}
+		}
+		response += "ts=" + String(dinfo.getThingspeakStatus()) + ",";
+		server.send(200, "text/plain", response);
+	});
+
 	server.on("/config", config);
+
+	server.on("/status", []() {
+		server.send(200, "text/plain", dinfo.toString(",/n"));
+	});
 
 	server.on(uri_v.c_str(), sendValue);
 

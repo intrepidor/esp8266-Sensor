@@ -140,14 +140,14 @@ void config(void) {
 
 	// Buttons and links
 	r = String(sHTTP_BUTTONS);
-	r += String(sHTTP_AHREF_START) + localIPstr() + "\">Show current values<br>" + String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr() + "/value?read=csv\">Show current values in csv format<br>"
+	r += String(sHTTP_AHREF_START) + localIPstr() + "\">Show Measured data<br>" + String(sHTTP_AHREF_END);
+	r += String(sHTTP_AHREF_START) + localIPstr() + "/csv\">Show current values in csv format<br>"
 			+ String(sHTTP_AHREF_END);
 	r += String(sHTTP_AHREF_START) + localIPstr() + "/config\">Configure Device<br>"
 			+ String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr() + "/value?read=status\">Show Device Status<br>"
+	r += String(sHTTP_AHREF_START) + localIPstr() + "/status\">Show Device Status<br>"
 			+ String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr() + "/reboot<br>" + String(sHTTP_AHREF_END);
+	r += String(sHTTP_AHREF_START) + localIPstr() + "/reboot\">Reboot<br>" + String(sHTTP_AHREF_END);
 	server.sendContent(r);
 
 	// End of page
