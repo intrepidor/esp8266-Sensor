@@ -98,7 +98,8 @@ void WebInit(void) {
 			if (sensors[i]) {
 				for (int j=0; j<getValueCount(); j++) {
 					if (sensors[i]->getValueEnable(j)) {
-						response+="\n" + String(sensors[i]->getValueName(j)) +
+						response+="\nval" + String(i) + String(j) + ":" +
+						String(sensors[i]->getValueName(j)) + "=" +
 						String(sensors[i]->getValue(j));
 					}
 				}
