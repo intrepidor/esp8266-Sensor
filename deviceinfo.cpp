@@ -66,14 +66,14 @@ void Device::printInfo(void) {
 		//lint -e{26} suppress error false error about the sensorModule
 		for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
 			if (dinfo.getPortMode(i) == static_cast<sensorModule>(j)) {
-				Serial.print("Port#");
-				Serial.print(i);
-				Serial.print(": ");
-				Serial.println(sensorList[static_cast<int>(j)].name);
+				debug.print(DebugLevel::ALWAYS, "Port#");
+				debug.print(DebugLevel::ALWAYS, i);
+				debug.print(DebugLevel::ALWAYS, ": ");
+				debug.println(DebugLevel::ALWAYS, sensorList[static_cast<int>(j)].name);
 			}
 		}
 	}
-	Serial.println("");
+	debug.println(DebugLevel::ALWAYS, "");
 }
 
 void Device::setcDeviceName(const char* newname) {
@@ -82,7 +82,7 @@ void Device::setcDeviceName(const char* newname) {
 		strncpy(db.device.name, newname, sizeof(db.device.name) - 1);
 	}
 	else {
-		Serial.println("\r\nERROR: setcDeviceName() - null value");
+		debug.println(DebugLevel::ERROR, "\r\nERROR: setcDeviceName() - null value");
 	}
 }
 
@@ -110,7 +110,7 @@ void Device::setPortMode(int portnum, sensorModule _mode) {
 		db.port[portnum].mode = _mode;
 	}
 	else {
-		Serial.println("\r\nERROR: Device::setPortMode() - invalid port");
+		debug.println(DebugLevel::ERROR, "\r\nERROR: Device::setPortMode() - invalid port");
 	}
 }
 
@@ -123,11 +123,11 @@ String Device::getModeStr(int portnum) {
 			s = String(String(m) + ":" + String(sensorList[m].name));
 		}
 		else {
-			Serial.print("\r\nERROR: Device::getModeStr() - invalid mode");
+			debug.print(DebugLevel::ERROR, "\r\nERROR: Device::getModeStr() - invalid mode");
 		}
 	}
 	else {
-		Serial.println("\r\nERROR: Device::getModeStr() - invalid port");
+		debug.println(DebugLevel::ERROR, "\r\nERROR: Device::getModeStr() - invalid port");
 	}
 	return s;
 }
@@ -137,7 +137,7 @@ void Device::setPortName(int portnum, String _n) {
 		strncpy(db.port[portnum].name, _n.c_str(), sizeof(db.port[portnum].name) - 1);
 	}
 	else {
-		Serial.println("\r\nERROR: Device::setPortName() - invalid port");
+		debug.println(DebugLevel::ERROR, "\r\nERROR: Device::setPortName() - invalid port");
 	}
 }
 
@@ -146,7 +146,7 @@ String Device::getPortName(int portnum) {
 		return this->db.port[portnum].name;
 	}
 	else {
-		Serial.println("\r\nERROR: Device::getPortName() - invalid port");
+		debug.println(DebugLevel::ERROR, "\r\nERROR: Device::getPortName() - invalid port");
 	}
 	return String("undefined");
 }
@@ -158,11 +158,11 @@ double Device::getPortAdj(int portnum, int adjnum) {
 			return this->db.port[portnum].adj[adjnum];
 		}
 		else {
-			Serial.println("\r\nERROR: Device::getPortAdj() - invalid adj index");
+			debug.println(DebugLevel::ERROR, "\r\nERROR: Device::getPortAdj() - invalid adj index");
 		}
 	}
 	else {
-		Serial.println("\r\nERROR: Device::getPortAdj() - invalid port");
+		debug.println(DebugLevel::ERROR, "\r\nERROR: Device::getPortAdj() - invalid port");
 	}
 	return 0.0;
 }
@@ -173,11 +173,11 @@ void Device::setPortAdj(int portnum, int adjnum, double v) {
 			db.port[portnum].adj[adjnum] = v;
 		}
 		else {
-			Serial.println("\r\nERROR: Device::setPortAdj() - invalid adj index");
+			debug.println(DebugLevel::ERROR, "\r\nERROR: Device::setPortAdj() - invalid adj index");
 		}
 	}
 	else {
-		Serial.println("\r\nERROR: Device::setPortAdj() - invalid port");
+		debug.println(DebugLevel::ERROR, "\r\nERROR: Device::setPortAdj() - invalid port");
 	}
 }
 
@@ -186,7 +186,7 @@ void Device::RestoreConfigurationFromEEPROM(void) {
 	for (unsigned int addr = 0; addr < sizeof(db); addr++) {
 		*(pp + addr) = EEPROM.read(static_cast<int>(addr));
 	}
-	Serial.println("\r\nINFO: Data copied from EEPROM into RAM data structure");
+	debug.println(DebugLevel::INFO, "\r\nINFO: Data copied from EEPROM into RAM data structure");
 }
 
 bool Device::StoreConfigurationIntoEEPROM(void) {
@@ -195,28 +195,24 @@ bool Device::StoreConfigurationIntoEEPROM(void) {
 	for (unsigned int addr = 0; addr < sizeof(db); addr++) {
 		v = *(pp + addr);
 		EEPROM.write(static_cast<int>(addr), v);
-//		if (debug_output) {
-//			Serial.write(v);
-//		}
 	}
-//	if (debug_output) Serial.println("");
 
 	if (EEPROM.commit()) {
-		Serial.println("\r\nSUCCESS: Write from RAM data structure to EEPROM ok.");
+		debug.println(DebugLevel::INFO, "\r\nSUCCESS: Write from RAM data structure to EEPROM ok.");
 		RestoreConfigurationFromEEPROM();
 		return true;
 	}
 	else {
-		Serial.println("\r\nERROR: Write to EEPROM failed!");
+		debug.println(DebugLevel::ERROR, "\r\nERROR: Write to EEPROM failed!");
 		return false; // signal error
 	}
 }
 
 void Device::printThingspeakInfo(void) {
-	Serial.print("Thingspeak host: ");
-	Serial.println(getcThingspeakHost());
-	Serial.print("API Write  Key: ");
-	Serial.println(getcThinkspeakApikey());
+	debug.print(DebugLevel::ALWAYS, "Thingspeak host: ");
+	debug.println(DebugLevel::ALWAYS, getcThingspeakHost());
+	debug.print(DebugLevel::ALWAYS, "API Write  Key: ");
+	debug.println(DebugLevel::ALWAYS, getcThinkspeakApikey());
 }
 
 void Device::updateThingspeak(void) {
@@ -224,9 +220,9 @@ void Device::updateThingspeak(void) {
 	int const MAX_THINGSPEAK_FIELD_COUNT = 8; // Thingspeak only accept 8 fields
 
 	if (!client.connect(db.thingspeak.host, 80)) {
-		Serial.print("error: connection to ");
-		Serial.print(getcThingspeakHost());
-		Serial.println(" failed");
+		debug.print(DebugLevel::ALWAYS, "error: connection to ");
+		debug.print(DebugLevel::ALWAYS, getcThingspeakHost());
+		debug.println(DebugLevel::ALWAYS, " failed");
 	}
 	else {
 		// Send message to Thingspeak
@@ -258,9 +254,9 @@ void Device::updateThingspeak(void) {
 				}
 			}
 		}
-		Serial.print("Thinkspeak URL:");
-		Serial.println(getStr);
-		Serial.println("");
+		debug.print(DebugLevel::DEBUG, "Thinkspeak URL:");
+		debug.println(DebugLevel::DEBUG, getStr);
+		debug.println(DebugLevel::DEBUG, "");
 		client.print(
 				String("GET ") + getStr + " HTTP/1.1\r\n" + "Host: " + getcThingspeakHost() + "\r\n"
 						+ "Connection: close\r\n\r\n");
@@ -272,15 +268,15 @@ void Device::updateThingspeak(void) {
 			String line = client.readStringUntil('\r');
 			if (line.startsWith("HTTP/1.1 200 OK")) {
 				db.thingspeak.status |= 0x01;
-				Serial.println(line);
+				debug.println(DebugLevel::DEBUG, line);
 			}
 			if (line.startsWith("Status: 200 OK")) {
 				db.thingspeak.status |= 0x02;
-				Serial.println(line);
+				debug.println(DebugLevel::DEBUG, line);
 			}
 			if (line.startsWith("error")) {
 				db.thingspeak.status |= 0x04;
-				Serial.println(line);
+				debug.println(DebugLevel::DEBUG, line);
 			}
 		}
 	}

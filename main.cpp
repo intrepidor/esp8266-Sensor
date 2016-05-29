@@ -24,7 +24,6 @@ String ProgramInfo("\r\nEnvironment Sensor v0.01 : Allan Inda 2016-May-27");
 
 // Other
 long count = 0;
-bool debug_output = true;
 
 // PIR Sensor
 int PIRcount = 0;     // current PIR count
@@ -54,6 +53,7 @@ const uint8_t I2C_SCL_PIN = D5;
 const int SENSOR_COUNT = 4; // should be at least equal to the value of MAX_PORTS
 Sensor* sensors[SENSOR_COUNT] = { nullptr, nullptr, nullptr, nullptr };
 Device dinfo;
+DebugPrint debug;
 
 // Information
 void printMenu(void);
@@ -95,7 +95,7 @@ void reset(void) {
 	 */
 	reset_config();
 
-	Serial.println("Rebooting ... this may take 15 seconds or more.");
+	debug.println(DebugLevel::ALWAYS, "Rebooting ... this may take 15 seconds or more.");
 
 	pinMode(PIN_SOFTRESET, OUTPUT);
 	for (int a = 0; a < 10; a++) {
@@ -115,8 +115,8 @@ void ConfigurePorts(void) {
 	// Loop through each of the ports
 	for (int portNumber = 0; portNumber < dinfo.getPortMax(); portNumber++) {
 		// Get the pins used for this port
-		//Serial.print("portNumber=");
-		//Serial.println(portNumber);
+		debug.print(DebugLevel::DEBUGMORE, "portNumber=");
+		debug.println(DebugLevel::DEBUGMORE, portNumber);
 		switch (portNumber) {
 			case 0: // port#0
 				p.digital = DIGITAL_PIN_1;
@@ -144,8 +144,9 @@ void ConfigurePorts(void) {
 				p.scl = I2C_SCL_PIN;
 				break;
 			default:
-				Serial.print("BUG: ConfigurePorts() - port number out of range in switch -");
-				Serial.println(portNumber);
+				debug.print(DebugLevel::ERROR,
+						"ERROR: ConfigurePorts() - port number out of range in switch -");
+				debug.println(DebugLevel::ERROR, portNumber);
 				break;
 		}
 
@@ -159,12 +160,13 @@ void ConfigurePorts(void) {
 				strncpy(name, sensorList[static_cast<int>(portType)].name, 19);
 				name[19] = 0;
 				// found the setting
-				Serial.print("Configuring Port#");
-				Serial.print(portNumber);
-				Serial.print(", name= ");
-				Serial.print(name);
-				Serial.print(", type=");
-				Serial.println(c_getModuleName(static_cast<sensorModule>(portType)).c_str());
+				debug.print(DebugLevel::INFO, "Configuring Port#");
+				debug.print(DebugLevel::INFO, portNumber);
+				debug.print(DebugLevel::INFO, ", name= ");
+				debug.print(DebugLevel::INFO, name);
+				debug.print(DebugLevel::INFO, ", type=");
+				debug.println(DebugLevel::INFO,
+						c_getModuleName(static_cast<sensorModule>(portType)).c_str());
 				//lint -e{30, 142} suppress error due to lint not understanding enum classes
 				if (portNumber >= 0 && portNumber < SENSOR_COUNT) {
 					switch (portType) {
@@ -219,15 +221,16 @@ void ConfigurePorts(void) {
 							sensors[portNumber] = new TemperatureSensor();
 							sensors[portNumber]->init(sensorModule::dht11, p);
 							sensors[portNumber]->setName("DHT11");
-							Serial.println(
-									"BUG: ConfigurePorts() - sensorModule not found in switch");
-							Serial.println(" ... Created DHT11 instead.");
+							debug.println(DebugLevel::ERROR,
+									"ERROR: ConfigurePorts() - sensorModule not found in switch");
+							debug.println(DebugLevel::ERROR, " ... Created DHT11 instead.");
 							break;
 					} // switch (portType)
 				} // if (portNumber...)
 				else {
-					Serial.print("BUG: ConfigurePort() - portNumber out of range - ");
-					Serial.println(portNumber);
+					debug.print(DebugLevel::ERROR,
+							"ERROR: ConfigurePort() - portNumber out of range - ");
+					debug.println(DebugLevel::ERROR, portNumber);
 				}
 			} // if (portMode ...)
 		} // for (portType ...)
@@ -305,11 +308,11 @@ void setup(void) {
 
 void printInfo(void) {
 // Print useful Information
-	Serial.println(ProgramInfo);
-	Serial.println(String("Device IP: ") + localIPstr());
+	debug.println(DebugLevel::ALWAYS, ProgramInfo);
+	debug.println(DebugLevel::ALWAYS, String("Device IP: ") + localIPstr());
 	dinfo.printThingspeakInfo();
-	Serial.print(String("ESP8266_Device_ID=") + String(dinfo.getDeviceID()));
-	Serial.println(String("\r\nFriendly Name: ") + String(dinfo.getDeviceName()));
+	debug.print(DebugLevel::ALWAYS, String("ESP8266_Device_ID=") + String(dinfo.getDeviceID()));
+	debug.println(DebugLevel::ALWAYS, String("\r\nFriendly Name: ") + String(dinfo.getDeviceName()));
 	dinfo.printInfo();
 }
 
@@ -359,35 +362,30 @@ int task_flashled(unsigned long now) {
 }
 
 void printMenu(void) {
-	Serial.println("MENU ----------------------");
-	Serial.println("?  show this menu");
-	Serial.println("i  show High-level configuration");
-	Serial.println("c  show calibration values");
-	Serial.println("m  show measured values");
-	Serial.println("s  show status");
-	Serial.println("w  show web URLs");
-	Serial.println("z  Extended menu");
-	Serial.println("");
+	debug.println(DebugLevel::ALWAYS, "MENU ----------------------");
+	debug.println(DebugLevel::ALWAYS, "?  show this menu");
+	debug.println(DebugLevel::ALWAYS, "i  show High-level configuration");
+	debug.println(DebugLevel::ALWAYS, "c  show calibration values");
+	debug.println(DebugLevel::ALWAYS, "m  show measured values");
+	debug.println(DebugLevel::ALWAYS, "s  show status");
+	debug.println(DebugLevel::ALWAYS, "w  show web URLs");
+	debug.println(DebugLevel::ALWAYS, "z  Extended menu");
+	debug.println(DebugLevel::ALWAYS, "");
 }
 
 void printExtendedMenu(void) {
-	Serial.println("MENU EXTENDED -------------");
-	Serial.println("E  show data structure in EEPROM");
-	Serial.println("M  show data structure in RAM");
-	Serial.println("R  show reason for last reset");
-	Serial.println("I  show ESP information");
-	Serial.println("Q  reset()");
-	Serial.println("W  EspClass::reset()");
-	Serial.println("A  EspClass::restart()");
-	Serial.print("D  [");
-	if (debug_output) {
-		Serial.print("ON");
-	}
-	else {
-		Serial.print("OFF");
-	}
-	Serial.println("] toggle debug output to serial port");
-	Serial.println("");
+	debug.println(DebugLevel::ALWAYS, "MENU EXTENDED -------------");
+	debug.println(DebugLevel::ALWAYS, "E  show data structure in EEPROM");
+	debug.println(DebugLevel::ALWAYS, "M  show data structure in RAM");
+	debug.println(DebugLevel::ALWAYS, "R  show reason for last reset");
+	debug.println(DebugLevel::ALWAYS, "I  show ESP information");
+	debug.println(DebugLevel::ALWAYS, "Q  reset()");
+	debug.println(DebugLevel::ALWAYS, "W  EspClass::reset()");
+	debug.println(DebugLevel::ALWAYS, "A  EspClass::restart()");
+	debug.print(DebugLevel::ALWAYS, "D  [");
+	debug.print(DebugLevel::ALWAYS, debug.getDebugLevelString());
+	debug.println(DebugLevel::ALWAYS, "] Debug level for logging to serial port");
+	debug.println(DebugLevel::ALWAYS, "");
 }
 
 int task_serialport_menu(unsigned long now) {
@@ -414,41 +412,41 @@ int task_serialport_menu(unsigned long now) {
 				// Display the heading
 				if (need_new_heading) {
 					need_new_heading = false;
-					Serial.print("CNT\tMotion\tLast\t");
+					debug.print(DebugLevel::ALWAYS, "CNT\tMotion\tLast\t");
 					for (int s = 0; s < SENSOR_COUNT; s++) {
 						if (sensors[s]) {
 							for (int v = 0; v < getValueCount(); v++) {
 								if (sensors[s]->getValueEnable(v)) {
-									Serial.print(sensors[s]->getValueName(v));
-									Serial.print("\t");
+									debug.print(DebugLevel::ALWAYS, sensors[s]->getValueName(v));
+									debug.print(DebugLevel::ALWAYS, "\t");
 								}
 							}
 						}
 					}
-					Serial.println("");
+					debug.println(DebugLevel::ALWAYS, "");
 				}
 				// Display the Data
-				Serial.print("#");
-				Serial.print(count);
-				Serial.print("\t");
-				Serial.print(PIRcount);
-				Serial.print("\t");
-				Serial.print(PIRcountLast);
-				Serial.print("\t");
+				debug.print(DebugLevel::ALWAYS, "#");
+				debug.print(DebugLevel::ALWAYS, count);
+				debug.print(DebugLevel::ALWAYS, "\t");
+				debug.print(DebugLevel::ALWAYS, PIRcount);
+				debug.print(DebugLevel::ALWAYS, "\t");
+				debug.print(DebugLevel::ALWAYS, PIRcountLast);
+				debug.print(DebugLevel::ALWAYS, "\t");
 				for (int s = 0; s < SENSOR_COUNT; s++) {
 					if (sensors[s]) {
 						for (int v = 0; v < getValueCount(); v++) {
 							if (sensors[s]->getValueEnable(v)) {
-								Serial.print(sensors[s]->getValue(v));
-								Serial.print("\t");
+								debug.print(DebugLevel::ALWAYS, sensors[s]->getValue(v));
+								debug.print(DebugLevel::ALWAYS, "\t");
 							}
 						}
 					}
 				}
-				Serial.println("");
+				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'c':
-				Serial.println("Calibration Data");
+				debug.println(DebugLevel::ALWAYS, "Calibration Data");
 				for (int i = 0; i < SENSOR_COUNT; i++) {
 					if (sensors[i]) {
 						sensors[i]->printCals();
@@ -456,7 +454,7 @@ int task_serialport_menu(unsigned long now) {
 				}
 				break;
 			case 'm':
-				Serial.println("Value Data");
+				debug.println(DebugLevel::ALWAYS, "Value Data");
 				for (int i = 0; i < SENSOR_COUNT; i++) {
 					if (sensors[i]) {
 						sensors[i]->printValues();
@@ -468,99 +466,94 @@ int task_serialport_menu(unsigned long now) {
 				break;
 ///// Extended Menu ////
 			case 'D':
-				if (debug_output) {
-					debug_output = false;
-					Serial.println("Debug Disabled");
-				}
-				else {
-					debug_output = true;
-					Serial.println("Debug Enabled");
-				}
+				debug.incrementDebugLevel();
+				debug.print(DebugLevel::ALWAYS, "Debug Level set to: ");
+				debug.println(DebugLevel::ALWAYS, debug.getDebugLevelString());
 				break;
 			case 'E': // Read the EEPROM into the RAM data structure, then dump the contents
-				Serial.println("");
+				debug.println(DebugLevel::ALWAYS, "");
 				dinfo.RestoreConfigurationFromEEPROM();
-				Serial.println(dinfo.toString().c_str());
-				Serial.println("");
+				debug.println(DebugLevel::ALWAYS, dinfo.toString().c_str());
+				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'M': // Just dump the contents of the RAM data structure
-				Serial.println("");
-				Serial.println(dinfo.toString().c_str());
-				Serial.println("");
+				debug.println(DebugLevel::ALWAYS, "");
+				debug.println(DebugLevel::ALWAYS, dinfo.toString().c_str());
+				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'I':
-				Serial.print("CycleCount:\t\t");
-				Serial.println(ESP.getCycleCount());
-				Serial.print("Vcc:\t\t\t");
-				Serial.println(ESP.getVcc());
-				Serial.print("FreeHeap:\t\t");
-				Serial.println(ESP.getFreeHeap(), HEX);
-				Serial.print("ChipId:\t\t\t");
-				Serial.println(ESP.getChipId(), HEX);
-				Serial.print("SdkVersion:\t\t");
-				Serial.println(ESP.getSdkVersion());
-				Serial.print("BootVersion:\t\t");
-				Serial.println(ESP.getBootVersion());
-				Serial.print("BootMode:\t\t");
-				Serial.println(ESP.getBootMode());
-				Serial.print("CpuFreqMHz:\t\t");
-				Serial.println(ESP.getCpuFreqMHz());
-				Serial.print("FlashChipId:\t\t");
-				Serial.println(ESP.getFlashChipId(), HEX);
-				Serial.print("FlashChipRealSize[Mbit]:");
-				Serial.println(ESP.getFlashChipRealSize(), HEX);
-				Serial.print("FlashChipSize [MBit]:\t");
-				Serial.println(ESP.getFlashChipSize(), HEX);
-				Serial.print("FlashChipSpeed [Hz]:\t");
-				Serial.println(ESP.getFlashChipSpeed());
-				Serial.print("FlashChipMode:\t\t");
+				debug.print(DebugLevel::ALWAYS, "CycleCount:\t\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getCycleCount());
+				debug.print(DebugLevel::ALWAYS, "Vcc:\t\t\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getVcc());
+				debug.print(DebugLevel::ALWAYS, "FreeHeap:\t\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getFreeHeap(), HEX);
+				debug.print(DebugLevel::ALWAYS, "ChipId:\t\t\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getChipId(), HEX);
+				debug.print(DebugLevel::ALWAYS, "SdkVersion:\t\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getSdkVersion());
+				debug.print(DebugLevel::ALWAYS, "BootVersion:\t\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getBootVersion());
+				debug.print(DebugLevel::ALWAYS, "BootMode:\t\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getBootMode());
+				debug.print(DebugLevel::ALWAYS, "CpuFreqMHz:\t\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getCpuFreqMHz());
+				debug.print(DebugLevel::ALWAYS, "FlashChipId:\t\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipId(), HEX);
+				debug.print(DebugLevel::ALWAYS, "FlashChipRealSize[Mbit]:");
+				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipRealSize(), HEX);
+				debug.print(DebugLevel::ALWAYS, "FlashChipSize [MBit]:\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipSize(), HEX);
+				debug.print(DebugLevel::ALWAYS, "FlashChipSpeed [Hz]:\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipSpeed());
+				debug.print(DebugLevel::ALWAYS, "FlashChipMode:\t\t");
 				switch (ESP.getFlashChipMode()) {
 					case FM_QIO:
-						Serial.println("QIO");
+						debug.println(DebugLevel::ALWAYS, "QIO");
 						break;
 					case FM_QOUT:
-						Serial.println("QOUT");
+						debug.println(DebugLevel::ALWAYS, "QOUT");
 						break;
 					case FM_DIO:
-						Serial.println("DIO");
+						debug.println(DebugLevel::ALWAYS, "DIO");
 						break;
 					case FM_DOUT:
-						Serial.println("DOUT");
+						debug.println(DebugLevel::ALWAYS, "DOUT");
 						break;
 					case FM_UNKNOWN:
 					default:
-						Serial.println("Unknown");
+						debug.println(DebugLevel::ALWAYS, "Unknown");
 						break;
 				}
-				Serial.print("FlashChipSizeByChipId:\t");
-				Serial.println(ESP.getFlashChipSizeByChipId(), HEX);
-				Serial.print("SketchSize [Bytes]:\t");
-				Serial.println(ESP.getSketchSize(), HEX);
-				Serial.print("FreeSketchSpace [Bytes]:");
-				Serial.println(ESP.getFreeSketchSpace(), HEX);
-				Serial.println("");
+				debug.print(DebugLevel::ALWAYS, "FlashChipSizeByChipId:\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipSizeByChipId(), HEX);
+				debug.print(DebugLevel::ALWAYS, "SketchSize [Bytes]:\t");
+				debug.println(DebugLevel::ALWAYS, ESP.getSketchSize(), HEX);
+				debug.print(DebugLevel::ALWAYS, "FreeSketchSpace [Bytes]:");
+				debug.println(DebugLevel::ALWAYS, ESP.getFreeSketchSpace(), HEX);
+				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'R':
-				Serial.print("Last Reset --> ");
-				Serial.println(ESP.getResetInfo());
+				debug.print(DebugLevel::ALWAYS, "Last Reset --> ");
+				debug.println(DebugLevel::ALWAYS, ESP.getResetInfo());
 				break;
 			case 'Q':
-				Serial.println("Calling reset() in 2 seconds ...");
+				debug.println(DebugLevel::ALWAYS, "Calling reset() in 2 seconds ...");
 				reset();
 				break;
 			case 'W':
-				Serial.println("Calling EspClass::reset() in 2 seconds ...");
+				debug.println(DebugLevel::ALWAYS, "Calling EspClass::reset() in 2 seconds ...");
 				delay(2000);
 				ESP.reset();
 				break;
 			case 'A':
-				Serial.println("Calling EspClass::restart() in 2 seconds ...");
+				debug.println(DebugLevel::ALWAYS, "Calling EspClass::restart() in 2 seconds ...");
 				delay(2000);
 				ESP.restart();
 				break;
 			default:
-				Serial.print("Unknown command: ");
-				Serial.println(ch);
+				debug.print(DebugLevel::ALWAYS, "Unknown command: ");
+				debug.println(DebugLevel::ALWAYS, ch);
 				break;
 		}
 	}

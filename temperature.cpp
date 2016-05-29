@@ -1,5 +1,5 @@
 #include <Arduino.h>
-//#include <EEPROM.h>
+#include "main.h"
 #include "temperature.h"
 
 void TemperatureSensor::init(sensorModule m, SensorPins& p) {
@@ -55,10 +55,8 @@ bool TemperatureSensor::acquire(void) {
 				return false;   // error: read failed
 			}
 
-			h = h * getCal(TEMP_CAL_INDEX_HUMIDITY_SLOPE)
-					+ getCal(TEMP_CAL_INDEX_HUMIDITY_OFFSET);
-			t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE)
-					+ getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
+			h = h * getCal(TEMP_CAL_INDEX_HUMIDITY_SLOPE) + getCal(TEMP_CAL_INDEX_HUMIDITY_OFFSET);
+			t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
 
 			setTemperature(t);
 			setHumidity(h);

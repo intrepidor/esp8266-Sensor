@@ -204,38 +204,35 @@ int ConfigurationChange(void) {
 	bool need_reboot = false;
 	if (server.args() > 0) {
 		bool found = false;
-		if (debug_output) {
-			Serial.println("");
-			Serial.println("##########################################################");
-		}
+		debug.println(DebugLevel::DEBUG, "");
+		debug.println(DebugLevel::DEBUG,
+				"##########################################################");
 		dinfo.setEnable(false);
 		for (uint8_t i = 0; i < server.args(); i++) {
 			String sarg = server.argName(i);
 			String varg = server.arg(i);
-			if (debug_output) {
-				Serial.print("NAME=");
-				Serial.print(sarg);
-				Serial.print("  VALUE=");
-				Serial.print(varg);
-			}
+			debug.print(DebugLevel::DEBUG, "NAME=");
+			debug.print(DebugLevel::DEBUG, sarg);
+			debug.print(DebugLevel::DEBUG, "  VALUE=");
+			debug.print(DebugLevel::DEBUG, varg);
 			if (sarg == String("name")) {
 				dinfo.setDeviceName(varg);
-				if (debug_output) Serial.println(" ok name");
+				debug.println(DebugLevel::DEBUG, " ok name");
 				found = true;
 			}
 			if (sarg == String("ts_enable")) {
 				dinfo.setEnable(true);
-				if (debug_output) Serial.println(" ok ts_enable");
+				debug.println(DebugLevel::DEBUG, " ok ts_enable");
 				found = true;
 			}
 			if (sarg == "apikey") {
 				dinfo.setThingspeakApikey(varg);
-				if (debug_output) Serial.println(" ok apikey");
+				debug.println(DebugLevel::DEBUG, " ok apikey");
 				found = true;
 			}
 			if (sarg == "ipaddr") {
 				dinfo.setIpaddr(varg);
-				if (debug_output) Serial.println(" ok ipaddr");
+				debug.println(DebugLevel::DEBUG, " ok ipaddr");
 				found = true;
 			}
 
@@ -243,34 +240,28 @@ int ConfigurationChange(void) {
 				found = true;
 				char c = sarg.c_str()[4];
 				int n = static_cast<int>(c) - static_cast<int>('0');
-				if (debug_output) {
-					Serial.print(", n=");
-					Serial.print(n);
-				}
+				debug.print(DebugLevel::DEBUG, ", n=");
+				debug.print(DebugLevel::DEBUG, n);
 				if (n >= 0 && n < dinfo.getPortMax()) {
 					if (varg.length() > 0) {
 						dinfo.setPortName(n, varg);
-						if (debug_output) {
-							Serial.print(" ok, port[");
-							Serial.print(n);
-							Serial.print("].name set to ");
-							Serial.println(varg.c_str());
-						}
+						debug.print(DebugLevel::DEBUG, " ok, port[");
+						debug.print(DebugLevel::DEBUG, n);
+						debug.print(DebugLevel::DEBUG, "].name set to ");
+						debug.println(DebugLevel::DEBUG, varg.c_str());
 					}
 					else {
 						dinfo.setPortName(n, "");
-						if (debug_output) Serial.println(" ok - cleared");
+						debug.println(DebugLevel::DEBUG, " ok - cleared");
 					}
 				}
 				else {
-					if (debug_output) {
-						Serial.print("\nERROR: Bug - Invalid port #(");
-						Serial.print(n);
-						Serial.print(",");
-						Serial.print(c);
-						Serial.print(") found in ConfigurationChange() - ");
-						Serial.println(sarg.c_str());
-					}
+					debug.print(DebugLevel::DEBUG, "\nERROR: Bug - Invalid port #(");
+					debug.print(DebugLevel::DEBUG, n);
+					debug.print(DebugLevel::DEBUG, ",");
+					debug.print(DebugLevel::DEBUG, c);
+					debug.print(DebugLevel::DEBUG, ") found in ConfigurationChange() - ");
+					debug.println(DebugLevel::DEBUG, sarg.c_str());
 				}
 			}
 
@@ -280,32 +271,28 @@ int ConfigurationChange(void) {
 				char c2 = sarg.c_str()[8];
 				int n1 = static_cast<int>(c1) - static_cast<int>('0');
 				int n2 = static_cast<int>(c2) - static_cast<int>('0');
-				if (debug_output) {
-					Serial.print(", n1=");
-					Serial.print(n1);
-					Serial.print(", n2=");
-					Serial.print(n2);
-				}
+				debug.print(DebugLevel::DEBUG, ", n1=");
+				debug.print(DebugLevel::DEBUG, n1);
+				debug.print(DebugLevel::DEBUG, ", n2=");
+				debug.print(DebugLevel::DEBUG, n2);
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					double d = 0;
 					if (varg.length() > 0) {
-						if (debug_output) Serial.println(" ok, set");
+						debug.println(DebugLevel::DEBUG, " ok, set");
 						d = ::atof(varg.c_str());
 					}
 					else {
-						if (debug_output) Serial.println(" ok, cleared");
+						debug.println(DebugLevel::DEBUG, " ok, cleared");
 					}
 					dinfo.setPortAdj(n1, n2, d);
 				}
 				else {
-					if (debug_output) {
-						Serial.print("\nERROR: Bug - Invalid port #(");
-						Serial.print(n1);
-						Serial.print(",");
-						Serial.print(c1);
-						Serial.print(") found in ConfigurationChange() - ");
-						Serial.println(sarg.c_str());
-					}
+					debug.print(DebugLevel::DEBUG, "\nERROR: Bug - Invalid port #(");
+					debug.print(DebugLevel::DEBUG, n1);
+					debug.print(DebugLevel::DEBUG, ",");
+					debug.print(DebugLevel::DEBUG, c1);
+					debug.print(DebugLevel::DEBUG, ") found in ConfigurationChange() - ");
+					debug.println(DebugLevel::DEBUG, sarg.c_str());
 				}
 			}
 
@@ -313,10 +300,8 @@ int ConfigurationChange(void) {
 				found = true;
 				char c1 = sarg.c_str()[7];
 				int n1 = static_cast<int>(c1) - static_cast<int>('0');
-				if (debug_output) {
-					Serial.print(", n1=");
-					Serial.print(n1);
-				}
+				debug.print(DebugLevel::DEBUG, ", n1=");
+				debug.print(DebugLevel::DEBUG, n1);
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					bool found1 = false;
 					if (varg.length() > 0) {
@@ -328,58 +313,50 @@ int ConfigurationChange(void) {
 									dinfo.setPortMode(n1, sensorList[j].id);
 									need_reboot = true;
 								}
-								if (debug_output) {
-									Serial.print("\r\nInfo: Setting mode to ");
-									Serial.print(static_cast<int>(sensorList[j].id));
-									Serial.print("(");
-									Serial.print(sensorList[j].name);
-									Serial.print("), Reboot needed: ");
-									if (need_reboot) {
-										Serial.println("yes");
-									}
-									else {
-										Serial.println("no");
-									}
+								debug.print(DebugLevel::DEBUG, "\r\nInfo: Setting mode to ");
+								debug.print(DebugLevel::DEBUG, static_cast<int>(sensorList[j].id));
+								debug.print(DebugLevel::DEBUG, "(");
+								debug.print(DebugLevel::DEBUG, sensorList[j].name);
+								debug.print(DebugLevel::DEBUG, "), Reboot needed: ");
+								if (need_reboot) {
+									debug.println(DebugLevel::DEBUG, "yes");
+								}
+								else {
+									debug.println(DebugLevel::DEBUG, "no");
 								}
 								found1 = true;
 								break;
 							}
 						}
 						if (!found1) {
-							Serial.print("\r\nERROR: unable to map mode: ");
-							Serial.println(varg.c_str());
+							debug.print(DebugLevel::DEBUG, "\r\nERROR: unable to map mode: ");
+							debug.println(DebugLevel::DEBUG, varg.c_str());
 						}
 					}
 					else {
-						if (debug_output) {
-							Serial.print("\r\nERROR: But - Invalid varg mode: (");
-							Serial.print(varg.c_str());
-							Serial.print(") found in ConfigurationChange() - ");
-							Serial.println(sarg.c_str());
-						}
+						debug.print(DebugLevel::DEBUG, "\r\nERROR: But - Invalid varg mode: (");
+						debug.print(DebugLevel::DEBUG, varg.c_str());
+						debug.print(DebugLevel::DEBUG, ") found in ConfigurationChange() - ");
+						debug.println(DebugLevel::DEBUG, sarg.c_str());
 					}
 				}
 				else {
-					if (debug_output) {
-						Serial.print("\r\nERROR: Bug - Invalid port #(");
-						Serial.print(n1);
-						Serial.print(",");
-						Serial.print(c1);
-						Serial.print(") found in ConfigurationChange() - ");
-						Serial.println(sarg.c_str());
-					}
+					debug.print(DebugLevel::DEBUG, "\r\nERROR: Bug - Invalid port #(");
+					debug.print(DebugLevel::DEBUG, n1);
+					debug.print(DebugLevel::DEBUG, ",");
+					debug.print(DebugLevel::DEBUG, c1);
+					debug.print(DebugLevel::DEBUG, ") found in ConfigurationChange() - ");
+					debug.println(DebugLevel::DEBUG, sarg.c_str());
 				}
 			}
 
 			if (sarg == "reboot") {
-				if (debug_output) {
-					Serial.println(", reboot");
-				}
+				debug.println(DebugLevel::DEBUG, ", reboot");
 				found = true;
 			}
 
 			if (!found) {
-				Serial.println("");
+				debug.println(DebugLevel::DEBUG, "");
 			}
 			found = false;
 		}

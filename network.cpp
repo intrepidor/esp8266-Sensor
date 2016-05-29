@@ -42,35 +42,35 @@ void WebInit(void) {
 
 // Start WiFi
 //  WiFi.begin(factory_default_ssid, factory_default_pass);
-//  Serial.print("Searching for ");
-//  Serial.print(factory_default_ssid);
+//  debug.print(DebugLevel::ALWAYS, "Searching for ");
+//  debug.print(DebugLevel::ALWAYS, factory_default_ssid);
 //
 //  while (WiFi.status() != WL_CONNECTED) {
 //    digitalWrite(BUILTIN_LED, BUILTIN_LED_OFF);
 //    delay(250);
 //    digitalWrite(BUILTIN_LED, BUILTIN_LED_ON);
 //    delay(250);
-//    Serial.print(".");
+//    debug.print(DebugLevel::ALWAYS, ".");
 //  }
 
-	Serial.println("");
-	Serial.print("Connected to ");
-	Serial.println(factory_default_ssid);
-	Serial.print("IP address: ");
-	Serial.println(WiFi.localIP());
+	debug.println(DebugLevel::ALWAYS, "");
+	debug.print(DebugLevel::ALWAYS, "Connected to ");
+	debug.println(DebugLevel::ALWAYS, factory_default_ssid);
+	debug.print(DebugLevel::ALWAYS, "IP address: ");
+	debug.println(DebugLevel::ALWAYS, WiFi.localIP());
 
 	uint8_t available_networks = static_cast<uint8_t>(WiFi.scanNetworks());
 	for (uint8_t network = 0; network < available_networks; network++) {
 		if (strcmp(WiFi.SSID(network).c_str(), factory_default_ssid) == 0) {
 			rssi = WiFi.RSSI(network);
-			Serial.print("RSSI: ");
-			Serial.print(String(rssi).c_str());
-			Serial.println(" dBm");
+			debug.print(DebugLevel::ALWAYS, "RSSI: ");
+			debug.print(DebugLevel::ALWAYS, String(rssi).c_str());
+			debug.println(DebugLevel::ALWAYS, " dBm");
 		}
 	}
 
 	if (MDNS.begin("esp8266")) {
-		Serial.println("mDNS started");
+		debug.println(DebugLevel::ALWAYS, "mDNS started");
 	}
 
 	// Configure webserver
@@ -93,8 +93,7 @@ void WebInit(void) {
 	server.on("/", []() {
 		String response("");
 		response += "\nCount=" + String(count);
-		response += "\nCycleCount=" + String(ESP.getCycleCount());
-		response += "\nMotion#1=" + String(PIRcount);
+		response += "\nPIR=" + String(PIRcount);
 		for (int i=0; i<SENSOR_COUNT; i++) {
 			if (sensors[i]) {
 				for (int j=0; j<getValueCount(); j++) {
@@ -113,7 +112,7 @@ void WebInit(void) {
 	server.on(uri_v.c_str(), sendValue);
 
 	server.begin();
-	Serial.println("Web server started");
+	debug.println(DebugLevel::ALWAYS, "Web server started");
 }
 
 void WebWorker(void) {

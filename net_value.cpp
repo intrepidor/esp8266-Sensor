@@ -14,24 +14,24 @@
 
 void WebPrintInfo(void) {
 	// Describe Webserver access
-	Serial.print("Configure Device: http://");
-	Serial.print(localIPstr());
-	Serial.println("/config");
+	debug.print(DebugLevel::ALWAYS, "Configure Device: http://");
+	debug.print(DebugLevel::ALWAYS, localIPstr());
+	debug.println(DebugLevel::ALWAYS, "/config");
 
-	Serial.print("Read Measured Data: http://");
-	Serial.println(localIPstr());
+	debug.print(DebugLevel::ALWAYS, "Read Measured Data: http://");
+	debug.println(DebugLevel::ALWAYS, localIPstr());
 
-	Serial.print("Read API: http://");
-	Serial.print(localIPstr());
-	Serial.println(uri_v);
-	Serial.println("?read=api        :: read ThingSpeak API key");
-	Serial.println("?read=rssi       :: read AP signal strength in dBm at connect time");
-	Serial.println("?read=deviceid   :: read deviceid number");
-	Serial.println("?read=name       :: read name of device");
-	Serial.println("?read=thingspeak :: read thingspeak api codes");
-	Serial.println("?read=csv        :: read summary of sensor data");
-	Serial.println("?reset=0         :: reboot device");
-	Serial.println("");
+	debug.print(DebugLevel::ALWAYS, "Read API: http://");
+	debug.print(DebugLevel::ALWAYS, localIPstr());
+	debug.println(DebugLevel::ALWAYS, uri_v);
+	debug.println(DebugLevel::ALWAYS, "?read=api        :: read ThingSpeak API key");
+	debug.println(DebugLevel::ALWAYS, "?read=rssi       :: read AP signal strength in dBm at connect time");
+	debug.println(DebugLevel::ALWAYS, "?read=deviceid   :: read deviceid number");
+	debug.println(DebugLevel::ALWAYS, "?read=name       :: read name of device");
+	debug.println(DebugLevel::ALWAYS, "?read=thingspeak :: read thingspeak api codes");
+	debug.println(DebugLevel::ALWAYS, "?read=csv        :: read summary of sensor data");
+	debug.println(DebugLevel::ALWAYS, "?reset=0         :: reboot device");
+	debug.println(DebugLevel::ALWAYS, "");
 }
 
 void sendValue(void) {

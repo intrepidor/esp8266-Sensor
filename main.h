@@ -11,16 +11,17 @@
 #include <Arduino.h>
 #include "temperature.h"
 #include "deviceinfo.h"
+#include "debugprint.h"
 
 extern void reset(void);
 extern long count;
 extern int PIRcount;
-extern bool debug_output;
 
 extern const int SENSOR_COUNT;
 extern Sensor* sensors[];
 
 extern Device dinfo;
+extern DebugPrint debug;
 
 extern const uint8_t PIN_SOFTRESET;
 extern const uint8_t PIN_BUILTIN_LED;

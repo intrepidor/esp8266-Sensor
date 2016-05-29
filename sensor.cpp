@@ -5,9 +5,9 @@
  *      Author: allan
  */
 
-#include "sensor.h"
-
 #include <Arduino.h>
+#include "main.h"
+#include "sensor.h"
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -58,6 +58,7 @@ int getCalCount(void) {
 }
 
 String c_getModuleName(sensorModule sm) {
+// FIXME -- this should be a lookup into the sensor[] array, not a repeat of the module names
 	switch (sm) {
 		// 1 digital
 		case sensorModule::dht11:
@@ -145,7 +146,7 @@ bool Sensor::isValueIndexValid(int _index) {
 	if (_index >= 0 && _index < getValueCount()) {
 		return true;
 	}
-	Serial.println("BUG: isValueIndexValid() index out of bounds");
+	debug.println(DebugLevel::ERROR, "ERROR: isValueIndexValid() index out of bounds");
 	return false;
 }
 
@@ -194,22 +195,22 @@ bool Sensor::setValue(int _index, float v) {
 }
 
 void Sensor::printValues(void) {
-	Serial.print("Sensor: ");
+	debug.print(DebugLevel::ALWAYS, "Sensor: ");
 	if (getName().length() > 0) {
-		Serial.print(getName());
+		debug.print(DebugLevel::ALWAYS, getName());
 	}
-	Serial.println("");
+	debug.println(DebugLevel::ALWAYS, "");
 	for (int i = 0; i < getValueCount(); i++) {
 		if (value[i].enabled) {
-			Serial.print("   Val[");
-			Serial.print(i);
-			Serial.print(",");
-			Serial.print(value[i].name);
-			Serial.print("]=");
-			Serial.println(getValue(i));
+			debug.print(DebugLevel::ALWAYS, "   Val[");
+			debug.print(DebugLevel::ALWAYS, i);
+			debug.print(DebugLevel::ALWAYS, ",");
+			debug.print(DebugLevel::ALWAYS, value[i].name);
+			debug.print(DebugLevel::ALWAYS, "]=");
+			debug.println(DebugLevel::ALWAYS, getValue(i));
 		}
 	}
-	Serial.println("");
+	debug.println(DebugLevel::ALWAYS, "");
 }
 
 //--------------------------------
@@ -219,7 +220,7 @@ bool Sensor::isCalIndexValid(int _index) {
 	if (_index >= 0 && _index < getCalCount()) {
 		return true;
 	}
-	Serial.println("BUG: isCalIndexValid() index out of bounds");
+	debug.println(DebugLevel::ERROR, "ERROR: isCalIndexValid() index out of bounds");
 	return false;
 }
 
@@ -268,21 +269,21 @@ bool Sensor::setCal(int _index, float v) {
 }
 
 void Sensor::printCals(void) {
-	Serial.print("Sensor: ");
+	debug.print(DebugLevel::ALWAYS, "Sensor: ");
 	if (getName().length() > 0) {
-		Serial.print(getName());
+		debug.print(DebugLevel::ALWAYS, getName());
 	}
-	Serial.println("");
+	debug.println(DebugLevel::ALWAYS, "");
 	for (int i = 0; i < getCalCount(); i++) {
 		if (cal[i].enabled) {
-			Serial.print("   Cal[");
-			Serial.print(i);
-			Serial.print(",");
-			Serial.print(cal[i].name);
-			Serial.print("]=");
-			Serial.println(getCal(i));
+			debug.print(DebugLevel::ALWAYS, "   Cal[");
+			debug.print(DebugLevel::ALWAYS, i);
+			debug.print(DebugLevel::ALWAYS, ",");
+			debug.print(DebugLevel::ALWAYS, cal[i].name);
+			debug.print(DebugLevel::ALWAYS, "]=");
+			debug.println(DebugLevel::ALWAYS, getCal(i));
 		}
 	}
-	Serial.println("");
+	debug.println(DebugLevel::ALWAYS, "");
 }
 

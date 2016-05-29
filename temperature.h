@@ -39,28 +39,21 @@ public:
 	// getters and setters
 	float getHumidity() {
 		float v = getValue(TEMP_VALUE_INDEX_HUMIDITY);
-		//Serial.print("getHumidity()=");
-		//Serial.println(v);
 		return v;
 	}
 
 	float getTemperature() {
 		float v = getValue(TEMP_VALUE_INDEX_TEMPERATURE);
-		//Serial.print("getTemperature()=");
-		//Serial.println(v);
 		return v;
 	}
 
 	void setHumidity(float v) {
 		setValue(TEMP_VALUE_INDEX_HUMIDITY, v);
-		//Serial.print("setHumidity()=");
-		//Serial.println(v);
 	}
 
 	void setTemperature(float v) {
 		setValue(TEMP_VALUE_INDEX_TEMPERATURE, v);
-		//Serial.print("setTemperature()=");
-		//Serial.println(v);
+
 	}
 
 	float getCalOffset() {
