@@ -22,6 +22,7 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, true);
 	setValueName(TEMP_VALUE_INDEX_HUMIDITY, "rH%");
 
+	//lint -e{788} Many modules are intentionally omitted from the switch. Don't complain about it.
 	switch (m) {
 		case sensorModule::dht11:
 			dht = new DHT(static_cast<uint8_t>(p.digital), DHT11);
@@ -36,7 +37,7 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 		case sensorModule::ds18b20:
 			break;
 		default:
-			break;
+			break;  // none of these sensors are supported by this module
 	}
 }
 

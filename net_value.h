@@ -4,7 +4,7 @@
 #include "network.h"
 
 extern void sendValue(void);
-void WebPrintInfo(void);
+String WebPrintInfo(String eol);
 
 #endif // NET_VALUE_H
 

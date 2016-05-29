@@ -10,9 +10,9 @@
 
 String localIPstr(void) {
 	IPAddress ip = WiFi.localIP();
-	String s = String(ip[0]) + String(".");
-	s += String(ip[1]) + String(".");
-	s += String(ip[2]) + String(".");
+	String s = String(ip[0]) + ".";
+	s += String(ip[1]) + ".";
+	s += String(ip[2]) + ".";
 	s += String(ip[3]);
 	return s;
 }

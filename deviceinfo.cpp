@@ -11,28 +11,38 @@
 #include "deviceinfo.h"
 //#include "net_config.h"
 #include "main.h"
+#include "debugprint.h"
 #include "sensor.h"
 
-unsigned int validate_string(char* str, const char* const def, unsigned int size, int lowest,
-		int highest) {
+unsigned int validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest) {
 	bool ok = true;
 	unsigned int n = 0; /*lint -e838 */
-	str[size - 1] = 0;
-	for (n = 0; n < size - 1; n++) {
-		if (str[n] < lowest || str[n] > highest) {
-			ok = false;
-			break;
+	if (str && def) {
+		if (size < strlen(str)) {
+			debug.println(DebugLevel::DEBUG,
+					nl
+							+ "ERROR: validate_string() string passed by pointer is shorter than the passed size value");
+		}
+
+		str[size - 1] = 0;
+		for (n = 0; n < size - 1; n++) {
+			if (str[n] < lowest || str[n] > highest) {
+				ok = false;
+				break;
+			}
+		}
+		if (ok == false) {
+			memset(str, 0, size);
+			strncpy(str, def, size - 1);
+			str[size - 1] = 0;
+			return n;
 		}
 	}
-	if (ok == false) {
-		memset(str, 0, size);
-		strncpy(str, def, size - 1);
-		str[size - 1] = 0;
-		return n;
-	}
 	else {
-		return 0;
+		debug.println(DebugLevel::DEBUG,
+				nl + "ERROR: validate_string() value for either/both def* or str* is null");
 	}
+	return 0;
 }
 
 void Device::init(void) {
@@ -41,20 +51,21 @@ void Device::init(void) {
 	validate_string(db.thingspeak.host, "<no host>", sizeof(db.thingspeak.host), 32, 126);
 }
 
-String Device::toString(void) {
+String Device::toString(String eol) {
 	String s;
-	s = String("config_version=") + String(db.config_version) + String("\r\ndevice.name=")
-			+ String(getDeviceName()) + String("\r\ndevice.id=") + String(getDeviceID())
-			+ String("\r\nthingspeak.status=") + String(getThingspeakStatus())
-			+ String("\r\nthingspeak.enable=") + getEnableString() + String("\r\nTS_apikey=")
-			+ getThinkspeakApikey() + String("\r\nthingspeak.host=") + getThingspeakHost()
-			+ String("\r\nthingspeak.ipaddr=") + getIpaddr();
+	s = "config_version=" + String(db.config_version) + eol;
+	s += "device.name=" + String(getDeviceName()) + eol;
+	s += "device.id=" + String(getDeviceID()) + eol;
+	s += "thingspeak.status=" + String(getThingspeakStatus()) + eol;
+	s += "thingspeak.enable=" + getEnableString() + eol;
+	s += "TS_apikey=" + getThinkspeakApikey() + eol;
+	s += "thingspeak.host=" + getThingspeakHost() + eol;
+	s += "thingspeak.ipaddr=" + getIpaddr();
 	for (int i = 0; i < getPortMax(); i++) {
-		s += String("\r\nport[") + String(i) + String("].name=") + getPortName(i) + String(", mode=")
-				+ String(getModeStr(i));
-//		s += String(", pin=") + String(db.port[i].pin);
+		s += eol + "port[" + String(i) + "].name=" + getPortName(i) + ", mode=" + String(getModeStr(i));
+//		s += String(", pin=") + String(db.port[i].pin); /// pin is not used
 		for (int k = 0; k < MAX_ADJ; k++) {
-			s += String(", adj[") + String(k) + String("]=");
+			s += ", adj[" + String(k) + "]=";
 			s += String(getPortAdj(i, k), DECIMAL_PRECISION);
 		}
 	}
@@ -82,7 +93,7 @@ void Device::setcDeviceName(const char* newname) {
 		strncpy(db.device.name, newname, sizeof(db.device.name) - 1);
 	}
 	else {
-		debug.println(DebugLevel::ERROR, "\r\nERROR: setcDeviceName() - null value");
+		debug.println(DebugLevel::ERROR, nl + "ERROR: setcDeviceName() - null value");
 	}
 }
 
@@ -110,7 +121,7 @@ void Device::setPortMode(int portnum, sensorModule _mode) {
 		db.port[portnum].mode = _mode;
 	}
 	else {
-		debug.println(DebugLevel::ERROR, "\r\nERROR: Device::setPortMode() - invalid port");
+		debug.println(DebugLevel::ERROR, nl + "ERROR: Device::setPortMode() - invalid port");
 	}
 }
 
@@ -123,11 +134,11 @@ String Device::getModeStr(int portnum) {
 			s = String(String(m) + ":" + String(sensorList[m].name));
 		}
 		else {
-			debug.print(DebugLevel::ERROR, "\r\nERROR: Device::getModeStr() - invalid mode");
+			debug.print(DebugLevel::ERROR, nl + "ERROR: Device::getModeStr() - invalid mode");
 		}
 	}
 	else {
-		debug.println(DebugLevel::ERROR, "\r\nERROR: Device::getModeStr() - invalid port");
+		debug.println(DebugLevel::ERROR, nl + "ERROR: Device::getModeStr() - invalid port");
 	}
 	return s;
 }
@@ -137,7 +148,7 @@ void Device::setPortName(int portnum, String _n) {
 		strncpy(db.port[portnum].name, _n.c_str(), sizeof(db.port[portnum].name) - 1);
 	}
 	else {
-		debug.println(DebugLevel::ERROR, "\r\nERROR: Device::setPortName() - invalid port");
+		debug.println(DebugLevel::ERROR, nl + "ERROR: Device::setPortName() - invalid port");
 	}
 }
 
@@ -146,7 +157,7 @@ String Device::getPortName(int portnum) {
 		return this->db.port[portnum].name;
 	}
 	else {
-		debug.println(DebugLevel::ERROR, "\r\nERROR: Device::getPortName() - invalid port");
+		debug.println(DebugLevel::ERROR, nl + "ERROR: Device::getPortName() - invalid port");
 	}
 	return String("undefined");
 }
@@ -158,11 +169,11 @@ double Device::getPortAdj(int portnum, int adjnum) {
 			return this->db.port[portnum].adj[adjnum];
 		}
 		else {
-			debug.println(DebugLevel::ERROR, "\r\nERROR: Device::getPortAdj() - invalid adj index");
+			debug.println(DebugLevel::ERROR, nl + "ERROR: Device::getPortAdj() - invalid adj index");
 		}
 	}
 	else {
-		debug.println(DebugLevel::ERROR, "\r\nERROR: Device::getPortAdj() - invalid port");
+		debug.println(DebugLevel::ERROR, nl + "ERROR: Device::getPortAdj() - invalid port");
 	}
 	return 0.0;
 }
@@ -173,11 +184,11 @@ void Device::setPortAdj(int portnum, int adjnum, double v) {
 			db.port[portnum].adj[adjnum] = v;
 		}
 		else {
-			debug.println(DebugLevel::ERROR, "\r\nERROR: Device::setPortAdj() - invalid adj index");
+			debug.println(DebugLevel::ERROR, nl + "ERROR: Device::setPortAdj() - invalid adj index");
 		}
 	}
 	else {
-		debug.println(DebugLevel::ERROR, "\r\nERROR: Device::setPortAdj() - invalid port");
+		debug.println(DebugLevel::ERROR, nl + "ERROR: Device::setPortAdj() - invalid port");
 	}
 }
 
@@ -186,7 +197,7 @@ void Device::RestoreConfigurationFromEEPROM(void) {
 	for (unsigned int addr = 0; addr < sizeof(db); addr++) {
 		*(pp + addr) = EEPROM.read(static_cast<int>(addr));
 	}
-	debug.println(DebugLevel::INFO, "\r\nINFO: Data copied from EEPROM into RAM data structure");
+	debug.println(DebugLevel::DEBUG, nl + "Data copied from EEPROM into RAM data structure");
 }
 
 bool Device::StoreConfigurationIntoEEPROM(void) {
@@ -198,12 +209,12 @@ bool Device::StoreConfigurationIntoEEPROM(void) {
 	}
 
 	if (EEPROM.commit()) {
-		debug.println(DebugLevel::INFO, "\r\nSUCCESS: Write from RAM data structure to EEPROM ok.");
+		debug.println(DebugLevel::DEBUG, nl + "Write from RAM data structure to EEPROM ok.");
 		RestoreConfigurationFromEEPROM();
 		return true;
 	}
 	else {
-		debug.println(DebugLevel::ERROR, "\r\nERROR: Write to EEPROM failed!");
+		debug.println(DebugLevel::ERROR, nl + "ERROR: Write to EEPROM failed!");
 		return false; // signal error
 	}
 }

@@ -8,6 +8,7 @@
 #include "network.h"
 #include "temperature.h"
 #include "main.h"
+#include "reset.h"
 #include "deviceinfo.h"
 #include "net_config.h"
 #include "net_value.h"
@@ -87,6 +88,7 @@ void WebInit(void) {
 			message += " " + server.argName(i);
 			message += ": " + server.arg(i) + "\n";
 		}
+		message += "\n" + WebPrintInfo("\n");
 		server.send(404, "text/plain", message);
 	});
 
@@ -94,6 +96,7 @@ void WebInit(void) {
 		String response("");
 		response += "\nCount=" + String(count);
 		response += "\nPIR=" + String(PIRcount);
+		response += "\nPIRLast="+String(PIRcountLast);
 		for (int i=0; i<SENSOR_COUNT; i++) {
 			if (sensors[i]) {
 				for (int j=0; j<getValueCount(); j++) {
@@ -110,7 +113,10 @@ void WebInit(void) {
 	});
 
 	server.on("/config", config);
+
 	server.on(uri_v.c_str(), sendValue);
+
+	server.on("/reboot", reset);
 
 	server.begin();
 	debug.println(DebugLevel::ALWAYS, "Web server started");

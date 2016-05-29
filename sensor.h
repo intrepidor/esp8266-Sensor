@@ -4,40 +4,7 @@
 
 #include <Arduino.h>
 #include <cstring>
-
-//-------------------------------------------------------------------
-enum class sensorModule {
-	off = 0,
-// 1 digital
-	dht11,
-	dht22,
-	ds18b20,
-	sonar,
-	sound,
-	reed,
-	hcs501,
-	hcsr505,
-// 1 digital + 1 analog
-	dust,
-	rain,
-	soil,
-	soundh,
-	methane,
-// I2C
-	gy68,
-	gy30,
-	lcd1602,
-// serial
-	rfid,
-	marquee,
-	END
-};
-struct t_sensor {
-	const char* const name;
-	sensorModule id;
-};
-extern t_sensor const sensorList[];
-extern String c_getModuleName(sensorModule sm);
+#include "sensor_support.h"
 
 //-------------------------------------------------------------------
 class SensorPins {
@@ -49,7 +16,7 @@ public:
 	SensorPins()
 			: digital(-1), analog(-1), sda(-1), scl(-1) {
 	}
-	void setPins(SensorPins p) {
+	void setPins(const SensorPins &p) {
 		digital = p.digital;
 		analog = p.analog;
 		sda = p.sda;
@@ -69,12 +36,6 @@ public:
 			: v(0), enabled(false), name("") {
 	}
 };
-
-//-------------------------------------------------------------------
-const int VALUE_COUNT = 2;
-const int CALIB_COUNT = 4;	// should be the same as MAX_ADJ
-int getValueCount(void);
-int getCalCount(void);
 
 //-------------------------------------------------------------------
 class Sensor {
@@ -106,7 +67,7 @@ public:
 	}
 
 	// pins
-	void setPins(SensorPins p) {
+	void setPins(const SensorPins &p) {
 		this->pins.setPins(p);
 	}
 	int getDigitalPin(void) {

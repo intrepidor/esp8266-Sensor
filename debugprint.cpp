@@ -7,6 +7,8 @@
 
 #include "debugprint.h"
 
+String nl("\r\n");
+
 bool DebugPrint::isDebugLevel(DebugLevel dlevel) {
 	if (dlevel == debuglevel || dlevel == DebugLevel::ALWAYS
 			|| static_cast<int>(debuglevel) >= static_cast<int>(dlevel)) {
@@ -43,6 +45,7 @@ String DebugPrint::getDebugLevelString(void) {
 		case DebugLevel::DEBUGMORE:
 			return String("DEBUGMORE");
 			break;
+		case DebugLevel::END:
 		default:
 			break;
 	}

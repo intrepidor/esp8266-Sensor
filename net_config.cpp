@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "network.h"
 #include "util.h"
+#include "reset.h"
 #include "main.h"
 #include "deviceinfo.h"
 #include "net_config.h"
@@ -96,9 +97,8 @@ void config(void) {
 	r = String(sHTTP_DEVICE_NAME) + String(dinfo.getDeviceName()) + String(sHTTP_ENDLABELQ_BR);
 	// Thingspeak
 	r += String(sHTTP_TS_ENABLE) + String(dinfo.getEnableStr()) + String(sHTTP_ENDLABEL_BR)
-			+ String(sHTTP_TS_APIKEY) + String(dinfo.getcThinkspeakApikey())
-			+ String(sHTTP_ENDLABELQ_BR) + String(sHTTP_TS_IPADDR) + String(dinfo.getIpaddr())
-			+ String(sHTTP_ENDLABELQ_BR);
+			+ String(sHTTP_TS_APIKEY) + String(dinfo.getcThinkspeakApikey()) + String(sHTTP_ENDLABELQ_BR)
+			+ String(sHTTP_TS_IPADDR) + String(dinfo.getIpaddr()) + String(sHTTP_ENDLABELQ_BR);
 
 	// Port Configuration Heading
 	r += String(sHTTP_PORT_HEADING);
@@ -116,13 +116,12 @@ void config(void) {
 		}
 		// Port Name
 		r += String(sHTTP_PORT_NUMBER) + String(i) + String(sHTTP_PORT_NAME) + String(i)
-				+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortName(i))
-				+ String(sHTTP_ENDLABELQ_BR);
+				+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortName(i)) + String(sHTTP_ENDLABELQ_BR);
 		// Port Adj Numeric Values
 		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
-			r += String(sHTTP_PORTADJ_NUMBER) + String(k) + String(sHTTP_PORTADJ_NAME) + String(i)
-					+ String(k) + String(sHTTP_CLOSE_AND_VALUE)
-					+ String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION) + String(sHTTP_ENDLABELQ);
+			r += String(sHTTP_PORTADJ_NUMBER) + String(k) + String(sHTTP_PORTADJ_NAME) + String(i) + String(k)
+					+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION)
+					+ String(sHTTP_ENDLABELQ);
 		}
 		r += String("<br>Port Mode: ");
 		// Port radio buttons
@@ -141,17 +140,14 @@ void config(void) {
 
 	// Buttons and links
 	r = String(sHTTP_BUTTONS);
-	r += String(sHTTP_AHREF_START) + localIPstr() + String("\">Show current values<br>")
+	r += String(sHTTP_AHREF_START) + localIPstr() + "\">Show current values<br>" + String(sHTTP_AHREF_END);
+	r += String(sHTTP_AHREF_START) + localIPstr() + "/value?read=csv\">Show current values in csv format<br>"
 			+ String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr()
-			+ String("/value?read=csv\">Show current values in csv format<br>")
+	r += String(sHTTP_AHREF_START) + localIPstr() + "/config\">Configure Device<br>"
 			+ String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr() + String("/config\">Configure Device<br>")
+	r += String(sHTTP_AHREF_START) + localIPstr() + "/value?read=status\">Show Device Status<br>"
 			+ String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr()
-			+ String("/value?read=status\">Show Device Status<br>") + String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr() + String("/value?reset=0\">Reboot<br>")
-			+ String(sHTTP_AHREF_END);
+	r += String(sHTTP_AHREF_START) + localIPstr() + "/reboot<br>" + String(sHTTP_AHREF_END);
 	server.sendContent(r);
 
 	// End of page
@@ -205,8 +201,7 @@ int ConfigurationChange(void) {
 	if (server.args() > 0) {
 		bool found = false;
 		debug.println(DebugLevel::DEBUG, "");
-		debug.println(DebugLevel::DEBUG,
-				"##########################################################");
+		debug.println(DebugLevel::DEBUG, "##########################################################");
 		dinfo.setEnable(false);
 		for (uint8_t i = 0; i < server.args(); i++) {
 			String sarg = server.argName(i);
@@ -256,7 +251,7 @@ int ConfigurationChange(void) {
 					}
 				}
 				else {
-					debug.print(DebugLevel::DEBUG, "\nERROR: Bug - Invalid port #(");
+					debug.print(DebugLevel::DEBUG, nl + "ERROR: Bug - Invalid port #(");
 					debug.print(DebugLevel::DEBUG, n);
 					debug.print(DebugLevel::DEBUG, ",");
 					debug.print(DebugLevel::DEBUG, c);
@@ -287,7 +282,7 @@ int ConfigurationChange(void) {
 					dinfo.setPortAdj(n1, n2, d);
 				}
 				else {
-					debug.print(DebugLevel::DEBUG, "\nERROR: Bug - Invalid port #(");
+					debug.print(DebugLevel::DEBUG, nl + "ERROR: Bug - Invalid port #(");
 					debug.print(DebugLevel::DEBUG, n1);
 					debug.print(DebugLevel::DEBUG, ",");
 					debug.print(DebugLevel::DEBUG, c1);
@@ -313,7 +308,7 @@ int ConfigurationChange(void) {
 									dinfo.setPortMode(n1, sensorList[j].id);
 									need_reboot = true;
 								}
-								debug.print(DebugLevel::DEBUG, "\r\nInfo: Setting mode to ");
+								debug.print(DebugLevel::DEBUG, nl + "Info: Setting mode to ");
 								debug.print(DebugLevel::DEBUG, static_cast<int>(sensorList[j].id));
 								debug.print(DebugLevel::DEBUG, "(");
 								debug.print(DebugLevel::DEBUG, sensorList[j].name);
@@ -329,19 +324,19 @@ int ConfigurationChange(void) {
 							}
 						}
 						if (!found1) {
-							debug.print(DebugLevel::DEBUG, "\r\nERROR: unable to map mode: ");
+							debug.print(DebugLevel::DEBUG, nl + "ERROR: unable to map mode: ");
 							debug.println(DebugLevel::DEBUG, varg.c_str());
 						}
 					}
 					else {
-						debug.print(DebugLevel::DEBUG, "\r\nERROR: But - Invalid varg mode: (");
+						debug.print(DebugLevel::DEBUG, nl + "ERROR: Invalid varg mode: (");
 						debug.print(DebugLevel::DEBUG, varg.c_str());
 						debug.print(DebugLevel::DEBUG, ") found in ConfigurationChange() - ");
 						debug.println(DebugLevel::DEBUG, sarg.c_str());
 					}
 				}
 				else {
-					debug.print(DebugLevel::DEBUG, "\r\nERROR: Bug - Invalid port #(");
+					debug.print(DebugLevel::DEBUG, nl + "ERROR:Invalid port #(");
 					debug.print(DebugLevel::DEBUG, n1);
 					debug.print(DebugLevel::DEBUG, ",");
 					debug.print(DebugLevel::DEBUG, c1);

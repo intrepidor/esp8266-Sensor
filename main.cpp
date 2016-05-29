@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <EEPROM.h>
+#include <Esp.h>
 #include "main.h"
 #include "temperature.h"
 #include "network.h"
@@ -8,7 +9,8 @@
 #include "deviceinfo.h"
 #include "sensor.h"
 #include "util.h"
-#include <Esp.h>
+#include "reset.h"
+#include "debugprint.h"
 
 extern int task_readpir(unsigned long now);
 extern int task_acquire(unsigned long now);
@@ -17,10 +19,15 @@ extern int task_flashled(unsigned long now);
 extern int task_serialport_menu(unsigned long now);
 extern int task_webServer(unsigned long now);
 
+extern void printMenu(void);
+extern void printExtendedMenu(void);
+extern void printInfo(void);
+extern void ConfigurePorts(void);
+
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("\r\nEnvironment Sensor v0.01 : Allan Inda 2016-May-27");
+String ProgramInfo("\r\nEnvironment Sensor v0.02 : Allan Inda 2016-May-29");
 
 // Other
 long count = 0;
@@ -55,54 +62,56 @@ Sensor* sensors[SENSOR_COUNT] = { nullptr, nullptr, nullptr, nullptr };
 Device dinfo;
 DebugPrint debug;
 
-// Information
-void printMenu(void);
-void printExtendedMenu(void);
-void printInfo(void);
-void ConfigurePorts(void);
-void reset_config(void);
-
-// ------------------------------------------------------------------------------------
-void reset_config(void) {
-	// Setup the external Reset circuit
-	digitalWrite(PIN_SOFTRESET, HIGH);
-	/* Make sure the pin is High so it does not reset until we want it to. Do
-	 * this before setting the direction as an output to avoid accidental
-	 * reset during pin configuration. */
-	pinMode(PIN_SOFTRESET, INPUT);
-	/* Set the pin used to cause a reset as an input. This avoids it reseting
-	 * when we don't want a reset.
-	 */
+///////////////////////////////////////////////////////////////////////////////////////////////
+//lint -e{1784}   // suppress message about signature conflict between C++ and C
+void loop(void) {
 }
 
-void reset(void) {
-	/* Note on the nodeMCU, pin D0 (aka GPIO16) may or may not already be
-	 * connected to the RST pin. If it's not connected, connect via a 10K
-	 * resistor. Do no connect directly.
-	 * The reason it's connected is in order to be able to wake up from deep sleep.
-	 * When the esp8266 is put into deep sleep everything but the RTC is powered off.
-	 * You can set a timer in the RTC that toggles GPIO16 when it expires and that
-	 * resets the esp8266 causing it to power up again. This is the only way the
-	 * esp8266 can wake itself up from deep sleep, so it's quite a useful function
-	 * to have. On the esp-03 module there is a tiny jumper to connect GPIO16 to reset
-	 * so one can connect/disconnect it. On the esp-12, since everything is under a
-	 * shield that jumper is evidently not available, so they had to decide one way
-	 * or the other...
-	 */
+//lint -e{1784}   // suppress message about signature conflict between C++ and C
+void setup(void) {
 
-	/* Write a low to the pin that is physically connected to the RST pin.
-	 * This will force the hardware to reset.
-	 */
+// Setup Reset circuit
 	reset_config();
 
-	debug.println(DebugLevel::ALWAYS, "Rebooting ... this may take 15 seconds or more.");
+// Setup GPIO
+	pinMode(PIN_PIRSENSOR, INPUT);			// Initialize the PIR sensor pin as an input
+	pinMode(PIN_BUILTIN_LED, OUTPUT);		// Initialize the BUILTIN_LED pin as an output
 
-	pinMode(PIN_SOFTRESET, OUTPUT);
-	for (int a = 0; a < 10; a++) {
-		digitalWrite(PIN_SOFTRESET, LOW);
-		delay(1000);
-		digitalWrite(PIN_SOFTRESET, HIGH);
-		delay(1000);
+// Signal that setup is proceeding
+	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_ON);
+
+// Setup Serial port
+	Serial.begin(115200);
+
+// Start EEPROM
+	EEPROM.begin(512);
+	dinfo.RestoreConfigurationFromEEPROM();
+
+// Setup the WebServer
+	WebInit();
+
+// Configure Objects
+	//dinfo.init(); // commented out -- causes EEPROM to get reset, not sure why
+	ConfigurePorts();
+	printInfo();
+
+// Configure Scheduler
+	Queue myQueue;
+	// scheduleFunction (function pointer, task name, start delay in ms, repeat interval in ms)
+	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
+	myQueue.scheduleFunction(task_acquire, "Temperature", 1000, 499);
+	myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
+	myQueue.scheduleFunction(task_flashled, "LED", 250, 1000);
+	myQueue.scheduleFunction(task_serialport_menu, "Status", 2000, 500);
+	myQueue.scheduleFunction(task_webServer, "WebServer", 3000, 1);
+
+// Signal that setup is done
+	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_OFF);
+	printMenu();
+
+	for (;;) {
+		myQueue.Run(millis());
+		delay(10);
 	}
 }
 
@@ -165,8 +174,7 @@ void ConfigurePorts(void) {
 				debug.print(DebugLevel::INFO, ", name= ");
 				debug.print(DebugLevel::INFO, name);
 				debug.print(DebugLevel::INFO, ", type=");
-				debug.println(DebugLevel::INFO,
-						c_getModuleName(static_cast<sensorModule>(portType)).c_str());
+				debug.println(DebugLevel::INFO, c_getModuleName(static_cast<sensorModule>(portType)).c_str());
 				//lint -e{30, 142} suppress error due to lint not understanding enum classes
 				if (portNumber >= 0 && portNumber < SENSOR_COUNT) {
 					switch (portType) {
@@ -228,8 +236,7 @@ void ConfigurePorts(void) {
 					} // switch (portType)
 				} // if (portNumber...)
 				else {
-					debug.print(DebugLevel::ERROR,
-							"ERROR: ConfigurePort() - portNumber out of range - ");
+					debug.print(DebugLevel::ERROR, "ERROR: ConfigurePort() - portNumber out of range - ");
 					debug.println(DebugLevel::ERROR, portNumber);
 				}
 			} // if (portMode ...)
@@ -254,68 +261,17 @@ void CopyCalibrationDataToSensors(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-//lint -e{1784}   // suppress message about signature conflict between C++ and C
-void loop(void) {
-}
-
-//lint -e{1784}   // suppress message about signature conflict between C++ and C
-void setup(void) {
-
-// Setup Reset circuit
-	reset_config();
-
-// Setup GPIO
-	pinMode(PIN_PIRSENSOR, INPUT);			// Initialize the PIR sensor pin as an input
-	pinMode(PIN_BUILTIN_LED, OUTPUT);		// Initialize the BUILTIN_LED pin as an output
-
-// Signal that setup is proceeding
-	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_ON);
-
-// Setup Serial port
-	Serial.begin(115200);
-
-// Start EEPROM
-	EEPROM.begin(512);
-	dinfo.RestoreConfigurationFromEEPROM();
-
-// Setup the WebServer
-	WebInit();
-
-// Configure Objects
-	//dinfo.init(); // commented out -- causes EEPROM to get reset, not sure why
-	ConfigurePorts();
-	printInfo();
-
-// Configure Scheduler
-	Queue myQueue;
-	// scheduleFunction (function pointer, task name, start delay in ms, repeat interval in ms)
-	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
-	myQueue.scheduleFunction(task_acquire, "Temperature", 1000, 499);
-	myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
-	myQueue.scheduleFunction(task_flashled, "LED", 250, 1000);
-	myQueue.scheduleFunction(task_serialport_menu, "Status", 2000, 500);
-	myQueue.scheduleFunction(task_webServer, "WebServer", 3000, 1);
-
-// Signal that setup is done
-	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_OFF);
-	printMenu();
-
-	for (;;) {
-		myQueue.Run(millis());
-		delay(10);
-	}
-}
-
 void printInfo(void) {
 // Print useful Information
 	debug.println(DebugLevel::ALWAYS, ProgramInfo);
-	debug.println(DebugLevel::ALWAYS, String("Device IP: ") + localIPstr());
+	debug.println(DebugLevel::ALWAYS, "Device IP: " + localIPstr());
 	dinfo.printThingspeakInfo();
-	debug.print(DebugLevel::ALWAYS, String("ESP8266_Device_ID=") + String(dinfo.getDeviceID()));
-	debug.println(DebugLevel::ALWAYS, String("\r\nFriendly Name: ") + String(dinfo.getDeviceName()));
+	debug.print(DebugLevel::ALWAYS, "ESP8266_Device_ID=" + String(dinfo.getDeviceID()));
+	debug.println(DebugLevel::ALWAYS, nl + "Friendly Name: " + String(dinfo.getDeviceName()));
 	dinfo.printInfo();
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////
 int task_readpir(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
 	if (digitalRead(PIN_PIRSENSOR)) {
@@ -462,7 +418,7 @@ int task_serialport_menu(unsigned long now) {
 				}
 				break;
 			case 'w':
-				WebPrintInfo();
+				debug.println(DebugLevel::ALWAYS, WebPrintInfo(nl));
 				break;
 ///// Extended Menu ////
 			case 'D':
@@ -473,12 +429,12 @@ int task_serialport_menu(unsigned long now) {
 			case 'E': // Read the EEPROM into the RAM data structure, then dump the contents
 				debug.println(DebugLevel::ALWAYS, "");
 				dinfo.RestoreConfigurationFromEEPROM();
-				debug.println(DebugLevel::ALWAYS, dinfo.toString().c_str());
+				debug.println(DebugLevel::ALWAYS, dinfo.toString(nl.c_str()).c_str());
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'M': // Just dump the contents of the RAM data structure
 				debug.println(DebugLevel::ALWAYS, "");
-				debug.println(DebugLevel::ALWAYS, dinfo.toString().c_str());
+				debug.println(DebugLevel::ALWAYS, dinfo.toString(nl.c_str()).c_str());
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'I':
@@ -536,6 +492,7 @@ int task_serialport_menu(unsigned long now) {
 			case 'R':
 				debug.print(DebugLevel::ALWAYS, "Last Reset --> ");
 				debug.println(DebugLevel::ALWAYS, ESP.getResetInfo());
+				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'Q':
 				debug.println(DebugLevel::ALWAYS, "Calling reset() in 2 seconds ...");

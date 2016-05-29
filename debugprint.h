@@ -10,6 +10,8 @@
 
 #include <Arduino.h>
 
+extern String nl;
+
 enum class DebugLevel
 	: int {
 		ALWAYS = 0, NONE, INFO, ERROR, DEBUG, DEBUGMORE, END
@@ -56,7 +58,6 @@ public:
 	void print(DebugLevel dlevel, unsigned long, int = DEC);
 	void print(DebugLevel dlevel, double, int = 2);
 	void print(DebugLevel dlevel, const Printable&);
-	void print(DebugLevel dlevel);
 };
 
 #endif /* DEBUGPRINT_H_ */

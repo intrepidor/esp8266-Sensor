@@ -26,7 +26,7 @@ static bool isValidPort(int portnum);
 struct cport {
 	char name[STRING_LENGTH + 1];
 	sensorModule mode;
-	int pin;// this is not used, but kept here because removing it will mess up the data structures sored in EEPROM of the ESP8266 devices
+	int pin; // this is not used, but kept here because removing it will mess up the data structures sored in EEPROM of the ESP8266 devices
 	double adj[MAX_ADJ];
 };
 
@@ -65,7 +65,7 @@ public:
 		memset(&db, 0, sizeof(db));
 	}
 	void init(void);
-	String toString(void);
+	String toString(String _eol); // pass end of line delimiter
 
 //--------------------------------------------------------
 // Device Name and ID

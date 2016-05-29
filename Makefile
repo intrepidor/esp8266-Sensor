@@ -16,8 +16,14 @@ tidy:
 	--wrap-sections false \
 	config.html
 
+lint-std: _LINT.TMP
+	./lint.sh *.c*
+
 lint-easy: _LINT.TMP
-	./lint easy.lnt *.c*
+	./lint.sh easy.lnt local.lnt *.c*
+
+lint-local: _LINT.TMP
+	./lint.sh local.lnt *.c*
 
 m: upload
 	minicom

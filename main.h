@@ -13,9 +13,9 @@
 #include "deviceinfo.h"
 #include "debugprint.h"
 
-extern void reset(void);
 extern long count;
 extern int PIRcount;
+extern int PIRcountLast;
 
 extern const int SENSOR_COUNT;
 extern Sensor* sensors[];
