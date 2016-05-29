@@ -20,7 +20,7 @@ extern int task_webServer(unsigned long now);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.01 : Allan Inda 2016-May-27");
+String ProgramInfo("\r\nEnvironment Sensor v0.01 : Allan Inda 2016-May-27");
 
 // Other
 long count = 0;
@@ -94,16 +94,16 @@ void reset(void) {
 	 * This will force the hardware to reset.
 	 */
 	reset_config();
-	Serial.println("Rebooting ... this may take 15 seconds or more.");
-	ESP.restart();
 
-//	pinMode(PIN_SOFTRESET, OUTPUT);
-//	for (int a = 0; a < 10; a++) {
-//		digitalWrite(PIN_SOFTRESET, LOW);
-//		delay(1000);
-//		digitalWrite(PIN_SOFTRESET, HIGH);
-//		delay(1000);
-//	}
+	Serial.println("Rebooting ... this may take 15 seconds or more.");
+
+	pinMode(PIN_SOFTRESET, OUTPUT);
+	for (int a = 0; a < 10; a++) {
+		digitalWrite(PIN_SOFTRESET, LOW);
+		delay(1000);
+		digitalWrite(PIN_SOFTRESET, HIGH);
+		delay(1000);
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -232,18 +232,22 @@ void ConfigurePorts(void) {
 			} // if (portMode ...)
 		} // for (portType ...)
 
-		// Now that the Sensor object likely exists, copy the calibration data to it.
-		if (portNumber >= 0 && portNumber < SENSOR_COUNT) {
-			if (sensors[portNumber] /* make sure it exists*/) {
-				// copy each of the multiple calibration values into the sensor
-				for (int i = 0; i < getCalCount() && i < dinfo.getPortMax(); i++) {
-					sensors[portNumber]->setCal(i,
-							static_cast<float>(dinfo.getPortAdj(portNumber, i)));
-				}
+	} // for (portNumber ...)
+
+	// Copy the calibration data to the sensors
+	CopyCalibrationDataToSensors();
+}
+
+void CopyCalibrationDataToSensors(void) {
+	// Note: This routine assumes the SENSOR_COUNT and getPortMax() are identical values
+	for (int idx = 0; idx < SENSOR_COUNT && idx < dinfo.getPortMax(); idx++) {
+		if (sensors[idx] /* make sure it exists*/) {
+			// copy each of the multiple calibration values into the sensor
+			for (int i = 0; i < getCalCount() && i < dinfo.getPortAdjMax(); i++) {
+				sensors[idx]->setCal(i, static_cast<float>(dinfo.getPortAdj(idx, i)));
 			}
 		}
-
-	} // for (portNumber ...)
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////

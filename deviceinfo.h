@@ -26,7 +26,7 @@ static bool isValidPort(int portnum);
 struct cport {
 	char name[STRING_LENGTH + 1];
 	sensorModule mode;
-	int pin;
+	int pin;// this is not used, but kept here because removing it will mess up the data structures sored in EEPROM of the ESP8266 devices
 	double adj[MAX_ADJ];
 };
 
@@ -115,14 +115,12 @@ public:
 
 	void setThingspeakApikey(const char* _apikey) {
 		if (_apikey) {
-			strncpy(this->db.thingspeak.apikey, _apikey,
-					sizeof(db.thingspeak.apikey) - 1);
+			strncpy(this->db.thingspeak.apikey, _apikey, sizeof(db.thingspeak.apikey) - 1);
 		}
 	}
 	void setThingspeakApikey(String _apikey) {
 		if (_apikey) {
-			strncpy(this->db.thingspeak.apikey, _apikey.c_str(),
-					sizeof(db.thingspeak.apikey) - 1);
+			strncpy(this->db.thingspeak.apikey, _apikey.c_str(), sizeof(db.thingspeak.apikey) - 1);
 		}
 	}
 	String getThinkspeakApikey() const {
@@ -134,8 +132,7 @@ public:
 
 	void setThingspeakHost(const char* _host) {
 		if (_host) {
-			strncpy(this->db.thingspeak.host, _host,
-					sizeof(this->db.thingspeak.host) - 1);
+			strncpy(this->db.thingspeak.host, _host, sizeof(this->db.thingspeak.host) - 1);
 		}
 	}
 	void setThingspeakHost(String _host) {
@@ -153,8 +150,7 @@ public:
 	}
 	void setIpaddr(const char* _ipaddr) {
 		if (_ipaddr) {
-			strncpy(this->db.thingspeak.ipaddr, _ipaddr,
-					sizeof(db.thingspeak.ipaddr) - 1);
+			strncpy(this->db.thingspeak.ipaddr, _ipaddr, sizeof(db.thingspeak.ipaddr) - 1);
 		}
 	}
 	String getIpaddr(void) const {

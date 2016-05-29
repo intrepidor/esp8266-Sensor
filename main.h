@@ -34,7 +34,6 @@ extern const uint8_t ANALOG_PIN;
 extern const uint8_t I2C_SDA_PIN;
 extern const uint8_t I2C_SCL_PIN;
 
-//extern void printChipInfo(void);
-extern uint32_t spi_flash_get_id(void);
+extern void CopyCalibrationDataToSensors(void);
 
 #endif /* MAIN_H_ */

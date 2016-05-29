@@ -51,8 +51,7 @@ const char sHTTP_TS_APIKEY[] = ""
 		"<input type=\"text\" name=\"apikey\" value=\"";
 // print current apikey
 // <ENDLABELQ>
-const char sHTTP_TS_IPADDR[] =
-		"<label>IP address: <input type=\"text\" name=\"ipaddr\" value=\"";
+const char sHTTP_TS_IPADDR[] = "<label>IP address: <input type=\"text\" name=\"ipaddr\" value=\"";
 // print current ipaddress
 // <ENDLABELQ>
 //
@@ -94,13 +93,11 @@ void config(void) {
 	String r = String(sHTTP_TOP);
 	server.sendContent(r);
 	// Device Name
-	r = String(sHTTP_DEVICE_NAME) + String(dinfo.getDeviceName())
-			+ String(sHTTP_ENDLABELQ_BR);
+	r = String(sHTTP_DEVICE_NAME) + String(dinfo.getDeviceName()) + String(sHTTP_ENDLABELQ_BR);
 	// Thingspeak
-	r += String(sHTTP_TS_ENABLE) + String(dinfo.getEnableStr())
-			+ String(sHTTP_ENDLABEL_BR) + String(sHTTP_TS_APIKEY)
-			+ String(dinfo.getcThinkspeakApikey()) + String(sHTTP_ENDLABELQ_BR)
-			+ String(sHTTP_TS_IPADDR) + String(dinfo.getIpaddr())
+	r += String(sHTTP_TS_ENABLE) + String(dinfo.getEnableStr()) + String(sHTTP_ENDLABEL_BR)
+			+ String(sHTTP_TS_APIKEY) + String(dinfo.getcThinkspeakApikey())
+			+ String(sHTTP_ENDLABELQ_BR) + String(sHTTP_TS_IPADDR) + String(dinfo.getIpaddr())
 			+ String(sHTTP_ENDLABELQ_BR);
 
 	// Port Configuration Heading
@@ -123,17 +120,15 @@ void config(void) {
 				+ String(sHTTP_ENDLABELQ_BR);
 		// Port Adj Numeric Values
 		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
-			r += String(sHTTP_PORTADJ_NUMBER) + String(k) + String(sHTTP_PORTADJ_NAME)
-					+ String(i) + String(k) + String(sHTTP_CLOSE_AND_VALUE)
-					+ String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION)
-					+ String(sHTTP_ENDLABELQ);
+			r += String(sHTTP_PORTADJ_NUMBER) + String(k) + String(sHTTP_PORTADJ_NAME) + String(i)
+					+ String(k) + String(sHTTP_CLOSE_AND_VALUE)
+					+ String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION) + String(sHTTP_ENDLABELQ);
 		}
-		r += String("<br>");
+		r += String("<br>Port Mode: ");
 		// Port radio buttons
 		//lint -e{26,785} suppress since lint doesn't understand C++11
 		for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
-			r += String(sHTTP_PORT_RADIO_START) + String(i)
-					+ String(sHTTP_CLOSE_AND_VALUE);
+			r += String(sHTTP_PORT_RADIO_START) + String(i) + String(sHTTP_CLOSE_AND_VALUE);
 			r += String(sensorList[static_cast<int>(j)].name);
 			r += String("\" ");
 			if (dinfo.getPortMode(i) == static_cast<sensorModule>(j)) {
@@ -151,11 +146,10 @@ void config(void) {
 	r += String(sHTTP_AHREF_START) + localIPstr()
 			+ String("/value?read=csv\">Show current values in csv format<br>")
 			+ String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr()
-			+ String("/config\">Configure Device<br>") + String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr()
-			+ String("/value?read=status\">Show Device Status<br>")
+	r += String(sHTTP_AHREF_START) + localIPstr() + String("/config\">Configure Device<br>")
 			+ String(sHTTP_AHREF_END);
+	r += String(sHTTP_AHREF_START) + localIPstr()
+			+ String("/value?read=status\">Show Device Status<br>") + String(sHTTP_AHREF_END);
 	r += String(sHTTP_AHREF_START) + localIPstr() + String("/value?reset=0\">Reboot<br>")
 			+ String(sHTTP_AHREF_END);
 	server.sendContent(r);
@@ -163,8 +157,8 @@ void config(void) {
 	// End of page
 	unsigned long tdiff = millis() - t0;
 	server.sendContent(
-			String("<pre>time:") + String(tdiff) + String("ms\nConfig:")
-					+ String(configChanges) + String("</pre>") + String(sHTTP_END));
+			String("<pre>time:") + String(tdiff) + String("ms\nConfig:") + String(configChanges)
+					+ String("</pre>") + String(sHTTP_END));
 
 // Stop client because ...
 //	server.client().stop();
@@ -329,14 +323,23 @@ int ConfigurationChange(void) {
 						//lint -e{26,785} suppress since lint doesn't understand C++11
 						for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
 							if (strcmp(varg.c_str(), sensorList[j].name) == 0) {
-								dinfo.setPortMode(n1, sensorList[j].id);
-								need_reboot = true;
+								sensorModule current = dinfo.getPortMode(n1);
+								if (current != sensorList[j].id) {
+									dinfo.setPortMode(n1, sensorList[j].id);
+									need_reboot = true;
+								}
 								if (debug_output) {
 									Serial.print("\r\nInfo: Setting mode to ");
 									Serial.print(static_cast<int>(sensorList[j].id));
 									Serial.print("(");
 									Serial.print(sensorList[j].name);
-									Serial.println(")");
+									Serial.print("), Reboot needed: ");
+									if (need_reboot) {
+										Serial.println("yes");
+									}
+									else {
+										Serial.println("no");
+									}
 								}
 								found1 = true;
 								break;
@@ -386,6 +389,8 @@ int ConfigurationChange(void) {
 			reset();
 		}
 
+		// Regardless if the calibration data changed or not, recopy it into the Sensors
+		CopyCalibrationDataToSensors();
 	}
 	return server.args();
 }
