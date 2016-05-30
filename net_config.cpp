@@ -70,8 +70,8 @@ const char sHTTP_TS_IPADDR[] = "<label>IP address: <input type=\"text\" name=\"i
 const char sHTTP_PORT_HEADING[] = "<br>"; //"<p><b>Port Configuration</b></p>";
 const char sHTTP_PORT_NUMBER[] = "<label>Port#";
 const char sHTTP_PORT_NAME[] = "<input type=\"text\" name=\"port";
-const char sHTTP_PORTADJ_NUMBER[] = "<label>Adj#";
-const char sHTTP_PORTADJ_NAME[] = " <input type=\"text\" name=\"adjport";
+const char sHTTP_PORTADJ_NUMBER[] = "<label>Adj";
+const char sHTTP_PORTADJ_INPUT[] = " <input type=\"text\" name=\"adjport";
 // -- Radio buttons for each port
 const char sHTTP_PORT_RADIO_START[] = "<input type=\"radio\" name=\"radport";
 // print port number, e.g. 1, 2, 3, 4, ...
@@ -110,7 +110,7 @@ void config(void) {
 	r += sHTTP_TS_APIKEY + dinfo.getThinkspeakApikey() + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_URL + dinfo.getThingspeakURL() + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_CHANNEL + dinfo.getThingspeakChannel() + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_TS_IPADDR + dinfo.getIpaddr() + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_TS_IPADDR + dinfo.getThingspeakIpaddr() + sHTTP_ENDLABELQ_BR;
 
 	// Port Configuration Heading
 	r += sHTTP_PORT_HEADING;
@@ -131,9 +131,9 @@ void config(void) {
 				+ dinfo.getPortName(i) + sHTTP_ENDLABELQ_BR;
 		// Port Adj Numeric Values
 		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
-			r += sHTTP_PORTADJ_NUMBER + String(k) + sHTTP_PORTADJ_NAME + String(i) + String(k)
-					+ sHTTP_CLOSE_AND_VALUE + String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION)
-					+ sHTTP_ENDLABELQ;
+			r += sHTTP_PORTADJ_NUMBER + String(k) + dinfo.getPortAdjName(i, k) + sHTTP_PORTADJ_INPUT
+					+ String(i) + String(k) + sHTTP_CLOSE_AND_VALUE
+					+ String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION) + sHTTP_ENDLABELQ;
 		}
 		r += "<br>Port Mode: ";
 		// Port radio buttons
@@ -210,7 +210,7 @@ int ConfigurationChange(void) {
 		bool found = false;
 		debug.println(DebugLevel::DEBUG, "");
 		debug.println(DebugLevel::DEBUG, "##########################################################");
-		dinfo.setEnable(false);
+		dinfo.setThingspeakEnable(false);
 		for (uint8_t i = 0; i < server.args(); i++) {
 			String sarg = server.argName(i);
 			String varg = server.arg(i);
@@ -221,7 +221,7 @@ int ConfigurationChange(void) {
 				found = true;
 			}
 			if (sarg == String("ts_enable")) {
-				dinfo.setEnable(true);
+				dinfo.setThingspeakEnable(true);
 				debug.println(DebugLevel::DEBUG, " ok ts_enable");
 				found = true;
 			}
@@ -231,7 +231,7 @@ int ConfigurationChange(void) {
 				found = true;
 			}
 			if (sarg == "ipaddr") {
-				dinfo.setIpaddr(varg);
+				dinfo.setThingspeakIpaddr(varg);
 				debug.println(DebugLevel::DEBUG, " ok ipaddr");
 				found = true;
 			}
@@ -355,7 +355,7 @@ int ConfigurationChange(void) {
 			found = false;
 		}
 
-		dinfo.StoreConfigurationIntoEEPROM();
+		dinfo.saveDatabaseToEEPROM();
 		if (need_reboot) {
 			reset();
 		}

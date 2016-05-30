@@ -11,6 +11,7 @@
 #include "util.h"
 #include "reset.h"
 #include "debugprint.h"
+#include "thingspeak.h"
 
 // Forward declarations
 extern int task_readpir(unsigned long now);
@@ -57,11 +58,13 @@ const uint8_t I2C_SCL_PIN = D5;
 #define BUILTIN_LED_ON LOW
 #define BUILTIN_LED_OFF HIGH
 
-// Create Objects
+// Create Objects --- note the order of creation is important
+DebugPrint debug;	// This must appear before Sensor and Device class declarations.
+
 const int SENSOR_COUNT = 4; // should be at least equal to the value of MAX_PORTS
 Sensor* sensors[SENSOR_COUNT] = { nullptr, nullptr, nullptr, nullptr };
-Device dinfo;
-DebugPrint debug;
+
+Device dinfo; // create AFTER Sensor declaration
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //lint -e{1784}   // suppress message about signature conflict between C++ and C
@@ -71,9 +74,6 @@ void loop(void) {
 //lint -e{1784}   // suppress message about signature conflict between C++ and C
 void setup(void) {
 
-// Setup Reset circuit
-	reset_config();
-
 // Setup GPIO
 	pinMode(PIN_PIRSENSOR, INPUT);			// Initialize the PIR sensor pin as an input
 	pinMode(PIN_BUILTIN_LED, OUTPUT);		// Initialize the BUILTIN_LED pin as an output
@@ -81,13 +81,19 @@ void setup(void) {
 // Signal that setup is proceeding
 	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_ON);
 
+// Finish any object initializations -- stuff that could not go into the constructors
+	dinfo.init(); // this must be done before calling any other member functions
+
+// Setup Reset circuit
+	reset_config();
+
 // Setup Serial port
 	Serial.begin(115200);
 
-// Start EEPROM
+// Start EEPROM and setup the Persisted Database
 	EEPROM.begin(512);
 	// Copy persisted data from EEPROM into RAM
-	dinfo.RestoreConfigurationFromEEPROM();
+	dinfo.restoreDatabaseFromEEPROM();
 	// Get DebugLevel from EEPROM
 	// Copy debug level from RAM, which was just copied from the EEPROM
 	debug.setDebugLevel(static_cast<DebugLevel>(dinfo.getDebugLevel()));
@@ -95,16 +101,14 @@ void setup(void) {
 	dinfo.setDebugLevel(static_cast<int>(debug.getDebugLevel()));
 	// if value is invalid, then fix it and rewrite the EEPROM
 	if (eeprom_is_dirty) {
-		dinfo.StoreConfigurationIntoEEPROM();
+		dinfo.saveDatabaseToEEPROM();
 	}
 
 // Setup the WebServer
 	WebInit();
 
-// Configure Objects
-	//dinfo.init(); // commented out -- causes EEPROM to get reset, not sure why
+// Configure Sensors
 	ConfigurePorts();
-	printInfo();
 
 // Configure Scheduler
 	Queue myQueue;
@@ -116,10 +120,14 @@ void setup(void) {
 	myQueue.scheduleFunction(task_serialport_menu, "Status", 2000, 500);
 	myQueue.scheduleFunction(task_webServer, "WebServer", 3000, 1);
 
-// Signal that setup is done
-	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_OFF);
+// Print boot up information and menu
+	printInfo();
 	printMenu();
 
+// Signal that setup is complete
+	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_OFF);
+
+// Start the task scheduler
 	for (;;) {
 		myQueue.Run(millis());
 		delay(10);
@@ -272,7 +280,7 @@ void printInfo(void) {
 	debug.println(DebugLevel::ALWAYS, ProgramInfo);
 	debug.println(DebugLevel::ALWAYS, "Device IP: " + localIPstr());
 	debug.println(DebugLevel::ALWAYS, "SSID: " + WiFi.SSID());
-	dinfo.printThingspeakInfo();
+	printThingspeakInfo();
 	debug.println(DebugLevel::ALWAYS, "ESP8266_Device_ID=" + String(dinfo.getDeviceID()));
 	debug.println(DebugLevel::ALWAYS, "Friendly Name: " + String(dinfo.getDeviceName()));
 	dinfo.printInfo();
@@ -302,8 +310,8 @@ int task_acquire(unsigned long now) {
 
 int task_updatethingspeak(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	if (dinfo.getEnable()) {
-		dinfo.updateThingspeak();
+	if (dinfo.getThingspeakEnable()) {
+		updateThingspeak();
 	}
 	PIRcountLast = PIRcount;
 	PIRcount = 0; // reset counter for starting a new period
@@ -425,17 +433,17 @@ int task_serialport_menu(unsigned long now) {
 			case 'D':
 				dinfo.setDebugLevel(static_cast<int>(debug.incrementDebugLevel()));
 				debug.println(DebugLevel::ALWAYS, "Debug Level set to: " + debug.getDebugLevelString());
-				if (eeprom_is_dirty) dinfo.StoreConfigurationIntoEEPROM();
+				if (eeprom_is_dirty) dinfo.saveDatabaseToEEPROM();
 				break;
 			case 'E': // Read the EEPROM into the RAM data structure, then dump the contents
 				debug.println(DebugLevel::ALWAYS, nl + "=== Data in EEPROM ===");
-				dinfo.RestoreConfigurationFromEEPROM();
-				debug.println(DebugLevel::ALWAYS, dinfo.toString(nl.c_str()));
+				dinfo.restoreDatabaseFromEEPROM();
+				debug.println(DebugLevel::ALWAYS, dinfo.databaseToString(nl.c_str()));
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'M': // Just dump the contents of the RAM data structure
 				debug.println(DebugLevel::ALWAYS, nl + "=== Data in RAM ===");
-				debug.println(DebugLevel::ALWAYS, dinfo.toString(nl.c_str()));
+				debug.println(DebugLevel::ALWAYS, dinfo.databaseToString(nl.c_str()));
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'I':

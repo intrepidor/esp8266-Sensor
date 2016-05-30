@@ -29,7 +29,6 @@ static bool isValidPort(int portnum);
 struct cport {
 	char name[STRING_LENGTH + 1];
 	sensorModule mode;
-	int pin; // this is not used, but kept here because removing it will mess up the data structures sored in EEPROM of the ESP8266 devices
 	double adj[MAX_ADJ];
 };
 
@@ -71,8 +70,18 @@ public:
 	Device() {
 		memset(&db, 0, sizeof(db));
 	}
-	void init(void);
-	String toString(String _eol); // pass end of line delimiter
+	void init(void) {
+		// This cannot be put in the constructor because it references other
+		//   classes, and the constructor could be a global variable, in which
+		//   case objects of those other classes might not have been declared.
+		writeDefaultsToDatabase();
+	}
+	void validateDatabase(void);
+	String databaseToString(String _eol); // pass end of line delimiter
+	void writeDefaultsToDatabase(void);
+	void eraseDatabase(void) {
+		memset(&db, 0, sizeof(db));
+	}
 
 //--------------------------------------------------------
 	int getDebugLevel(void) {
@@ -115,19 +124,26 @@ public:
 	void setPortAdj(int portnum, int adjnum, double v);
 	String getModeStr(int portnum);
 
+	// provide a custom adj field name based on the sensor module type
+	String getPortAdjName(int portnum, int adjunum) {
+		return String("FIXME");
+	}
+
 //--------------------------------------------------------
 // EEPROM and DB Stuff
-	void RestoreConfigurationFromEEPROM(void);
-	bool StoreConfigurationIntoEEPROM(void);
+	void restoreDatabaseFromEEPROM(void);
+	bool saveDatabaseToEEPROM(void);
+	bool eraseEEPROM(void);
 
 //--------------------------------------------------------
-// Thingspeak
-	void printThingspeakInfo(void);
-	void updateThingspeak(void);
-
+// Thingspeak Data
 	int getThingspeakStatus() const {
 		return db.thingspeak.status;
 	}
+	void setThingspeakStatus(int s) {
+		db.thingspeak.status = s;
+	}
+
 // API
 	void setThingspeakApikey(const char* _apikey) {
 		if (_apikey) {
@@ -176,29 +192,29 @@ public:
 		return db.thingspeak.channel;
 	}
 // IPADDR
-	void setIpaddr(String _ipaddr) {
-		setIpaddr(_ipaddr.c_str());
+	void setThingspeakIpaddr(String _ipaddr) {
+		setThingspeakIpaddr(_ipaddr.c_str());
 	}
-	void setIpaddr(const char* _ipaddr) {
+	void setThingspeakIpaddr(const char* _ipaddr) {
 		if (_ipaddr) {
 			strncpy(this->db.thingspeak.ipaddr, _ipaddr, sizeof(db.thingspeak.ipaddr) - 1);
 		}
 	}
-	String getIpaddr(void) const {
+	String getThingspeakIpaddr(void) const {
 		return String(db.thingspeak.ipaddr);
 	}
-	const char* getcIpaddr(void) const {
+	const char* getThingspeakIpaddr_c(void) const {
 		return db.thingspeak.ipaddr;
 	}
 // ENABLE
-	void setEnable(bool _enable) {
+	void setThingspeakEnable(bool _enable) {
 		this->db.thingspeak.enabled = _enable;
 	}
-	bool getEnable(void) const {
+	bool getThingspeakEnable(void) const {
 		if (db.thingspeak.enabled) return true;
 		return false;
 	}
-	String getEnableString(void) const {
+	String getThingspeakEnableString(void) const {
 		if (db.thingspeak.enabled) return String("true");
 		return String("false");
 	}

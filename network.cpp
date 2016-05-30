@@ -137,7 +137,7 @@ void WebInit(void) {
 	server.on("/config", config);
 
 	server.on("/status", []() {
-		server.send(200, "text/plain", dinfo.toString(",\n"));
+		server.send(200, "text/plain", dinfo.databaseToString(",\n"));
 	});
 
 	server.on(uri_v.c_str(), sendValue);
