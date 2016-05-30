@@ -18,6 +18,7 @@ String getReadAPIString(String eol) {
 	r += "Where X is one of:" + eol;
 	r += "  api        :: ThingSpeak API key" + eol;
 	r += "  rssi       :: AP signal strength in dBm at connect time" + eol;
+	r += "  ssid       :: SSID of the connected AP" + eol;
 	r += "  id         :: Device ID number" + eol;
 	r += "  name       :: Device Name" + eol;
 	r += "  thingspeak :: Last Thingspeak http return value" + eol;
@@ -44,9 +45,9 @@ void sendValue(void) {
 	bool found = false;
 	if (arg) {
 		String sarg = server.arg("read");
-		if (sarg == "factory_default_ssid") {
+		if (sarg == "ssid") {
 			found = true;
-			value = String(factory_default_ssid);
+			value = WiFi.SSID();
 		}
 		if (sarg == "api") {
 			found = true;

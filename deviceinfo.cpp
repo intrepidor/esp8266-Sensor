@@ -49,7 +49,7 @@ unsigned int validate_string(char* str, const char* const def, unsigned int size
 void Device::init(void) {
 	validate_string(db.device.name, "<not named>", sizeof(db.device.name), 32, 126);
 	validate_string(db.thingspeak.apikey, "<no api key>", sizeof(db.thingspeak.apikey), 48, 95);
-	validate_string(db.thingspeak.host, "<no host>", sizeof(db.thingspeak.host), 32, 126);
+	validate_string(db.thingspeak.url, "<no url>", sizeof(db.thingspeak.url), 32, 126);
 }
 
 String Device::toString(String eol) {
@@ -62,7 +62,7 @@ String Device::toString(String eol) {
 	s += "thingspeak.status=" + String(getThingspeakStatus()) + eol;
 	s += "thingspeak.enable=" + getEnableString() + eol;
 	s += "TS_apikey=" + getThinkspeakApikey() + eol;
-	s += "thingspeak.host=" + getThingspeakHost() + eol;
+	s += "thingspeak.url=" + getThingspeakURL() + "]" + eol;
 	s += "thingspeak.ipaddr=" + getIpaddr();
 	for (int i = 0; i < getPortMax(); i++) {
 		s += eol + "port[" + String(i) + "].name=" + getPortName(i) + ", mode=" + String(getModeStr(i));
@@ -80,10 +80,8 @@ void Device::printInfo(void) {
 		//lint -e{26} suppress error false error about the sensorModule
 		for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
 			if (dinfo.getPortMode(i) == static_cast<sensorModule>(j)) {
-				debug.print(DebugLevel::ALWAYS, "Port#");
-				debug.print(DebugLevel::ALWAYS, i);
-				debug.print(DebugLevel::ALWAYS, ": ");
-				debug.println(DebugLevel::ALWAYS, sensorList[static_cast<int>(j)].name);
+				debug.println(DebugLevel::ALWAYS,
+						"Port#" + String(i) + ": " + sensorList[static_cast<int>(j)].name);
 			}
 		}
 	}
@@ -225,20 +223,16 @@ bool Device::StoreConfigurationIntoEEPROM(void) {
 }
 
 void Device::printThingspeakInfo(void) {
-	debug.print(DebugLevel::ALWAYS, "Thingspeak host: ");
-	debug.println(DebugLevel::ALWAYS, getcThingspeakHost());
-	debug.print(DebugLevel::ALWAYS, "API Write  Key: ");
-	debug.println(DebugLevel::ALWAYS, getcThinkspeakApikey());
+	debug.println(DebugLevel::ALWAYS, "Thingspeak URL: " + getThingspeakURL());
+	debug.println(DebugLevel::ALWAYS, "API Write  Key: " + getThinkspeakApikey());
 }
 
 void Device::updateThingspeak(void) {
 	WiFiClient client;
 	int const MAX_THINGSPEAK_FIELD_COUNT = 8; // Thingspeak only accept 8 fields
 
-	if (!client.connect(db.thingspeak.host, 80)) {
-		debug.print(DebugLevel::ALWAYS, "error: connection to ");
-		debug.print(DebugLevel::ALWAYS, getcThingspeakHost());
-		debug.println(DebugLevel::ALWAYS, " failed");
+	if (!client.connect(db.thingspeak.url, 80)) {
+		debug.println(DebugLevel::ALWAYS, "error: connection to " + getThingspeakURL() + " failed");
 	}
 	else {
 		// Send message to Thingspeak
@@ -270,11 +264,9 @@ void Device::updateThingspeak(void) {
 				}
 			}
 		}
-		debug.print(DebugLevel::DEBUG, "Thinkspeak URL:");
-		debug.println(DebugLevel::DEBUG, getStr);
-		debug.println(DebugLevel::DEBUG, "");
+		debug.println(DebugLevel::DEBUG, "Thinkspeak URL:" + getStr);
 		client.print(
-				String("GET ") + getStr + " HTTP/1.1\r\n" + "Host: " + getcThingspeakHost() + "\r\n"
+				String("GET ") + getStr + " HTTP/1.1\r\n" + "Host: " + getcThingspeakURL() + "\r\n"
 						+ "Connection: close\r\n\r\n");
 		delay(10);
 

@@ -206,10 +206,7 @@ int ConfigurationChange(void) {
 		for (uint8_t i = 0; i < server.args(); i++) {
 			String sarg = server.argName(i);
 			String varg = server.arg(i);
-			debug.print(DebugLevel::DEBUG, "NAME=");
-			debug.print(DebugLevel::DEBUG, sarg);
-			debug.print(DebugLevel::DEBUG, "  VALUE=");
-			debug.print(DebugLevel::DEBUG, varg);
+			debug.print(DebugLevel::DEBUG, "NAME=" + sarg + "  VALUE=" + varg);
 			if (sarg == String("name")) {
 				dinfo.setDeviceName(varg);
 				debug.println(DebugLevel::DEBUG, " ok name");
@@ -240,10 +237,7 @@ int ConfigurationChange(void) {
 				if (n >= 0 && n < dinfo.getPortMax()) {
 					if (varg.length() > 0) {
 						dinfo.setPortName(n, varg);
-						debug.print(DebugLevel::DEBUG, " ok, port[");
-						debug.print(DebugLevel::DEBUG, n);
-						debug.print(DebugLevel::DEBUG, "].name set to ");
-						debug.println(DebugLevel::DEBUG, varg.c_str());
+						debug.print(DebugLevel::DEBUG, " ok, port[" + String(n) + "].name set to " + varg);
 					}
 					else {
 						dinfo.setPortName(n, "");
@@ -251,12 +245,9 @@ int ConfigurationChange(void) {
 					}
 				}
 				else {
-					debug.print(DebugLevel::DEBUG, nl + "ERROR: Bug - Invalid port #(");
-					debug.print(DebugLevel::DEBUG, n);
-					debug.print(DebugLevel::DEBUG, ",");
-					debug.print(DebugLevel::DEBUG, c);
-					debug.print(DebugLevel::DEBUG, ") found in ConfigurationChange() - ");
-					debug.println(DebugLevel::DEBUG, sarg.c_str());
+					debug.println(DebugLevel::DEBUG,
+							nl + "ERROR: Bug - Invalid port #(" + String(n) + "," + String(c)
+									+ ") found in ConfigurationChange() - " + sarg);
 				}
 			}
 
@@ -266,10 +257,8 @@ int ConfigurationChange(void) {
 				char c2 = sarg.c_str()[8];
 				int n1 = static_cast<int>(c1) - static_cast<int>('0');
 				int n2 = static_cast<int>(c2) - static_cast<int>('0');
-				debug.print(DebugLevel::DEBUG, ", n1=");
-				debug.print(DebugLevel::DEBUG, n1);
-				debug.print(DebugLevel::DEBUG, ", n2=");
-				debug.print(DebugLevel::DEBUG, n2);
+				debug.print(DebugLevel::DEBUG, ", n1=" + String(n1));
+				debug.print(DebugLevel::DEBUG, ", n2=" + String(n2));
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					double d = 0;
 					if (varg.length() > 0) {
@@ -282,12 +271,9 @@ int ConfigurationChange(void) {
 					dinfo.setPortAdj(n1, n2, d);
 				}
 				else {
-					debug.print(DebugLevel::DEBUG, nl + "ERROR: Bug - Invalid port #(");
-					debug.print(DebugLevel::DEBUG, n1);
-					debug.print(DebugLevel::DEBUG, ",");
-					debug.print(DebugLevel::DEBUG, c1);
-					debug.print(DebugLevel::DEBUG, ") found in ConfigurationChange() - ");
-					debug.println(DebugLevel::DEBUG, sarg.c_str());
+					debug.println(DebugLevel::DEBUG,
+							nl + "ERROR: Bug - Invalid port #(" + String(n1) + "," + String(c1)
+									+ ") found in ConfigurationChange() - " + sarg);
 				}
 			}
 
@@ -324,15 +310,12 @@ int ConfigurationChange(void) {
 							}
 						}
 						if (!found1) {
-							debug.print(DebugLevel::DEBUG, nl + "ERROR: unable to map mode: ");
-							debug.println(DebugLevel::DEBUG, varg.c_str());
+							debug.println(DebugLevel::DEBUG, nl + "ERROR: unable to map mode: " + varg);
 						}
 					}
 					else {
-						debug.print(DebugLevel::DEBUG, nl + "ERROR: Invalid varg mode: (");
-						debug.print(DebugLevel::DEBUG, varg.c_str());
-						debug.print(DebugLevel::DEBUG, ") found in ConfigurationChange() - ");
-						debug.println(DebugLevel::DEBUG, sarg.c_str());
+						debug.print(DebugLevel::DEBUG, nl + "ERROR: Invalid varg mode: (" + varg);
+						debug.println(DebugLevel::DEBUG, ") found in ConfigurationChange() - " + sarg);
 					}
 				}
 				else {
@@ -340,8 +323,7 @@ int ConfigurationChange(void) {
 					debug.print(DebugLevel::DEBUG, n1);
 					debug.print(DebugLevel::DEBUG, ",");
 					debug.print(DebugLevel::DEBUG, c1);
-					debug.print(DebugLevel::DEBUG, ") found in ConfigurationChange() - ");
-					debug.println(DebugLevel::DEBUG, sarg.c_str());
+					debug.println(DebugLevel::DEBUG, ") found in ConfigurationChange() - " + sarg);
 				}
 			}
 

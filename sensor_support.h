@@ -44,7 +44,7 @@ struct t_sensor {
 };
 extern t_sensor const sensorList[];
 
-extern String c_getModuleName(sensorModule sm);
+extern String getModuleNameString(sensorModule sm);
 extern int getValueCount(void);
 extern int getCalCount(void);
 

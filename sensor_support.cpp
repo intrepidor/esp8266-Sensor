@@ -46,7 +46,7 @@ t_sensor const sensorList[static_cast<int>(sensorModule::END)] = {
 		{ "RFID", sensorModule::rfid },
 		{ "Marquee", sensorModule::marquee } };
 
-String c_getModuleName(sensorModule sm) {
+String getModuleNameString(sensorModule sm) {
 // FIXME -- this should be a lookup into the sensor[] array, not a repeat of the module names
 	switch (sm) {
 		// 1 digital

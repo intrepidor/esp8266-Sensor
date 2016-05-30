@@ -55,18 +55,15 @@ void WebInit(void) {
 //  }
 
 	debug.println(DebugLevel::ALWAYS, "");
-	debug.print(DebugLevel::ALWAYS, "Connected to ");
-	debug.println(DebugLevel::ALWAYS, factory_default_ssid);
+	debug.println(DebugLevel::ALWAYS, "Connected to " + WiFi.SSID());
 	debug.print(DebugLevel::ALWAYS, "IP address: ");
 	debug.println(DebugLevel::ALWAYS, WiFi.localIP());
 
 	uint8_t available_networks = static_cast<uint8_t>(WiFi.scanNetworks());
 	for (uint8_t network = 0; network < available_networks; network++) {
-		if (strcmp(WiFi.SSID(network).c_str(), factory_default_ssid) == 0) {
+		if (strcmp(WiFi.SSID(network).c_str(), WiFi.SSID().c_str()) == 0) {
 			rssi = WiFi.RSSI(network);
-			debug.print(DebugLevel::ALWAYS, "RSSI: ");
-			debug.print(DebugLevel::ALWAYS, String(rssi).c_str());
-			debug.println(DebugLevel::ALWAYS, " dBm");
+			debug.println(DebugLevel::ALWAYS, "RSSI: " + String(rssi) + " dBm");
 		}
 	}
 

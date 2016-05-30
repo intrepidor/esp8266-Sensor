@@ -88,20 +88,11 @@ void setup(void) {
 	EEPROM.begin(512);
 	// Copy persisted data from EEPROM into RAM
 	dinfo.RestoreConfigurationFromEEPROM();
-	debug.print(DebugLevel::ALWAYS, "Debug level started as [1 dinfo]: ");
-	debug.println(DebugLevel::ALWAYS, dinfo.getDebugLevel());
-	debug.print(DebugLevel::ALWAYS, "Debug level started as [2 debug]: ");
-	debug.println(DebugLevel::ALWAYS, debug.getDebugLevelString());
-
 	// Get DebugLevel from EEPROM
 	// Copy debug level from RAM, which was just copied from the EEPROM
 	debug.setDebugLevel(static_cast<DebugLevel>(dinfo.getDebugLevel()));
 	// write it back to dinfo since debug would have validated it, and potentially changed it to fix errors.
 	dinfo.setDebugLevel(static_cast<int>(debug.getDebugLevel()));
-	debug.print(DebugLevel::ALWAYS, "Debug level now [1 dinfo]: ");
-	debug.println(DebugLevel::ALWAYS, dinfo.getDebugLevel());
-	debug.print(DebugLevel::ALWAYS, "Debug level now [2 debug]: ");
-	debug.println(DebugLevel::ALWAYS, debug.getDebugLevelString());
 	// if value is invalid, then fix it and rewrite the EEPROM
 	if (eeprom_is_dirty) {
 		dinfo.StoreConfigurationIntoEEPROM();
@@ -144,8 +135,7 @@ void ConfigurePorts(void) {
 	// Loop through each of the ports
 	for (int portNumber = 0; portNumber < dinfo.getPortMax(); portNumber++) {
 		// Get the pins used for this port
-		debug.print(DebugLevel::DEBUGMORE, "portNumber=");
-		debug.println(DebugLevel::DEBUGMORE, portNumber);
+		debug.println(DebugLevel::DEBUGMORE, "portNumber=" + String(portNumber));
 		switch (portNumber) {
 			case 0: // port#0
 				p.digital = DIGITAL_PIN_1;
@@ -173,9 +163,9 @@ void ConfigurePorts(void) {
 				p.scl = I2C_SCL_PIN;
 				break;
 			default:
-				debug.print(DebugLevel::ERROR,
-						"ERROR: ConfigurePorts() - port number out of range in switch -");
-				debug.println(DebugLevel::ERROR, portNumber);
+				debug.println(DebugLevel::ERROR,
+						"ERROR: ConfigurePorts() - port number out of range in switch -"
+								+ String(portNumber));
 				break;
 		}
 
@@ -189,12 +179,9 @@ void ConfigurePorts(void) {
 				strncpy(name, sensorList[static_cast<int>(portType)].name, 19);
 				name[19] = 0;
 				// found the setting
-				debug.print(DebugLevel::INFO, "Configuring Port#");
-				debug.print(DebugLevel::INFO, portNumber);
-				debug.print(DebugLevel::INFO, ", name= ");
-				debug.print(DebugLevel::INFO, name);
-				debug.print(DebugLevel::INFO, ", type=");
-				debug.println(DebugLevel::INFO, c_getModuleName(static_cast<sensorModule>(portType)).c_str());
+				debug.println(DebugLevel::INFO,
+						"Configuring Port#" + String(portNumber) + ", name= " + String(name) + ", type="
+								+ getModuleNameString(static_cast<sensorModule>(portType)));
 				//lint -e{30, 142} suppress error due to lint not understanding enum classes
 				if (portNumber >= 0 && portNumber < SENSOR_COUNT) {
 					switch (portType) {
@@ -250,14 +237,13 @@ void ConfigurePorts(void) {
 							sensors[portNumber]->init(sensorModule::dht11, p);
 							sensors[portNumber]->setName("DHT11");
 							debug.println(DebugLevel::ERROR,
-									"ERROR: ConfigurePorts() - sensorModule not found in switch");
-							debug.println(DebugLevel::ERROR, " ... Created DHT11 instead.");
+									"ERROR: ConfigurePorts() - sensorModule not found in switch\n ... Created DHT11 instead.");
 							break;
 					} // switch (portType)
 				} // if (portNumber...)
 				else {
-					debug.print(DebugLevel::ERROR, "ERROR: ConfigurePort() - portNumber out of range - ");
-					debug.println(DebugLevel::ERROR, portNumber);
+					debug.println(DebugLevel::ERROR,
+							"ERROR: ConfigurePort() - portNumber out of range - " + String(portNumber));
 				}
 			} // if (portMode ...)
 		} // for (portType ...)
@@ -285,9 +271,10 @@ void printInfo(void) {
 // Print useful Information
 	debug.println(DebugLevel::ALWAYS, ProgramInfo);
 	debug.println(DebugLevel::ALWAYS, "Device IP: " + localIPstr());
+	debug.println(DebugLevel::ALWAYS, "SSID: " + WiFi.SSID());
 	dinfo.printThingspeakInfo();
-	debug.print(DebugLevel::ALWAYS, "ESP8266_Device_ID=" + String(dinfo.getDeviceID()));
-	debug.println(DebugLevel::ALWAYS, nl + "Friendly Name: " + String(dinfo.getDeviceName()));
+	debug.println(DebugLevel::ALWAYS, "ESP8266_Device_ID=" + String(dinfo.getDeviceID()));
+	debug.println(DebugLevel::ALWAYS, "Friendly Name: " + String(dinfo.getDeviceName()));
 	dinfo.printInfo();
 }
 
@@ -358,9 +345,8 @@ void printExtendedMenu(void) {
 	debug.println(DebugLevel::ALWAYS, "Q  reset()");
 	debug.println(DebugLevel::ALWAYS, "W  EspClass::reset()");
 	debug.println(DebugLevel::ALWAYS, "A  EspClass::restart()");
-	debug.print(DebugLevel::ALWAYS, "D  [");
-	debug.print(DebugLevel::ALWAYS, debug.getDebugLevelString());
-	debug.println(DebugLevel::ALWAYS, "] Debug level for logging to serial port");
+	debug.println(DebugLevel::ALWAYS,
+			"D  [" + debug.getDebugLevelString() + "] Debug level for logging to serial port");
 	debug.println(DebugLevel::ALWAYS, "");
 }
 
@@ -393,8 +379,7 @@ int task_serialport_menu(unsigned long now) {
 						if (sensors[s]) {
 							for (int v = 0; v < getValueCount(); v++) {
 								if (sensors[s]->getValueEnable(v)) {
-									debug.print(DebugLevel::ALWAYS, sensors[s]->getValueName(v));
-									debug.print(DebugLevel::ALWAYS, "\t");
+									debug.print(DebugLevel::ALWAYS, sensors[s]->getValueName(v) + "\t");
 								}
 							}
 						}
@@ -402,13 +387,9 @@ int task_serialport_menu(unsigned long now) {
 					debug.println(DebugLevel::ALWAYS, "");
 				}
 				// Display the Data
-				debug.print(DebugLevel::ALWAYS, "#");
-				debug.print(DebugLevel::ALWAYS, count);
-				debug.print(DebugLevel::ALWAYS, "\t");
-				debug.print(DebugLevel::ALWAYS, PIRcount);
-				debug.print(DebugLevel::ALWAYS, "\t");
-				debug.print(DebugLevel::ALWAYS, PIRcountLast);
-				debug.print(DebugLevel::ALWAYS, "\t");
+				debug.print(DebugLevel::ALWAYS, "#" + String(count) + "\t");
+				debug.print(DebugLevel::ALWAYS, String(PIRcount) + "\t");
+				debug.print(DebugLevel::ALWAYS, String(PIRcountLast) + "\t");
 				for (int s = 0; s < SENSOR_COUNT; s++) {
 					if (sensors[s]) {
 						for (int v = 0; v < getValueCount(); v++) {
@@ -443,46 +424,38 @@ int task_serialport_menu(unsigned long now) {
 ///// Extended Menu ////
 			case 'D':
 				dinfo.setDebugLevel(static_cast<int>(debug.incrementDebugLevel()));
-				debug.print(DebugLevel::ALWAYS, "Debug Level set to: ");
-				debug.println(DebugLevel::ALWAYS, debug.getDebugLevelString());
+				debug.println(DebugLevel::ALWAYS, "Debug Level set to: " + debug.getDebugLevelString());
 				if (eeprom_is_dirty) dinfo.StoreConfigurationIntoEEPROM();
 				break;
 			case 'E': // Read the EEPROM into the RAM data structure, then dump the contents
 				debug.println(DebugLevel::ALWAYS, nl + "=== Data in EEPROM ===");
 				dinfo.RestoreConfigurationFromEEPROM();
-				debug.println(DebugLevel::ALWAYS, dinfo.toString(nl.c_str()).c_str());
+				debug.println(DebugLevel::ALWAYS, dinfo.toString(nl.c_str()));
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'M': // Just dump the contents of the RAM data structure
 				debug.println(DebugLevel::ALWAYS, nl + "=== Data in RAM ===");
-				debug.println(DebugLevel::ALWAYS, dinfo.toString(nl.c_str()).c_str());
+				debug.println(DebugLevel::ALWAYS, dinfo.toString(nl.c_str()));
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'I':
-				debug.print(DebugLevel::ALWAYS, "CycleCount:\t\t");
-				debug.println(DebugLevel::ALWAYS, ESP.getCycleCount());
-				debug.print(DebugLevel::ALWAYS, "Vcc:\t\t\t");
-				debug.println(DebugLevel::ALWAYS, ESP.getVcc());
+				debug.println(DebugLevel::ALWAYS, "CycleCount:\t\t" + String(ESP.getCycleCount()));
+				debug.println(DebugLevel::ALWAYS, "Vcc:\t\t\t" + String(ESP.getVcc()));
 				debug.print(DebugLevel::ALWAYS, "FreeHeap:\t\t");
 				debug.println(DebugLevel::ALWAYS, ESP.getFreeHeap(), HEX);
 				debug.print(DebugLevel::ALWAYS, "ChipId:\t\t\t");
 				debug.println(DebugLevel::ALWAYS, ESP.getChipId(), HEX);
-				debug.print(DebugLevel::ALWAYS, "SdkVersion:\t\t");
-				debug.println(DebugLevel::ALWAYS, ESP.getSdkVersion());
-				debug.print(DebugLevel::ALWAYS, "BootVersion:\t\t");
-				debug.println(DebugLevel::ALWAYS, ESP.getBootVersion());
-				debug.print(DebugLevel::ALWAYS, "BootMode:\t\t");
-				debug.println(DebugLevel::ALWAYS, ESP.getBootMode());
-				debug.print(DebugLevel::ALWAYS, "CpuFreqMHz:\t\t");
-				debug.println(DebugLevel::ALWAYS, ESP.getCpuFreqMHz());
+				debug.println(DebugLevel::ALWAYS, "SdkVersion:\t\t" + String(ESP.getSdkVersion()));
+				debug.println(DebugLevel::ALWAYS, "BootVersion:\t\t" + String(ESP.getBootVersion()));
+				debug.println(DebugLevel::ALWAYS, "BootMode:\t\t" + String(ESP.getBootMode()));
+				debug.println(DebugLevel::ALWAYS, "CpuFreqMHz:\t\t" + String(ESP.getCpuFreqMHz()));
 				debug.print(DebugLevel::ALWAYS, "FlashChipId:\t\t");
 				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipId(), HEX);
 				debug.print(DebugLevel::ALWAYS, "FlashChipRealSize[Mbit]:");
 				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipRealSize(), HEX);
 				debug.print(DebugLevel::ALWAYS, "FlashChipSize [MBit]:\t");
 				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipSize(), HEX);
-				debug.print(DebugLevel::ALWAYS, "FlashChipSpeed [Hz]:\t");
-				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipSpeed());
+				debug.println(DebugLevel::ALWAYS, "FlashChipSpeed [Hz]:\t" + String(ESP.getFlashChipSpeed()));
 				debug.print(DebugLevel::ALWAYS, "FlashChipMode:\t\t");
 				switch (ESP.getFlashChipMode()) {
 					case FM_QIO:
@@ -511,8 +484,7 @@ int task_serialport_menu(unsigned long now) {
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'R':
-				debug.print(DebugLevel::ALWAYS, "Last Reset --> ");
-				debug.println(DebugLevel::ALWAYS, ESP.getResetInfo());
+				debug.println(DebugLevel::ALWAYS, "Last Reset --> " + ESP.getResetInfo());
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'Q':
@@ -530,8 +502,7 @@ int task_serialport_menu(unsigned long now) {
 				ESP.restart();
 				break;
 			default:
-				debug.print(DebugLevel::ALWAYS, "Unknown command: ");
-				debug.println(DebugLevel::ALWAYS, ch);
+				debug.println(DebugLevel::ALWAYS, "Unknown command: " + String(ch));
 				break;
 		}
 	}

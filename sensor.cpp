@@ -17,7 +17,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 String Sensor::getModuleName(void) {
-	return c_getModuleName(this->getModule());
+	return getModuleNameString(this->getModule());
 }
 
 //--------------------------------

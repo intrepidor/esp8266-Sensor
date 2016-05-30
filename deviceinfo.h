@@ -52,7 +52,7 @@ private:
 			// 4 means "connection failure"
 			char enabled;
 			char apikey[STRING_LENGTH + 1];
-			char host[STRING_LENGTH + 1];
+			char url[STRING_LENGTH + 1];
 			char ipaddr[16]; // nnn.nnn.nnn.nnn = 4*3+3(dots)+1(nul) = 16 chars; 15 for data, and 1 for terminating nul
 		} thingspeak;
 
@@ -143,19 +143,19 @@ public:
 		return db.thingspeak.apikey;
 	}
 
-	void setThingspeakHost(const char* _host) {
-		if (_host) {
-			strncpy(this->db.thingspeak.host, _host, sizeof(this->db.thingspeak.host) - 1);
+	void setThingspeakURL(const char* _url) {
+		if (_url) {
+			strncpy(this->db.thingspeak.url, _url, sizeof(this->db.thingspeak.url) - 1);
 		}
 	}
-	void setThingspeakHost(String _host) {
-		setThingspeakHost(_host.c_str());
+	void setThingspeakURL(String _url) {
+		setThingspeakURL(_url.c_str());
 	}
-	String getThingspeakHost() const {
-		return String(db.thingspeak.host);
+	String getThingspeakURL() const {
+		return String(db.thingspeak.url);
 	}
-	const char* getcThingspeakHost() const {
-		return db.thingspeak.host;
+	const char* getcThingspeakURL() const {
+		return db.thingspeak.url;
 	}
 
 	void setIpaddr(String _ipaddr) {
