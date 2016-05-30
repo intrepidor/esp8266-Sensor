@@ -125,9 +125,7 @@ public:
 	String getModeStr(int portnum);
 
 	// provide a custom adj field name based on the sensor module type
-	String getPortAdjName(int portnum, int adjunum) {
-		return String("FIXME");
-	}
+	String getPortAdjName(int portnum, int adjunum);
 
 //--------------------------------------------------------
 // EEPROM and DB Stuff

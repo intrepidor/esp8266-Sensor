@@ -28,6 +28,12 @@ const char sHTTP_TOP[] =
 				"<html>"
 				"<head>"
 				"<title>Environment Sensor Configuration</title>"
+				"<STYLE type=\"text/css\">"
+				".textbox25 {width:150px; height:16px; background-color:lightgray}"
+				".textbox10 {width:80px; height:16px; background-color:lightgray}"
+				".textbox100 {width:80%; height:16px; background-color:lightgray}"
+				".thingspeak {background-color:yellowgreen}"
+				"</STYLE>"
 				"</head>"
 				"<body>"
 				"<h1>Environment Sensor Configuration</h1>"
@@ -36,7 +42,7 @@ const char sHTTP_TOP[] =
 // ## Device Name
 const char sHTTP_DEVICE_NAME[] = ""
 		"<label>Device name: "
-		"<input type=\"text\" name=\"name\" value=\"";
+		"<input type=\"text\" class=\"textbox25\" name=\"name\" value=\"";
 // <print user assigned name>
 // <ENDLABELQ>
 //
@@ -49,29 +55,30 @@ const char sHTTP_TS_ENABLE[] = ""
 // <ENDLABEL>
 const char sHTTP_TS_URL[] = ""
 		"<label>URL: "
-		"<input type=\"text\" name=\"tsurl\" value=\"";
+		"<input type=\"text\" class=\"textbox100\" name=\"tsurl\" value=\"";
 // print current apikey
 // <ENDLABELQ>
 const char sHTTP_TS_CHANNEL[] = ""
 		"<label>Channel: "
-		"<input type=\"text\" name=\"tschannel\" value=\"";
+		"<input type=\"text\" class=\"textbox25\" name=\"tschannel\" value=\"";
 // print current apikey
 // <ENDLABELQ>
 const char sHTTP_TS_APIKEY[] = ""
 		"<label>API Key: "
-		"<input type=\"text\" name=\"apikey\" value=\"";
+		"<input type=\"text\" class=\"textbox25\" name=\"apikey\" value=\"";
 // print current apikey
 // <ENDLABELQ>
-const char sHTTP_TS_IPADDR[] = "<label>IP address: <input type=\"text\" name=\"ipaddr\" value=\"";
+const char sHTTP_TS_IPADDR[] =
+		"<label>IP address: <input type=\"text\" class=\"textbox25\" name=\"ipaddr\" value=\"";
 // print current ipaddress
 // <ENDLABELQ>
 //
 // ## Port Configuration
 const char sHTTP_PORT_HEADING[] = "<br>"; //"<p><b>Port Configuration</b></p>";
 const char sHTTP_PORT_NUMBER[] = "<label>Port#";
-const char sHTTP_PORT_NAME[] = "<input type=\"text\" name=\"port";
-const char sHTTP_PORTADJ_NUMBER[] = "<label>Adj";
-const char sHTTP_PORTADJ_INPUT[] = " <input type=\"text\" name=\"adjport";
+const char sHTTP_PORT_NAME[] = "<input type=\"text\" class=\"textbox25\" name=\"port";
+const char sHTTP_PORTADJ_NUMBER[] = "<label>";
+const char sHTTP_PORTADJ_INPUT[] = " <input type=\"text\" class=\"textbox10\" name=\"adjport";
 // -- Radio buttons for each port
 const char sHTTP_PORT_RADIO_START[] = "<input type=\"radio\" name=\"radport";
 // print port number, e.g. 1, 2, 3, 4, ...
@@ -131,7 +138,7 @@ void config(void) {
 				+ dinfo.getPortName(i) + sHTTP_ENDLABELQ_BR;
 		// Port Adj Numeric Values
 		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
-			r += sHTTP_PORTADJ_NUMBER + String(k) + dinfo.getPortAdjName(i, k) + sHTTP_PORTADJ_INPUT
+			r += sHTTP_PORTADJ_NUMBER + /*String(k)+*/dinfo.getPortAdjName(i, k) + sHTTP_PORTADJ_INPUT
 					+ String(i) + String(k) + sHTTP_CLOSE_AND_VALUE
 					+ String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION) + sHTTP_ENDLABELQ;
 		}
@@ -156,6 +163,8 @@ void config(void) {
 	r += sHTTP_AHREF_START + localIPstr() + "/csv\">Show current values in csv format<br>" + sHTTP_AHREF_END;
 	r += sHTTP_AHREF_START + localIPstr() + "/config\">Configure Device<br>" + sHTTP_AHREF_END;
 	r += sHTTP_AHREF_START + localIPstr() + "/status\">Show Device Status<br>" + sHTTP_AHREF_END;
+	r += sHTTP_AHREF_START + localIPstr() + "/default_configuration\">D" + sHTTP_AHREF_END
+			+ "efault Configuration<br>"; // Only make the D clickable to help prevent accidents
 	r += sHTTP_AHREF_START + localIPstr() + "/reboot\">Reboot<br>" + sHTTP_AHREF_END;
 	server.sendContent(r);
 
