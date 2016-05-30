@@ -20,6 +20,8 @@ const int DECIMAL_PRECISION = 5;
 const int MAX_PORTS = 4;
 const int MAX_ADJ = 4;
 const int STRING_LENGTH = 20;
+const int URL_LENGTH = 120;
+const int CHANNEL_LENGTH = 20;
 
 extern bool eeprom_is_dirty; // false whenever EEPROM and RAM are different.
 static bool isValidPort(int portnum);
@@ -43,7 +45,7 @@ private:
 			int id;
 		} device;
 
-		// Thingspeak'
+		// Thingspeak
 		struct {
 			int status;
 			// bit value
@@ -52,7 +54,8 @@ private:
 			// 4 means "connection failure"
 			char enabled;
 			char apikey[STRING_LENGTH + 1];
-			char url[STRING_LENGTH + 1];
+			char url[URL_LENGTH + 1];
+			char channel[CHANNEL_LENGTH + 1];
 			char ipaddr[16]; // nnn.nnn.nnn.nnn = 4*3+3(dots)+1(nul) = 16 chars; 15 for data, and 1 for terminating nul
 		} thingspeak;
 
@@ -125,7 +128,7 @@ public:
 	int getThingspeakStatus() const {
 		return db.thingspeak.status;
 	}
-
+// API
 	void setThingspeakApikey(const char* _apikey) {
 		if (_apikey) {
 			strncpy(this->db.thingspeak.apikey, _apikey, sizeof(db.thingspeak.apikey) - 1);
@@ -142,7 +145,7 @@ public:
 	const char* getcThinkspeakApikey() const {
 		return db.thingspeak.apikey;
 	}
-
+// URL
 	void setThingspeakURL(const char* _url) {
 		if (_url) {
 			strncpy(this->db.thingspeak.url, _url, sizeof(this->db.thingspeak.url) - 1);
@@ -157,7 +160,22 @@ public:
 	const char* getcThingspeakURL() const {
 		return db.thingspeak.url;
 	}
-
+// CHANNEL
+	void setThingspeakChannel(const char* _channel) {
+		if (_channel) {
+			strncpy(this->db.thingspeak.channel, _channel, sizeof(this->db.thingspeak.channel) - 1);
+		}
+	}
+	void setThingspeakChannel(String _channel) {
+		setThingspeakChannel(_channel.c_str());
+	}
+	String getThingspeakChannel() const {
+		return String(db.thingspeak.channel);
+	}
+	const char* getcThingspeakChannel() const {
+		return db.thingspeak.channel;
+	}
+// IPADDR
 	void setIpaddr(String _ipaddr) {
 		setIpaddr(_ipaddr.c_str());
 	}
@@ -172,7 +190,7 @@ public:
 	const char* getcIpaddr(void) const {
 		return db.thingspeak.ipaddr;
 	}
-
+// ENABLE
 	void setEnable(bool _enable) {
 		this->db.thingspeak.enabled = _enable;
 	}

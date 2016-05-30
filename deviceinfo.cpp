@@ -62,7 +62,8 @@ String Device::toString(String eol) {
 	s += "thingspeak.status=" + String(getThingspeakStatus()) + eol;
 	s += "thingspeak.enable=" + getEnableString() + eol;
 	s += "TS_apikey=" + getThinkspeakApikey() + eol;
-	s += "thingspeak.url=" + getThingspeakURL() + "]" + eol;
+	s += "thingspeak.url=" + getThingspeakURL() + eol;
+	s += "thingspeak.channel=" + getThingspeakChannel() + eol;
 	s += "thingspeak.ipaddr=" + getIpaddr();
 	for (int i = 0; i < getPortMax(); i++) {
 		s += eol + "port[" + String(i) + "].name=" + getPortName(i) + ", mode=" + String(getModeStr(i));
@@ -199,7 +200,7 @@ void Device::RestoreConfigurationFromEEPROM(void) {
 		*(pp + addr) = EEPROM.read(static_cast<int>(addr));
 	}
 	eeprom_is_dirty = false;
-	debug.println(DebugLevel::ALWAYS, nl + "Data copied from EEPROM into RAM data structure");
+	debug.println(DebugLevel::DEBUG, nl + "Data copied from EEPROM into RAM data structure");
 }
 
 bool Device::StoreConfigurationIntoEEPROM(void) {
@@ -211,13 +212,13 @@ bool Device::StoreConfigurationIntoEEPROM(void) {
 	}
 
 	if (EEPROM.commit()) {
-		debug.println(DebugLevel::ALWAYS, nl + "Write from RAM data structure to EEPROM ok.");
+		debug.println(DebugLevel::DEBUG, nl + "Write from RAM data structure to EEPROM ok.");
 		RestoreConfigurationFromEEPROM();
 		eeprom_is_dirty = false;
 		return true;
 	}
 	else {
-		debug.println(DebugLevel::ALWAYS, nl + "ERROR: Write to EEPROM failed!");
+		debug.println(DebugLevel::ERROR, nl + "ERROR: Write to EEPROM failed!");
 		return false; // signal error
 	}
 }

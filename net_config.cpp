@@ -47,6 +47,16 @@ const char sHTTP_TS_ENABLE[] = ""
 		"<input type=\"checkbox\" name=\"ts_enable\" value=\"tsenable\" ";
 // <print "checked" or blank>
 // <ENDLABEL>
+const char sHTTP_TS_URL[] = ""
+		"<label>URL: "
+		"<input type=\"text\" name=\"tsurl\" value=\"";
+// print current apikey
+// <ENDLABELQ>
+const char sHTTP_TS_CHANNEL[] = ""
+		"<label>Channel: "
+		"<input type=\"text\" name=\"tschannel\" value=\"";
+// print current apikey
+// <ENDLABELQ>
 const char sHTTP_TS_APIKEY[] = ""
 		"<label>API Key: "
 		"<input type=\"text\" name=\"apikey\" value=\"";
@@ -94,14 +104,16 @@ void config(void) {
 	String r = String(sHTTP_TOP);
 	server.sendContent(r);
 	// Device Name
-	r = String(sHTTP_DEVICE_NAME) + String(dinfo.getDeviceName()) + String(sHTTP_ENDLABELQ_BR);
+	r = sHTTP_DEVICE_NAME + String(dinfo.getDeviceName()) + sHTTP_ENDLABELQ_BR;
 	// Thingspeak
-	r += String(sHTTP_TS_ENABLE) + String(dinfo.getEnableStr()) + String(sHTTP_ENDLABEL_BR)
-			+ String(sHTTP_TS_APIKEY) + String(dinfo.getcThinkspeakApikey()) + String(sHTTP_ENDLABELQ_BR)
-			+ String(sHTTP_TS_IPADDR) + String(dinfo.getIpaddr()) + String(sHTTP_ENDLABELQ_BR);
+	r += sHTTP_TS_ENABLE + String(dinfo.getEnableStr()) + sHTTP_ENDLABEL_BR;
+	r += sHTTP_TS_APIKEY + dinfo.getThinkspeakApikey() + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_TS_URL + dinfo.getThingspeakURL() + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_TS_CHANNEL + dinfo.getThingspeakChannel() + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_TS_IPADDR + dinfo.getIpaddr() + sHTTP_ENDLABELQ_BR;
 
 	// Port Configuration Heading
-	r += String(sHTTP_PORT_HEADING);
+	r += sHTTP_PORT_HEADING;
 	// ....SEND
 	server.sendContent(r);
 
@@ -109,52 +121,48 @@ void config(void) {
 	for (int i = 0; i < dinfo.getPortMax(); i++) {
 		// Port Name and edit box
 		if (i > 0) {
-			r = String("<br>");
+			r = "<br>";
 		}
 		else {
-			r = String("");
+			r = "";
 		}
 		// Port Name
-		r += String(sHTTP_PORT_NUMBER) + String(i) + String(sHTTP_PORT_NAME) + String(i)
-				+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortName(i)) + String(sHTTP_ENDLABELQ_BR);
+		r += sHTTP_PORT_NUMBER + String(i) + sHTTP_PORT_NAME + String(i) + sHTTP_CLOSE_AND_VALUE
+				+ dinfo.getPortName(i) + sHTTP_ENDLABELQ_BR;
 		// Port Adj Numeric Values
 		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
-			r += String(sHTTP_PORTADJ_NUMBER) + String(k) + String(sHTTP_PORTADJ_NAME) + String(i) + String(k)
-					+ String(sHTTP_CLOSE_AND_VALUE) + String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION)
-					+ String(sHTTP_ENDLABELQ);
+			r += sHTTP_PORTADJ_NUMBER + String(k) + sHTTP_PORTADJ_NAME + String(i) + String(k)
+					+ sHTTP_CLOSE_AND_VALUE + String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION)
+					+ sHTTP_ENDLABELQ;
 		}
-		r += String("<br>Port Mode: ");
+		r += "<br>Port Mode: ";
 		// Port radio buttons
 		//lint -e{26,785} suppress since lint doesn't understand C++11
 		for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
-			r += String(sHTTP_PORT_RADIO_START) + String(i) + String(sHTTP_CLOSE_AND_VALUE);
+			r += sHTTP_PORT_RADIO_START + String(i) + sHTTP_CLOSE_AND_VALUE;
 			r += String(sensorList[static_cast<int>(j)].name);
-			r += String("\" ");
+			r += "\" ";
 			if (dinfo.getPortMode(i) == static_cast<sensorModule>(j)) {
-				r += String("checked");
+				r += "checked";
 			}
-			r += String(">") + String(sensorList[static_cast<int>(j)].name);
+			r += ">" + String(sensorList[static_cast<int>(j)].name);
 		}
-		server.sendContent(r + String("<br>"));
+		server.sendContent(r + "<br>");
 	}
 
 	// Buttons and links
-	r = String(sHTTP_BUTTONS);
-	r += String(sHTTP_AHREF_START) + localIPstr() + "\">Show Measured data<br>" + String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr() + "/csv\">Show current values in csv format<br>"
-			+ String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr() + "/config\">Configure Device<br>"
-			+ String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr() + "/status\">Show Device Status<br>"
-			+ String(sHTTP_AHREF_END);
-	r += String(sHTTP_AHREF_START) + localIPstr() + "/reboot\">Reboot<br>" + String(sHTTP_AHREF_END);
+	r = sHTTP_BUTTONS;
+	r += sHTTP_AHREF_START + localIPstr() + "\">Show Measured data<br>" + sHTTP_AHREF_END;
+	r += sHTTP_AHREF_START + localIPstr() + "/csv\">Show current values in csv format<br>" + sHTTP_AHREF_END;
+	r += sHTTP_AHREF_START + localIPstr() + "/config\">Configure Device<br>" + sHTTP_AHREF_END;
+	r += sHTTP_AHREF_START + localIPstr() + "/status\">Show Device Status<br>" + sHTTP_AHREF_END;
+	r += sHTTP_AHREF_START + localIPstr() + "/reboot\">Reboot<br>" + sHTTP_AHREF_END;
 	server.sendContent(r);
 
 	// End of page
 	unsigned long tdiff = millis() - t0;
 	server.sendContent(
-			String("<pre>time:") + String(tdiff) + String("ms\nConfig:") + String(configChanges)
-					+ String("</pre>") + String(sHTTP_END));
+			"<pre>time:" + String(tdiff) + "ms\nConfig:" + String(configChanges) + "</pre>" + sHTTP_END);
 
 // Stop client because ...
 //	server.client().stop();
@@ -227,7 +235,16 @@ int ConfigurationChange(void) {
 				debug.println(DebugLevel::DEBUG, " ok ipaddr");
 				found = true;
 			}
-
+			if (sarg == "tsurl") {
+				dinfo.setThingspeakURL(varg);
+				debug.println(DebugLevel::DEBUG, " ok tsurl");
+				found = true;
+			}
+			if (sarg == "tschannel") {
+				dinfo.setThingspeakChannel(varg);
+				debug.println(DebugLevel::DEBUG, " ok tschannel");
+				found = true;
+			}
 			if (strncmp(sarg.c_str(), "port", 4) == 0) {
 				found = true;
 				char c = sarg.c_str()[4];
