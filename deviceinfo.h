@@ -21,6 +21,7 @@ const int MAX_PORTS = 4;
 const int MAX_ADJ = 4;
 const int STRING_LENGTH = 20;
 
+extern bool eeprom_is_dirty; // false whenever EEPROM and RAM are different.
 static bool isValidPort(int portnum);
 
 struct cport {
@@ -57,6 +58,9 @@ private:
 
 		// Ports
 		cport port[MAX_PORTS];
+
+		// Logging level
+		int debuglevel;
 	} db;
 
 public:
@@ -66,6 +70,15 @@ public:
 	}
 	void init(void);
 	String toString(String _eol); // pass end of line delimiter
+
+//--------------------------------------------------------
+	int getDebugLevel(void) {
+		return db.debuglevel;
+	}
+	void setDebugLevel(int dlevel) {
+		db.debuglevel = dlevel;
+		eeprom_is_dirty = true;
+	}
 
 //--------------------------------------------------------
 // Device Name and ID

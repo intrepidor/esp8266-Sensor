@@ -9,6 +9,7 @@
 #define DEBUGPRINT_H_
 
 #include <Arduino.h>
+#include "deviceinfo.h"
 
 extern String nl;
 
@@ -30,10 +31,16 @@ public:
 	}
 	void setDebugLevel(DebugLevel dlevel) {
 		debuglevel = dlevel;
+		eeprom_is_dirty = true;
+		validateDebugLevel();
 	}
+	bool validateDebugLevel(void);
+	static String convertDebugLevelToString(DebugLevel dl);
 	bool isDebugLevel(DebugLevel dlevel);
-	void incrementDebugLevel(void);
-	String getDebugLevelString(void);
+	DebugLevel incrementDebugLevel(void);
+	String getDebugLevelString(void) {
+		return convertDebugLevelToString(debuglevel);
+	}
 	void println(DebugLevel dlevel, const __FlashStringHelper *);
 	void println(DebugLevel dlevel, const String &s);
 	void println(DebugLevel dlevel, const char[]);

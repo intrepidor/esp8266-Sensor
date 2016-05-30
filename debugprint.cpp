@@ -9,6 +9,18 @@
 
 String nl("\r\n");
 
+bool DebugPrint::validateDebugLevel(void) {
+	if (debuglevel >= DebugLevel::END) {
+		debuglevel = DebugLevel::ALWAYS;
+		eeprom_is_dirty = true;
+	}
+	if (debuglevel < DebugLevel::ALWAYS) {
+		debuglevel = DebugLevel::ALWAYS;
+		eeprom_is_dirty = true;
+	}
+	return eeprom_is_dirty;
+}
+
 bool DebugPrint::isDebugLevel(DebugLevel dlevel) {
 	if (dlevel == debuglevel || dlevel == DebugLevel::ALWAYS
 			|| static_cast<int>(debuglevel) >= static_cast<int>(dlevel)) {
@@ -17,16 +29,16 @@ bool DebugPrint::isDebugLevel(DebugLevel dlevel) {
 	return false;
 }
 
-void DebugPrint::incrementDebugLevel(void) {
+DebugLevel DebugPrint::incrementDebugLevel(void) {
 	int newd = static_cast<int>(debuglevel) + 1;
 	debuglevel = static_cast<DebugLevel>(newd);
-	if (debuglevel >= DebugLevel::END) {
-		debuglevel = DebugLevel::NONE;
-	}
+	eeprom_is_dirty = true;
+	validateDebugLevel();
+	return debuglevel;
 }
 
-String DebugPrint::getDebugLevelString(void) {
-	switch (debuglevel) {
+String DebugPrint::convertDebugLevelToString(DebugLevel dl) {
+	switch (dl) {
 		case DebugLevel::ALWAYS:
 			return String("ALWAYS");
 			break;

@@ -9,10 +9,11 @@
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include "deviceinfo.h"
-//#include "net_config.h"
 #include "main.h"
 #include "debugprint.h"
 #include "sensor.h"
+
+bool eeprom_is_dirty = false;
 
 unsigned int validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest) {
 	bool ok = true;
@@ -54,6 +55,8 @@ void Device::init(void) {
 String Device::toString(String eol) {
 	String s;
 	s = "config_version=" + String(db.config_version) + eol;
+	s += "debugLevel=" + DebugPrint::convertDebugLevelToString(static_cast<DebugLevel>(dinfo.getDebugLevel()))
+			+ eol;
 	s += "device.name=" + String(getDeviceName()) + eol;
 	s += "device.id=" + String(getDeviceID()) + eol;
 	s += "thingspeak.status=" + String(getThingspeakStatus()) + eol;
@@ -197,7 +200,8 @@ void Device::RestoreConfigurationFromEEPROM(void) {
 	for (unsigned int addr = 0; addr < sizeof(db); addr++) {
 		*(pp + addr) = EEPROM.read(static_cast<int>(addr));
 	}
-	debug.println(DebugLevel::DEBUG, nl + "Data copied from EEPROM into RAM data structure");
+	eeprom_is_dirty = false;
+	debug.println(DebugLevel::ALWAYS, nl + "Data copied from EEPROM into RAM data structure");
 }
 
 bool Device::StoreConfigurationIntoEEPROM(void) {
@@ -209,12 +213,13 @@ bool Device::StoreConfigurationIntoEEPROM(void) {
 	}
 
 	if (EEPROM.commit()) {
-		debug.println(DebugLevel::DEBUG, nl + "Write from RAM data structure to EEPROM ok.");
+		debug.println(DebugLevel::ALWAYS, nl + "Write from RAM data structure to EEPROM ok.");
 		RestoreConfigurationFromEEPROM();
+		eeprom_is_dirty = false;
 		return true;
 	}
 	else {
-		debug.println(DebugLevel::ERROR, nl + "ERROR: Write to EEPROM failed!");
+		debug.println(DebugLevel::ALWAYS, nl + "ERROR: Write to EEPROM failed!");
 		return false; // signal error
 	}
 }

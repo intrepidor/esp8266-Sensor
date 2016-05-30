@@ -12,6 +12,7 @@
 #include "reset.h"
 #include "debugprint.h"
 
+// Forward declarations
 extern int task_readpir(unsigned long now);
 extern int task_acquire(unsigned long now);
 extern int task_updatethingspeak(unsigned long now);
@@ -85,7 +86,26 @@ void setup(void) {
 
 // Start EEPROM
 	EEPROM.begin(512);
+	// Copy persisted data from EEPROM into RAM
 	dinfo.RestoreConfigurationFromEEPROM();
+	debug.print(DebugLevel::ALWAYS, "Debug level started as [1 dinfo]: ");
+	debug.println(DebugLevel::ALWAYS, dinfo.getDebugLevel());
+	debug.print(DebugLevel::ALWAYS, "Debug level started as [2 debug]: ");
+	debug.println(DebugLevel::ALWAYS, debug.getDebugLevelString());
+
+	// Get DebugLevel from EEPROM
+	// Copy debug level from RAM, which was just copied from the EEPROM
+	debug.setDebugLevel(static_cast<DebugLevel>(dinfo.getDebugLevel()));
+	// write it back to dinfo since debug would have validated it, and potentially changed it to fix errors.
+	dinfo.setDebugLevel(static_cast<int>(debug.getDebugLevel()));
+	debug.print(DebugLevel::ALWAYS, "Debug level now [1 dinfo]: ");
+	debug.println(DebugLevel::ALWAYS, dinfo.getDebugLevel());
+	debug.print(DebugLevel::ALWAYS, "Debug level now [2 debug]: ");
+	debug.println(DebugLevel::ALWAYS, debug.getDebugLevelString());
+	// if value is invalid, then fix it and rewrite the EEPROM
+	if (eeprom_is_dirty) {
+		dinfo.StoreConfigurationIntoEEPROM();
+	}
 
 // Setup the WebServer
 	WebInit();
@@ -402,7 +422,7 @@ int task_serialport_menu(unsigned long now) {
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'c':
-				debug.println(DebugLevel::ALWAYS, "Calibration Data");
+				debug.println(DebugLevel::ALWAYS, "=== Calibration Data ===");
 				for (int i = 0; i < SENSOR_COUNT; i++) {
 					if (sensors[i]) {
 						sensors[i]->printCals();
@@ -410,7 +430,7 @@ int task_serialport_menu(unsigned long now) {
 				}
 				break;
 			case 'm':
-				debug.println(DebugLevel::ALWAYS, "Value Data");
+				debug.println(DebugLevel::ALWAYS, "=== Value Data ===");
 				for (int i = 0; i < SENSOR_COUNT; i++) {
 					if (sensors[i]) {
 						sensors[i]->printValues();
@@ -422,18 +442,19 @@ int task_serialport_menu(unsigned long now) {
 				break;
 ///// Extended Menu ////
 			case 'D':
-				debug.incrementDebugLevel();
+				dinfo.setDebugLevel(static_cast<int>(debug.incrementDebugLevel()));
 				debug.print(DebugLevel::ALWAYS, "Debug Level set to: ");
 				debug.println(DebugLevel::ALWAYS, debug.getDebugLevelString());
+				if (eeprom_is_dirty) dinfo.StoreConfigurationIntoEEPROM();
 				break;
 			case 'E': // Read the EEPROM into the RAM data structure, then dump the contents
-				debug.println(DebugLevel::ALWAYS, "");
+				debug.println(DebugLevel::ALWAYS, nl + "=== Data in EEPROM ===");
 				dinfo.RestoreConfigurationFromEEPROM();
 				debug.println(DebugLevel::ALWAYS, dinfo.toString(nl.c_str()).c_str());
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'M': // Just dump the contents of the RAM data structure
-				debug.println(DebugLevel::ALWAYS, "");
+				debug.println(DebugLevel::ALWAYS, nl + "=== Data in RAM ===");
 				debug.println(DebugLevel::ALWAYS, dinfo.toString(nl.c_str()).c_str());
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
