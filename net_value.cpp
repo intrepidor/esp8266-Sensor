@@ -51,7 +51,7 @@ void sendValue(void) {
 		}
 		if (sarg == "api") {
 			found = true;
-			value = String(dinfo.getcThinkspeakApikey());
+			value = String(dinfo.getcThingspeakApikey());
 		}
 		if (sarg == "rssi") {
 			found = true;

@@ -51,12 +51,12 @@ void Device::writeDefaultsToDatabase(void) {
 	eraseDatabase();
 	db.config_version = 0;
 	setDeviceName("");
-	setDeviceID(0);
+	setDeviceID(999);
 	setThingspeakEnable(false);
 	setThingspeakApikey("");
-	setThingspeakURL("");
+	setThingspeakURL("http://api.thingspeak.com");
 	setThingspeakChannel("");
-	setThingspeakIpaddr("");
+	setThingspeakIpaddr("184.106.153.149");
 	db.debuglevel = 0;
 	for (int i = 0; i < MAX_PORTS; i++) {
 		setPortName(i, "");
@@ -77,7 +77,7 @@ String Device::databaseToString(String eol) {
 	s += "device.id=" + String(getDeviceID()) + eol;
 	s += "thingspeak.status=" + String(getThingspeakStatus()) + eol;
 	s += "thingspeak.enable=" + getThingspeakEnableString() + eol;
-	s += "TS_apikey=" + getThinkspeakApikey() + eol;
+	s += "TS_apikey=" + getThingspeakApikey() + eol;
 	s += "thingspeak.url=" + getThingspeakURL() + eol;
 	s += "thingspeak.channel=" + getThingspeakChannel() + eol;
 	s += "thingspeak.ipaddr=" + getThingspeakIpaddr();

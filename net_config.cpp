@@ -31,7 +31,7 @@ const char sHTTP_TOP[] =
 				"<STYLE type=\"text/css\">"
 				".textbox25 {width:150px; height:16px; background-color:lightgray}"
 				".textbox10 {width:80px; height:16px; background-color:lightgray}"
-				".textbox100 {width:80%; height:16px; background-color:lightgray}"
+				".textbox100 {width:60%; height:16px; background-color:lightgray}"
 				".thingspeak {background-color:yellowgreen}"
 				"</STYLE>"
 				"</head>"
@@ -54,12 +54,12 @@ const char sHTTP_TS_ENABLE[] = ""
 // <print "checked" or blank>
 // <ENDLABEL>
 const char sHTTP_TS_URL[] = ""
-		"<label>URL: "
+		"<label>URL (optional): "
 		"<input type=\"text\" class=\"textbox100\" name=\"tsurl\" value=\"";
 // print current apikey
 // <ENDLABELQ>
 const char sHTTP_TS_CHANNEL[] = ""
-		"<label>Channel: "
+		"<label>Channel (optional): "
 		"<input type=\"text\" class=\"textbox25\" name=\"tschannel\" value=\"";
 // print current apikey
 // <ENDLABELQ>
@@ -90,7 +90,7 @@ const char sHTTP_PORT_RADIO_START[] = "<input type=\"radio\" name=\"radport";
 // ## Submit Buttons
 const char sHTTP_BUTTONS[] = ""
 		"<br>"
-		"<input type=\"submit\" name=\"submit\" value=\"submit\">"
+		"<input type=\"submit\" name=\"submit\" value=\"SAVE\">"
 		/*		"<input type=\"submit\" name=\"reboot\" value=\"reboot\">"*/
 		"</form>";
 const char sHTTP_AHREF_START[] = "<a href=\"http://";
@@ -114,7 +114,7 @@ void config(void) {
 	r = sHTTP_DEVICE_NAME + String(dinfo.getDeviceName()) + sHTTP_ENDLABELQ_BR;
 	// Thingspeak
 	r += sHTTP_TS_ENABLE + String(dinfo.getEnableStr()) + sHTTP_ENDLABEL_BR;
-	r += sHTTP_TS_APIKEY + dinfo.getThinkspeakApikey() + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_TS_APIKEY + dinfo.getThingspeakApikey() + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_URL + dinfo.getThingspeakURL() + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_CHANNEL + dinfo.getThingspeakChannel() + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_IPADDR + dinfo.getThingspeakIpaddr() + sHTTP_ENDLABELQ_BR;

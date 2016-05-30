@@ -153,10 +153,10 @@ public:
 			strncpy(this->db.thingspeak.apikey, _apikey.c_str(), sizeof(db.thingspeak.apikey) - 1);
 		}
 	}
-	String getThinkspeakApikey() const {
+	String getThingspeakApikey() const {
 		return String(db.thingspeak.apikey);
 	}
-	const char* getcThinkspeakApikey() const {
+	const char* getcThingspeakApikey() const {
 		return db.thingspeak.apikey;
 	}
 // URL

@@ -14,9 +14,9 @@
 void printThingspeakInfo(void) {
 	debug.println(DebugLevel::ALWAYS, "== Thingspeak Configuration ==");
 	debug.println(DebugLevel::ALWAYS, "Enable: " + dinfo.getThingspeakEnableString());
-	debug.println(DebugLevel::ALWAYS, "URL: " + dinfo.getThingspeakURL());
-	debug.println(DebugLevel::ALWAYS, "Write Key: " + dinfo.getThinkspeakApikey());
-	debug.println(DebugLevel::ALWAYS, "Channel" + dinfo.getThingspeakChannel());
+	debug.println(DebugLevel::ALWAYS, "URL: " + dinfo.getThingspeakURL() + " Note: for future use");
+	debug.println(DebugLevel::ALWAYS, "Write Key: " + dinfo.getThingspeakApikey());
+	debug.println(DebugLevel::ALWAYS, "Channel: " + dinfo.getThingspeakChannel());
 	debug.println(DebugLevel::ALWAYS, "IP Address" + dinfo.getThingspeakIpaddr());
 }
 
@@ -24,13 +24,13 @@ void updateThingspeak(void) {
 	WiFiClient client;
 	int const MAX_THINGSPEAK_FIELD_COUNT = 8; // Thingspeak only accept 8 fields
 
-	if (!client.connect(dinfo.getThingspeakURL().c_str(), 80)) {
-		debug.println(DebugLevel::ALWAYS, "error: connection to " + dinfo.getThingspeakURL() + " failed");
+	if (!client.connect(dinfo.getThingspeakIpaddr().c_str(), 80)) {
+		debug.println(DebugLevel::ALWAYS, "error: connection to " + dinfo.getThingspeakIpaddr() + " failed");
 	}
 	else {
+		debug.println(DebugLevel::DEBUG, "success: connected to " + dinfo.getThingspeakIpaddr());
 		// Send message to Thingspeak
-		String getStr = "/update?api_key=";
-		getStr += dinfo.getThinkspeakApikey();
+		String getStr = "GET /update?api_key=" + dinfo.getThingspeakApikey();
 		getStr += "&field1=" + String(PIRcount); // The built-in PIR sensor is always field1
 		// This code is written so the fields are static regardless of which sensor is used in
 		//    which port, or how many ports are present, or how many values are enabled per
@@ -57,9 +57,9 @@ void updateThingspeak(void) {
 				}
 			}
 		}
-		debug.println(DebugLevel::DEBUG, "Thinkspeak URL:" + getStr);
+		debug.println(DebugLevel::DEBUG, "Sent: " + getStr);
 		client.print(
-				String("GET ") + getStr + " HTTP/1.1\r\n" + "Host: " + dinfo.getThingspeakURL() + "\r\n"
+				getStr + " HTTP/1.1\r\n" + "Host: " + dinfo.getThingspeakURL() + "\r\n"
 						+ "Connection: close\r\n\r\n");
 		delay(10);
 
