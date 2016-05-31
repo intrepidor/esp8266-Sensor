@@ -26,12 +26,12 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	switch (m) {
 		case sensorModule::dht11:
 			dht = new DHT(static_cast<uint8_t>(p.digital), DHT11);
-			delay(2000);
+			delay(2000); // CONSIDER using an optimistic_yield(2000000) instead so background tasks can still run
 			dht->begin();
 			break;
 		case sensorModule::dht22:
 			dht = new DHT(static_cast<uint8_t>(p.digital), DHT22);
-			delay(2000);
+			delay(2000); // CONSIDER using an optimistic_yield(2000000) instead so background tasks can still run
 			dht->begin();
 			break;
 		case sensorModule::ds18b20:

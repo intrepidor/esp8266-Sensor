@@ -12,6 +12,7 @@
 #include "deviceinfo.h"
 #include "net_config.h"
 #include "net_value.h"
+#include "thingspeak.h"
 
 const char* const factory_default_ssid = "ssid";
 ESP8266WebServer server(80);
@@ -102,6 +103,8 @@ void WebInit(void) {
 		response += "\nCount=" + String(count);
 		response += "\nPIR=" + String(PIRcount);
 		response += "\nPIRLast="+String(PIRcountLast);
+		response += "\nThingspeakUpdates="+String(thingspeak_update_counter);
+		response += "\nThingspeakerrors="+String(thingspeak_error_counter);
 		for (int i=0; i<SENSOR_COUNT; i++) {
 			if (sensors[i]) {
 				for (int j=0; j<getValueCount(); j++) {

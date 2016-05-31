@@ -19,7 +19,7 @@ void Device::restoreDatabaseFromEEPROM(void) {
 		*(pp + addr) = EEPROM.read(static_cast<int>(addr));
 	}
 	eeprom_is_dirty = false;
-	debug.println(DebugLevel::DEBUG, nl + "Data copied from EEPROM into RAM data structure");
+	debug.println(DebugLevel::DEBUGMORE, nl + "Data copied from EEPROM into RAM data structure");
 }
 
 bool Device::saveDatabaseToEEPROM(void) {
@@ -31,7 +31,7 @@ bool Device::saveDatabaseToEEPROM(void) {
 	}
 
 	if (EEPROM.commit()) {
-		debug.println(DebugLevel::DEBUG, nl + "Write from RAM data structure to EEPROM ok.");
+		debug.println(DebugLevel::DEBUGMORE, nl + "Write from RAM data structure to EEPROM ok.");
 		restoreDatabaseFromEEPROM();
 		eeprom_is_dirty = false;
 		return true;

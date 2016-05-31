@@ -60,7 +60,7 @@ const char sHTTP_TS_URL[] = ""
 // <ENDLABELQ>
 const char sHTTP_TS_CHANNEL[] = ""
 		"<label>Channel (optional): "
-		"<input type=\"text\" class=\"textbox25\" name=\"tschannel\" value=\"";
+		"<input type=\"text\" class=\"textbox10\" name=\"tschannel\" value=\"";
 // print current apikey
 // <ENDLABELQ>
 const char sHTTP_TS_APIKEY[] = ""
@@ -217,61 +217,62 @@ int ConfigurationChange(void) {
 	bool need_reboot = false;
 	if (server.args() > 0) {
 		bool found = false;
-		debug.println(DebugLevel::DEBUG, "");
-		debug.println(DebugLevel::DEBUG, "##########################################################");
+		debug.println(DebugLevel::DEBUGMORE, "");
+		debug.println(DebugLevel::DEBUGMORE, "##########################################################");
 		dinfo.setThingspeakEnable(false);
 		for (uint8_t i = 0; i < server.args(); i++) {
 			String sarg = server.argName(i);
 			String varg = server.arg(i);
-			debug.print(DebugLevel::DEBUG, "NAME=" + sarg + "  VALUE=" + varg);
+			debug.print(DebugLevel::DEBUGMORE, "NAME=" + sarg + "  VALUE=" + varg);
 			if (sarg == String("name")) {
 				dinfo.setDeviceName(varg);
-				debug.println(DebugLevel::DEBUG, " ok name");
+				debug.println(DebugLevel::DEBUGMORE, " ok name");
 				found = true;
 			}
 			if (sarg == String("ts_enable")) {
 				dinfo.setThingspeakEnable(true);
-				debug.println(DebugLevel::DEBUG, " ok ts_enable");
+				debug.println(DebugLevel::DEBUGMORE, " ok ts_enable");
 				found = true;
 			}
 			if (sarg == "apikey") {
 				dinfo.setThingspeakApikey(varg);
-				debug.println(DebugLevel::DEBUG, " ok apikey");
+				debug.println(DebugLevel::DEBUGMORE, " ok apikey");
 				found = true;
 			}
 			if (sarg == "ipaddr") {
 				dinfo.setThingspeakIpaddr(varg);
-				debug.println(DebugLevel::DEBUG, " ok ipaddr");
+				debug.println(DebugLevel::DEBUGMORE, " ok ipaddr");
 				found = true;
 			}
 			if (sarg == "tsurl") {
 				dinfo.setThingspeakURL(varg);
-				debug.println(DebugLevel::DEBUG, " ok tsurl");
+				debug.println(DebugLevel::DEBUGMORE, " ok tsurl");
 				found = true;
 			}
 			if (sarg == "tschannel") {
 				dinfo.setThingspeakChannel(varg);
-				debug.println(DebugLevel::DEBUG, " ok tschannel");
+				debug.println(DebugLevel::DEBUGMORE, " ok tschannel");
 				found = true;
 			}
 			if (strncmp(sarg.c_str(), "port", 4) == 0) {
 				found = true;
 				char c = sarg.c_str()[4];
 				int n = static_cast<int>(c) - static_cast<int>('0');
-				debug.print(DebugLevel::DEBUG, ", n=");
-				debug.print(DebugLevel::DEBUG, n);
+				debug.print(DebugLevel::DEBUGMORE, ", n=");
+				debug.print(DebugLevel::DEBUGMORE, n);
 				if (n >= 0 && n < dinfo.getPortMax()) {
 					if (varg.length() > 0) {
 						dinfo.setPortName(n, varg);
-						debug.print(DebugLevel::DEBUG, " ok, port[" + String(n) + "].name set to " + varg);
+						debug.print(DebugLevel::DEBUGMORE,
+								" ok, port[" + String(n) + "].name set to " + varg);
 					}
 					else {
 						dinfo.setPortName(n, "");
-						debug.println(DebugLevel::DEBUG, " ok - cleared");
+						debug.println(DebugLevel::DEBUGMORE, " ok - cleared");
 					}
 				}
 				else {
-					debug.println(DebugLevel::DEBUG,
+					debug.println(DebugLevel::DEBUGMORE,
 							nl + "ERROR: Bug - Invalid port #(" + String(n) + "," + String(c)
 									+ ") found in ConfigurationChange() - " + sarg);
 				}
@@ -283,21 +284,21 @@ int ConfigurationChange(void) {
 				char c2 = sarg.c_str()[8];
 				int n1 = static_cast<int>(c1) - static_cast<int>('0');
 				int n2 = static_cast<int>(c2) - static_cast<int>('0');
-				debug.print(DebugLevel::DEBUG, ", n1=" + String(n1));
-				debug.print(DebugLevel::DEBUG, ", n2=" + String(n2));
+				debug.print(DebugLevel::DEBUGMORE, ", n1=" + String(n1));
+				debug.print(DebugLevel::DEBUGMORE, ", n2=" + String(n2));
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					double d = 0;
 					if (varg.length() > 0) {
-						debug.println(DebugLevel::DEBUG, " ok, set");
+						debug.println(DebugLevel::DEBUGMORE, " ok, set");
 						d = ::atof(varg.c_str());
 					}
 					else {
-						debug.println(DebugLevel::DEBUG, " ok, cleared");
+						debug.println(DebugLevel::DEBUGMORE, " ok, cleared");
 					}
 					dinfo.setPortAdj(n1, n2, d);
 				}
 				else {
-					debug.println(DebugLevel::DEBUG,
+					debug.println(DebugLevel::DEBUGMORE,
 							nl + "ERROR: Bug - Invalid port #(" + String(n1) + "," + String(c1)
 									+ ") found in ConfigurationChange() - " + sarg);
 				}
@@ -307,8 +308,8 @@ int ConfigurationChange(void) {
 				found = true;
 				char c1 = sarg.c_str()[7];
 				int n1 = static_cast<int>(c1) - static_cast<int>('0');
-				debug.print(DebugLevel::DEBUG, ", n1=");
-				debug.print(DebugLevel::DEBUG, n1);
+				debug.print(DebugLevel::DEBUGMORE, ", n1=");
+				debug.print(DebugLevel::DEBUGMORE, n1);
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					bool found1 = false;
 					if (varg.length() > 0) {
@@ -320,46 +321,46 @@ int ConfigurationChange(void) {
 									dinfo.setPortMode(n1, sensorList[j].id);
 									need_reboot = true;
 								}
-								debug.print(DebugLevel::DEBUG, nl + "Info: Setting mode to ");
-								debug.print(DebugLevel::DEBUG, static_cast<int>(sensorList[j].id));
-								debug.print(DebugLevel::DEBUG, "(");
-								debug.print(DebugLevel::DEBUG, sensorList[j].name);
-								debug.print(DebugLevel::DEBUG, "), Reboot needed: ");
+								debug.print(DebugLevel::DEBUGMORE, nl + "Info: Setting mode to ");
+								debug.print(DebugLevel::DEBUGMORE, static_cast<int>(sensorList[j].id));
+								debug.print(DebugLevel::DEBUGMORE, "(");
+								debug.print(DebugLevel::DEBUGMORE, sensorList[j].name);
+								debug.print(DebugLevel::DEBUGMORE, "), Reboot needed: ");
 								if (need_reboot) {
-									debug.println(DebugLevel::DEBUG, "yes");
+									debug.println(DebugLevel::DEBUGMORE, "yes");
 								}
 								else {
-									debug.println(DebugLevel::DEBUG, "no");
+									debug.println(DebugLevel::DEBUGMORE, "no");
 								}
 								found1 = true;
 								break;
 							}
 						}
 						if (!found1) {
-							debug.println(DebugLevel::DEBUG, nl + "ERROR: unable to map mode: " + varg);
+							debug.println(DebugLevel::DEBUGMORE, nl + "ERROR: unable to map mode: " + varg);
 						}
 					}
 					else {
-						debug.print(DebugLevel::DEBUG, nl + "ERROR: Invalid varg mode: (" + varg);
-						debug.println(DebugLevel::DEBUG, ") found in ConfigurationChange() - " + sarg);
+						debug.print(DebugLevel::DEBUGMORE, nl + "ERROR: Invalid varg mode: (" + varg);
+						debug.println(DebugLevel::DEBUGMORE, ") found in ConfigurationChange() - " + sarg);
 					}
 				}
 				else {
-					debug.print(DebugLevel::DEBUG, nl + "ERROR:Invalid port #(");
-					debug.print(DebugLevel::DEBUG, n1);
-					debug.print(DebugLevel::DEBUG, ",");
-					debug.print(DebugLevel::DEBUG, c1);
-					debug.println(DebugLevel::DEBUG, ") found in ConfigurationChange() - " + sarg);
+					debug.print(DebugLevel::DEBUGMORE, nl + "ERROR:Invalid port #(");
+					debug.print(DebugLevel::DEBUGMORE, n1);
+					debug.print(DebugLevel::DEBUGMORE, ",");
+					debug.print(DebugLevel::DEBUGMORE, c1);
+					debug.println(DebugLevel::DEBUGMORE, ") found in ConfigurationChange() - " + sarg);
 				}
 			}
 
 			if (sarg == "reboot") {
-				debug.println(DebugLevel::DEBUG, ", reboot");
+				debug.println(DebugLevel::DEBUGMORE, ", reboot");
 				found = true;
 			}
 
 			if (!found) {
-				debug.println(DebugLevel::DEBUG, "");
+				debug.println(DebugLevel::DEBUGMORE, "");
 			}
 			found = false;
 		}

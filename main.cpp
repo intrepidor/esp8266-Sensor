@@ -114,11 +114,11 @@ void setup(void) {
 	Queue myQueue;
 	// scheduleFunction (function pointer, task name, start delay in ms, repeat interval in ms)
 	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
-	myQueue.scheduleFunction(task_acquire, "Temperature", 1000, 499);
-	myQueue.scheduleFunction(task_updatethingspeak, "Thingspeak", 1500, 10000);
-	myQueue.scheduleFunction(task_flashled, "LED", 250, 1000);
-	myQueue.scheduleFunction(task_serialport_menu, "Status", 2000, 500);
-	myQueue.scheduleFunction(task_webServer, "WebServer", 3000, 1);
+	myQueue.scheduleFunction(task_acquire, "acquire", 1000, 499);
+	myQueue.scheduleFunction(task_updatethingspeak, "thingspeak", 2000, 20000);
+	myQueue.scheduleFunction(task_flashled, "led", 250, 1000);
+	myQueue.scheduleFunction(task_serialport_menu, "menu", 2000, 500);
+	myQueue.scheduleFunction(task_webServer, "webserver", 3000, 1);
 
 // Print boot up information and menu
 	printInfo();
@@ -130,7 +130,7 @@ void setup(void) {
 // Start the task scheduler
 	for (;;) {
 		myQueue.Run(millis());
-		delay(10);
+		delay(10); // CONSIDER using an optimistic_yield(10000) instead so background tasks can still run
 	}
 }
 
@@ -280,9 +280,10 @@ void printInfo(void) {
 	debug.println(DebugLevel::ALWAYS, ProgramInfo);
 	debug.println(DebugLevel::ALWAYS, "Device IP: " + localIPstr());
 	debug.println(DebugLevel::ALWAYS, "SSID: " + WiFi.SSID());
-	printThingspeakInfo();
 	debug.println(DebugLevel::ALWAYS, "ESP8266_Device_ID=" + String(dinfo.getDeviceID()));
 	debug.println(DebugLevel::ALWAYS, "Friendly Name: " + String(dinfo.getDeviceName()));
+	printThingspeakInfo();
+	debug.println(DebugLevel::ALWAYS, "== Port Information ==");
 	dinfo.printInfo();
 }
 
@@ -501,12 +502,12 @@ int task_serialport_menu(unsigned long now) {
 				break;
 			case 'W':
 				debug.println(DebugLevel::ALWAYS, "Calling EspClass::reset() in 2 seconds ...");
-				delay(2000);
+				delay(2000); // CONSIDER using an optimistic_yield(200000) instead so background tasks can still run
 				ESP.reset();
 				break;
 			case 'A':
 				debug.println(DebugLevel::ALWAYS, "Calling EspClass::restart() in 2 seconds ...");
-				delay(2000);
+				delay(2000); // CONSIDER using an optimistic_yield(200000) instead so background tasks can still run
 				ESP.restart();
 				break;
 			default:

@@ -47,9 +47,9 @@ void reset(void) {
 	pinMode(PIN_SOFTRESET, OUTPUT);
 	for (int a = 0; a < 10; a++) {
 		digitalWrite(PIN_SOFTRESET, LOW);
-		delay(1000);
+		delay(1000); // CONSIDER using an optimistic_yield(1000000) instead so background tasks can still run
 		digitalWrite(PIN_SOFTRESET, HIGH);
-		delay(1000);
+		delay(1000); // CONSIDER using an optimistic_yield(1000000) instead so background tasks can still run
 	}
 }
 
