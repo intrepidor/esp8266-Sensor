@@ -46,6 +46,13 @@ const char sHTTP_DEVICE_NAME[] = ""
 // <print user assigned name>
 // <ENDLABELQ>
 //
+// ## Device ID
+const char sHTTP_DEVICE_ID[] = ""
+		"<label>Device ID: "
+		"<input type=\"text\" class=\"textbox25\" name=\"deviceid\" value=\"";
+// <print user assigned name>
+// <ENDLABELQ>
+//
 // ## Thingspeak
 const char sHTTP_TS_ENABLE[] = ""
 		"<br>" //<p><b>Thingspeak</b></p>"
@@ -112,6 +119,7 @@ void config(void) {
 	server.sendContent(r);
 	// Device Name
 	r = sHTTP_DEVICE_NAME + String(dinfo.getDeviceName()) + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_DEVICE_ID + String(dinfo.getDeviceID()) + sHTTP_ENDLABELQ_BR;
 	// Thingspeak
 	r += sHTTP_TS_ENABLE + String(dinfo.getEnableStr()) + sHTTP_ENDLABEL_BR;
 	r += sHTTP_TS_APIKEY + dinfo.getThingspeakApikey() + sHTTP_ENDLABELQ_BR;
@@ -227,6 +235,11 @@ int ConfigurationChange(void) {
 			if (sarg == String("name")) {
 				dinfo.setDeviceName(varg);
 				debug.println(DebugLevel::DEBUGMORE, " ok name");
+				found = true;
+			}
+			if (sarg == String("deviceid")) {
+				dinfo.setDeviceID(atoi(varg.c_str()));
+				debug.println(DebugLevel::DEBUGMORE, " ok deviceid");
 				found = true;
 			}
 			if (sarg == String("ts_enable")) {
