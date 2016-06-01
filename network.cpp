@@ -105,6 +105,7 @@ void WebInit(void) {
 		response += "\nPIRLast="+String(PIRcountLast);
 		response += "\nThingspeakUpdates="+String(thingspeak_update_counter);
 		response += "\nThingspeakerrors="+String(thingspeak_error_counter);
+		response += "\nThinkspeakentries="+String(thinkspeak_total_entries);
 		for (int i=0; i<SENSOR_COUNT; i++) {
 			if (sensors[i]) {
 				for (int j=0; j<getValueCount(); j++) {

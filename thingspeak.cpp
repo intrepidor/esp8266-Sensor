@@ -6,6 +6,7 @@
  */
 
 #include <Arduino.h>
+#include <WString.h>
 #include <ESP8266WiFi.h>
 #include "include/wl_definitions.h"
 #include "debugprint.h"
@@ -14,6 +15,7 @@
 
 size_t thingspeak_update_counter = 0;
 size_t thingspeak_error_counter = 0;
+long thinkspeak_total_entries = 0; // this is filled in by the response from the REST update
 String getThingspeakGET(void);
 String getTCPStatusString(uint8_t s);
 
@@ -26,6 +28,7 @@ void printThingspeakInfo(void) {
 	debug.println(DebugLevel::ALWAYS, "IP Address: " + dinfo.getThingspeakIpaddr());
 	debug.println(DebugLevel::ALWAYS, "Updates: " + String(thingspeak_update_counter));
 	debug.println(DebugLevel::ALWAYS, "Errors: " + String(thingspeak_error_counter));
+	debug.println(DebugLevel::ALWAYS, "Entries: " + String(thinkspeak_total_entries));
 }
 
 String getTCPStatusString(uint8_t s) {
@@ -73,7 +76,7 @@ String getTCPStatusString(uint8_t s) {
 
 String getThingspeakGET(void) {
 	int const MAX_THINGSPEAK_FIELD_COUNT = 8; // Thingspeak only accept 8 fields
-	String getStr = "GET /update?api_key=" + dinfo.getThingspeakApikey();
+	String getStr = "/update?api_key=" + dinfo.getThingspeakApikey();
 
 	getStr += "&field1=" + String(PIRcount); // The built-in PIR sensor is always field1
 // This code is written so the fields are static regardless of which sensor is used in
@@ -106,11 +109,9 @@ String getThingspeakGET(void) {
 
 void updateThingspeak(void) {
 	WiFiClient client;
-	unsigned int r;
 
-	int connect_ret = client.connect(dinfo.getThingspeakIpaddr_c(), 80);
-
-	if (!connect_ret) {
+	// Create the connection
+	if (!client.connect(dinfo.getThingspeakIpaddr_c(), 80)) {
 		debug.println(DebugLevel::ALWAYS,
 				nl + "Connecting to " + dinfo.getThingspeakIpaddr() + ": "
 						+ getTCPStatusString(client.status()) + " : FAILED");
@@ -121,30 +122,30 @@ void updateThingspeak(void) {
 				nl + "Connecting to " + dinfo.getThingspeakIpaddr() + ": "
 						+ getTCPStatusString(client.status()) + " : Success");
 
-		String getStr = getThingspeakGET();
+		// Create the command
+		String getStr = "GET " + getThingspeakGET() + "HTTP/1.1";
+
+		// Send the command
 		debug.println(DebugLevel::DEBUG, "Sending -> " + getStr);
-
-		r = client.print(
-				getStr + " HTPP/1.1\r\nHost: " + dinfo.getThingspeakIpaddr()
-						+ "\r\nConnection: close\r\n\r\n");
-
-		optimistic_yield(50000); // 50,000 us, or 0.1 seconds
+		unsigned int r = client.println(getStr);
+		r += client.println("Host: " + dinfo.getThingspeakIpaddr());
+		r += client.println("Connection: close");
+		r += client.println();
 
 		// Read the response
 		debug.println(DebugLevel::DEBUG, "        -> " + String(r) + " bytes sent");
 		if (r == 0) {
-			debug.println(DebugLevel::ALWAYS, "  Send FAILED");
+			debug.println(DebugLevel::ALWAYS, getStr + "  Send FAILED");
 			thingspeak_error_counter++;
 		}
-		else {
-			thingspeak_update_counter++;
+		else if (client.available()) {
+			String response = client.readString();
+			debug.println(DebugLevel::DEBUG, "Response: " + response);
+			if (isdigit(response.charAt(0))) {
+				thinkspeak_total_entries = response.toInt();
+				thingspeak_update_counter++;
+			}
 		}
-
-		while (client.available()) {
-			String line = client.readStringUntil('\r');
-			debug.print(DebugLevel::DEBUG, ">> " + line);
-		}
-//		client.stop();
 	}
 }
 

@@ -125,7 +125,7 @@ void config(void) {
 	r += sHTTP_TS_APIKEY + dinfo.getThingspeakApikey() + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_URL + dinfo.getThingspeakURL() + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_CHANNEL + dinfo.getThingspeakChannel() + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_TS_IPADDR + dinfo.getThingspeakIpaddr() + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_TS_IPADDR + dinfo.getThingspeakIpaddr() + sHTTP_ENDLABELQ + " Default=184.106.153.149<br>";
 
 	// Port Configuration Heading
 	r += sHTTP_PORT_HEADING;
