@@ -88,7 +88,7 @@ String getThingspeakGET(void) {
 	int nextfield = 2;
 	for (int i = 0; i < SENSOR_COUNT && nextfield <= MAX_THINGSPEAK_FIELD_COUNT; i++) {
 		if (sensors[i]) {
-			for (int j = 0; j < getValueCount() && nextfield <= MAX_THINGSPEAK_FIELD_COUNT; j++) {
+			for (int j = 0; j < getSensorValueCount() && nextfield <= MAX_THINGSPEAK_FIELD_COUNT; j++) {
 				getStr += "&field" + String(nextfield++) + "=";
 				if (sensors[i]->getValueEnable(j)) {
 					getStr += String(sensors[i]->getValue(j));
@@ -99,7 +99,7 @@ String getThingspeakGET(void) {
 			}
 		}
 		else { // sensor not present; assume zero for the values
-			for (int k = 0; k < getValueCount() && nextfield <= MAX_THINGSPEAK_FIELD_COUNT; k++) {
+			for (int k = 0; k < getSensorValueCount() && nextfield <= MAX_THINGSPEAK_FIELD_COUNT; k++) {
 				getStr += "&field" + String(nextfield++) + "=0";
 			}
 		}

@@ -108,11 +108,15 @@ void WebInit(void) {
 		response += "\nThinkspeakentries="+String(thinkspeak_total_entries);
 		for (int i=0; i<SENSOR_COUNT; i++) {
 			if (sensors[i]) {
-				for (int j=0; j<getValueCount(); j++) {
+				for (int j=0; j<getSensorValueCount(); j++) {
 					if (sensors[i]->getValueEnable(j)) {
 						response+="\nval" + String(i) + String(j) + ":" +
 						String(sensors[i]->getValueName(j)) + "=" +
 						String(sensors[i]->getValue(j));
+						response+="\nval" + String(i) + String(j) + ":" +
+						String(sensors[i]->getValueName(j)) + "=" +
+						String(sensors[i]->getRawValue(j));
+
 					}
 				}
 			}
@@ -127,14 +131,16 @@ void WebInit(void) {
 		for (int i = 0; i < SENSOR_COUNT; i++) {
 			if (sensors[i]) {
 
-				for (int j = 0; j < getValueCount(); j++) {
+				for (int j = 0; j < getSensorValueCount(); j++) {
 					if (sensors[i]->getValueEnable(j)) {
+						response += String("val") + String(i) + String(j) + "="
+						+ String(sensors[i]->getRawValue(j)) + ",";
 						response += String("val") + String(i) + String(j) + "="
 						+ String(sensors[i]->getValue(j)) + ",";
 					}
 				}
 
-				for (int j = 0; j < getCalCount(); j++) {
+				for (int j = 0; j < getSensorCalCount(); j++) {
 					if (sensors[i]->getCalEnable(j)) {
 						response += String("cal") + String(i) + String(j) + "="
 						+ String(sensors[i]->getCal(j)) + ",";

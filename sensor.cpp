@@ -24,7 +24,7 @@ String Sensor::getModuleName(void) {
 // Values
 //--------------------------------
 bool Sensor::isValueIndexValid(int _index) {
-	if (_index >= 0 && _index < getValueCount()) {
+	if (_index >= 0 && _index < getSensorValueCount()) {
 		return true;
 	}
 	debug.println(DebugLevel::ERROR, nl + "ERROR: isValueIndexValid() index out of bounds");
@@ -75,13 +75,28 @@ bool Sensor::setValue(int _index, float v) {
 	return false;
 }
 
+float Sensor::getRawValue(int _index) {
+	if (isValueIndexValid(_index)) {
+		return rawval[_index].v;
+	}
+	return NAN;
+}
+
+bool Sensor::setRawValue(int _index, float v) {
+	if (isValueIndexValid(_index)) {
+		rawval[_index].v = v;
+		return true;
+	}
+	return false;
+}
+
 void Sensor::printValues(void) {
 	debug.print(DebugLevel::ALWAYS, "Sensor: ");
 	if (getName().length() > 0) {
 		debug.print(DebugLevel::ALWAYS, getName());
 	}
 	debug.println(DebugLevel::ALWAYS, "");
-	for (int i = 0; i < getValueCount(); i++) {
+	for (int i = 0; i < getSensorValueCount(); i++) {
 		if (value[i].enabled) {
 			debug.print(DebugLevel::ALWAYS, "   Val[");
 			debug.print(DebugLevel::ALWAYS, i);
@@ -89,6 +104,12 @@ void Sensor::printValues(void) {
 			debug.print(DebugLevel::ALWAYS, value[i].name);
 			debug.print(DebugLevel::ALWAYS, "]=");
 			debug.println(DebugLevel::ALWAYS, getValue(i));
+			debug.print(DebugLevel::ALWAYS, "   Raw[");
+			debug.print(DebugLevel::ALWAYS, i);
+			debug.print(DebugLevel::ALWAYS, ",");
+			debug.print(DebugLevel::ALWAYS, value[i].name);
+			debug.print(DebugLevel::ALWAYS, "]=");
+			debug.println(DebugLevel::ALWAYS, getRawValue(i));
 		}
 	}
 	debug.println(DebugLevel::ALWAYS, "");
@@ -98,7 +119,7 @@ void Sensor::printValues(void) {
 // Cals
 //--------------------------------
 bool Sensor::isCalIndexValid(int _index) {
-	if (_index >= 0 && _index < getCalCount()) {
+	if (_index >= 0 && _index < getSensorCalCount()) {
 		return true;
 	}
 	debug.println(DebugLevel::ERROR, nl + "ERROR: isCalIndexValid() index out of bounds");
@@ -155,7 +176,7 @@ void Sensor::printCals(void) {
 		debug.print(DebugLevel::ALWAYS, getName());
 	}
 	debug.println(DebugLevel::ALWAYS, "");
-	for (int i = 0; i < getCalCount(); i++) {
+	for (int i = 0; i < getSensorCalCount(); i++) {
 		if (cal[i].enabled) {
 			debug.print(DebugLevel::ALWAYS, "   Cal[");
 			debug.print(DebugLevel::ALWAYS, i);

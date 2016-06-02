@@ -143,7 +143,13 @@ void config(void) {
 		}
 		// Port Name
 		r += sHTTP_PORT_NUMBER + String(i) + sHTTP_PORT_NAME + String(i) + sHTTP_CLOSE_AND_VALUE
-				+ dinfo.getPortName(i) + sHTTP_ENDLABELQ_BR;
+				+ dinfo.getPortName(i) + sHTTP_ENDLABELQ;
+		// Current Values
+		for (int vindx = 0; vindx < getSensorValueCount(); vindx++) {
+			r += " raw/val" + String(i) + String(vindx) + "= " + sensors[i]->getRawValue(vindx) + "/"
+					+ sensors[i]->getValue(vindx) + String(" : ");
+		}
+		r += "<br>";
 		// Port Adj Numeric Values
 		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
 			r += sHTTP_PORTADJ_NUMBER + /*String(k)+*/dinfo.getPortAdjName(i, k) + sHTTP_PORTADJ_INPUT

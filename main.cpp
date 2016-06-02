@@ -267,7 +267,7 @@ void CopyCalibrationDataToSensors(void) {
 	for (int idx = 0; idx < SENSOR_COUNT && idx < dinfo.getPortMax(); idx++) {
 		if (sensors[idx] /* make sure it exists*/) {
 			// copy each of the multiple calibration values into the sensor
-			for (int i = 0; i < getCalCount() && i < dinfo.getPortAdjMax(); i++) {
+			for (int i = 0; i < getSensorCalCount() && i < dinfo.getPortAdjMax(); i++) {
 				sensors[idx]->setCal(i, static_cast<float>(dinfo.getPortAdj(idx, i)));
 			}
 		}
@@ -383,12 +383,13 @@ int task_serialport_menu(unsigned long now) {
 				// Display the heading
 				if (need_new_heading) {
 					need_new_heading = false;
-					debug.print(DebugLevel::ALWAYS, "CNT\tMotion\tLast\t");
+					debug.print(DebugLevel::ALWAYS, "CNT\tPIR/Last\t");
 					for (int s = 0; s < SENSOR_COUNT; s++) {
 						if (sensors[s]) {
-							for (int v = 0; v < getValueCount(); v++) {
+							for (int v = 0; v < getSensorValueCount(); v++) {
 								if (sensors[s]->getValueEnable(v)) {
-									debug.print(DebugLevel::ALWAYS, sensors[s]->getValueName(v) + "\t");
+									debug.print(DebugLevel::ALWAYS,
+											"Raw/" + sensors[s]->getValueName(v) + "\t");
 								}
 							}
 						}
@@ -397,14 +398,14 @@ int task_serialport_menu(unsigned long now) {
 				}
 				// Display the Data
 				debug.print(DebugLevel::ALWAYS, "#" + String(count) + "\t");
-				debug.print(DebugLevel::ALWAYS, String(PIRcount) + "\t");
-				debug.print(DebugLevel::ALWAYS, String(PIRcountLast) + "\t");
+				debug.print(DebugLevel::ALWAYS, String(PIRcount) + "/");
+				debug.print(DebugLevel::ALWAYS, String(PIRcountLast) + "\t\t");
 				for (int s = 0; s < SENSOR_COUNT; s++) {
 					if (sensors[s]) {
-						for (int v = 0; v < getValueCount(); v++) {
+						for (int v = 0; v < getSensorValueCount(); v++) {
 							if (sensors[s]->getValueEnable(v)) {
-								debug.print(DebugLevel::ALWAYS, sensors[s]->getValue(v));
-								debug.print(DebugLevel::ALWAYS, "\t");
+								debug.print(DebugLevel::ALWAYS, sensors[s]->getRawValue(v) + String("/"));
+								debug.print(DebugLevel::ALWAYS, sensors[s]->getValue(v) + String("\t"));
 							}
 						}
 					}

@@ -41,7 +41,8 @@ public:
 class Sensor {
 private:
 	String sensorName;
-	SensorValue value[VALUE_COUNT];
+	SensorValue value[VALUE_COUNT];		// calibrated adjusted values
+	SensorValue rawval[VALUE_COUNT];	// raw values
 	SensorValue cal[CALIB_COUNT];
 	sensorModule module;
 	SensorPins pins;
@@ -85,6 +86,10 @@ public:
 		return this->module;
 	}
 	String getModuleName(void);
+
+	// raw values
+	float getRawValue(int index);
+	bool setRawValue(int index, float v);
 
 	// values
 	bool isValueIndexValid(int index);

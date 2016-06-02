@@ -8,11 +8,11 @@
 #include <Arduino.h>
 #include "sensor_support.h"
 
-int getValueCount(void) {
+int getSensorValueCount(void) {
 	return VALUE_COUNT;
 }
 
-int getCalCount(void) {
+int getSensorCalCount(void) {
 	return CALIB_COUNT;
 }
 

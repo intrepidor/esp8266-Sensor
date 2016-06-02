@@ -56,6 +56,15 @@ public:
 
 	}
 
+	void setRawHumidity(float v) {
+		setRawValue(TEMP_VALUE_INDEX_HUMIDITY, v);
+	}
+
+	void setRawTemperature(float v) {
+		setRawValue(TEMP_VALUE_INDEX_TEMPERATURE, v);
+
+	}
+
 	float getCalOffset() {
 		return getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
 	}

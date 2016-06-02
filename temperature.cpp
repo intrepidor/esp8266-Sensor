@@ -56,9 +56,14 @@ bool TemperatureSensor::acquire(void) {
 				return false;   // error: read failed
 			}
 
+			// raw, non-corrected, values
+			setRawTemperature(t);
+			setRawHumidity(h);
+
 			h = h * getCal(TEMP_CAL_INDEX_HUMIDITY_SLOPE) + getCal(TEMP_CAL_INDEX_HUMIDITY_OFFSET);
 			t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
 
+			// Calibration corrected values
 			setTemperature(t);
 			setHumidity(h);
 		}
