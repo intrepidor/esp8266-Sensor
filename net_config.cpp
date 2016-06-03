@@ -16,78 +16,93 @@
 extern int ConfigurationChange(void);
 
 // Generic and reused statements
-const char sHTTP_ENDLABEL_BR[] = "></label> <br>";
+//const char sHTTP_ENDLABEL_BR[] = "></label> <br>";
 const char sHTTP_ENDLABELQ_BR[] = "\"></label><br>";
 const char sHTTP_ENDLABELQ[] = "\"></label>";
 //const char sHTTP_ENDBRACEQ[] = "\">";
 const char sHTTP_CLOSE_AND_VALUE[] = "\"  value=\"";
 const char sHTTP_END[] = "</body></html>";
 // ## Header
+const char sHTTP_DIVSTART[] = "<div class=\"base ";
+const char sHTTP_DIVSTART_CLOSE[] = "\">";
+const char sHTTP_DIVEND[] = "</div>";
 const char sHTTP_TOP[] =
 		"<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
 				"<html>"
 				"<head>"
 				"<title>Environment Sensor Configuration</title>"
 				"<STYLE type=\"text/css\">"
-				".textbox25 {width:150px; height:16px; background-color:lightgray}"
-				".textbox10 {width:80px; height:16px; background-color:lightgray}"
-				".textbox100 {width:60%; height:16px; background-color:lightgray}"
-				".thingspeak {background-color:yellowgreen}"
+				"label { font-weight:bold; height:18px; color:midnightblue;}"
+				".base {-webkit-font-smoothing:antialiased; font-family:\"Arial\"; font-size:15px;"
+				" border-style:solid; border-width:0px; border-radius:10px;"
+				" padding: 10px; margin-bottom:5px}"
+				".device {background-color:#edd9c0;}"
+				".thingspeak {background-color:#c9d8c5; }"
+				".port {background-color:#a8b6bf;}"
+				".links {background-color:#c9c9c9; float:left;}"
+				".button {background-color:#4CAF50; border:none; color:white; padding:15px 32px;"
+				" text-align:center; text-decoration:none; display:inline-block; font-size:16px;}"
+				".save {float:right;}"
+				".field {height:15px; background-color:lightgray; color:darkgreen; margin-top:-2px;border-radius:2px;}"
+				".fieldshort {width:80px;}"
+				".fieldmedium {width:170px;}"
+				".fieldlong {width:60%;}"
+				".newcheckbox {display:inline-block; width:15px; height:15px; margin:-1px 4px 0 4px;"
+				"   vertical-align:middle;}"
+				".newradio {display:inline-block; width:15px; height:15px; margin:-1px 0px 0 9px;"
+				"   vertical-align:middle;}"
 				"</STYLE>"
 				"</head>"
 				"<body>"
-				"<h1>Environment Sensor Configuration</h1>"
-				"<form action=\"config\" method=\"get\" name=\"Configuration\"> "; // extra character to make it word aligned
+//				"<h1>Environment Sensor Configuration</h1>"
+				"<form action=\"config\" method=\"get\" name=\"Configuration\"> ";// extra character to make it word aligned
 //
 // ## Device Name
 const char sHTTP_DEVICE_NAME[] = ""
 		"<label>Device name: "
-		"<input type=\"text\" class=\"textbox25\" name=\"name\" value=\"";
+		"<input type=\"text\" class=\"field fieldmedium\" name=\"name\" value=\"";
 // <print user assigned name>
 // <ENDLABELQ>
 //
 // ## Device ID
 const char sHTTP_DEVICE_ID[] = ""
 		"<label>Device ID: "
-		"<input type=\"text\" class=\"textbox25\" name=\"deviceid\" value=\"";
+		"<input type=\"text\" class=\"field fieldmedium\" name=\"deviceid\" value=\"";
 // <print user assigned name>
 // <ENDLABELQ>
 //
 // ## Thingspeak
 const char sHTTP_TS_ENABLE[] = ""
-		"<br>" //<p><b>Thingspeak</b></p>"
-		"<label>Thingspeak Enabled"
-		"<input type=\"checkbox\" name=\"ts_enable\" value=\"tsenable\" ";
+		"<input type=\"checkbox\" name=\"ts_enable\" class=\"newcheckbox\" value=\"tsenable\" ";
 // <print "checked" or blank>
 // <ENDLABEL>
 const char sHTTP_TS_URL[] = ""
 		"<label>URL (optional): "
-		"<input type=\"text\" class=\"textbox100\" name=\"tsurl\" value=\"";
+		"<input type=\"text\" class=\"field fieldlong\" name=\"tsurl\" value=\"";
 // print current apikey
 // <ENDLABELQ>
 const char sHTTP_TS_CHANNEL[] = ""
 		"<label>Channel (optional): "
-		"<input type=\"text\" class=\"textbox10\" name=\"tschannel\" value=\"";
+		"<input type=\"text\" class=\"field fieldshort\" name=\"tschannel\" value=\"";
 // print current apikey
 // <ENDLABELQ>
 const char sHTTP_TS_APIKEY[] = ""
 		"<label>API Key: "
-		"<input type=\"text\" class=\"textbox25\" name=\"apikey\" value=\"";
+		"<input type=\"text\" class=\"field fieldmedium\" name=\"apikey\" value=\"";
 // print current apikey
 // <ENDLABELQ>
 const char sHTTP_TS_IPADDR[] =
-		"<label>IP address: <input type=\"text\" class=\"textbox25\" name=\"ipaddr\" value=\"";
+		"<label>IP address: <input type=\"text\" class=\"field fieldmedium\" name=\"ipaddr\" value=\"";
 // print current ipaddress
 // <ENDLABELQ>
 //
 // ## Port Configuration
-const char sHTTP_PORT_HEADING[] = "<br>"; //"<p><b>Port Configuration</b></p>";
 const char sHTTP_PORT_NUMBER[] = "<label>Port#";
-const char sHTTP_PORT_NAME[] = "<input type=\"text\" class=\"textbox25\" name=\"port";
+const char sHTTP_PORT_NAME[] = "<input type=\"text\" class=\"field fieldmedium\" name=\"port";
 const char sHTTP_PORTADJ_NUMBER[] = "<label>";
-const char sHTTP_PORTADJ_INPUT[] = " <input type=\"text\" class=\"textbox10\" name=\"adjport";
+const char sHTTP_PORTADJ_INPUT[] = " <input type=\"text\" class=\"field fieldshort\" name=\"adjport";
 // -- Radio buttons for each port
-const char sHTTP_PORT_RADIO_START[] = "<input type=\"radio\" name=\"radport";
+const char sHTTP_PORT_RADIO_START[] = "<input type=\"radio\" class=\"newradio\" name=\"radport";
 // print port number, e.g. 1, 2, 3, 4, ...
 // <sHTTP_CLOSE_AND_VALUE>
 // print sensor name, then print port number --- this creates a handle for the radio button
@@ -96,8 +111,7 @@ const char sHTTP_PORT_RADIO_START[] = "<input type=\"radio\" name=\"radport";
 //
 // ## Submit Buttons
 const char sHTTP_BUTTONS[] = ""
-		"<br>"
-		"<input type=\"submit\" name=\"submit\" value=\"SAVE\">"
+		"<div class=\"save\"><input type=\"submit\" class=\"button\" name=\"submit\" value=\"SAVE\"></div>"
 		/*		"<input type=\"submit\" name=\"reboot\" value=\"reboot\">"*/
 		"</form>";
 const char sHTTP_AHREF_START[] = "<a href=\"http://";
@@ -116,32 +130,31 @@ void config(void) {
 
 	// Start of page
 	String r = String(sHTTP_TOP);
+	r += "<h2>Device Configuration :: " + ProgramInfo + "</h2>";
 	server.sendContent(r);
+
 	// Device Name
-	r = sHTTP_DEVICE_NAME + String(dinfo.getDeviceName()) + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_DEVICE_ID + String(dinfo.getDeviceID()) + sHTTP_ENDLABELQ_BR;
+	r = sHTTP_DIVSTART + String("device") + sHTTP_DIVSTART_CLOSE;
+	r += sHTTP_DEVICE_NAME + String(dinfo.getDeviceName()) + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_DEVICE_ID + String(dinfo.getDeviceID()) + sHTTP_ENDLABELQ;
+	r += sHTTP_DIVEND;
+
 	// Thingspeak
-	r += sHTTP_TS_ENABLE + String(dinfo.getEnableStr()) + sHTTP_ENDLABEL_BR;
+	r += sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
+	r += sHTTP_TS_ENABLE + String(dinfo.getEnableStr()) + "> Thingspeak Enable<br>";
 	r += sHTTP_TS_APIKEY + dinfo.getThingspeakApikey() + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_URL + dinfo.getThingspeakURL() + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_CHANNEL + dinfo.getThingspeakChannel() + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_TS_IPADDR + dinfo.getThingspeakIpaddr() + sHTTP_ENDLABELQ + " Default=184.106.153.149<br>";
-
-	// Port Configuration Heading
-	r += sHTTP_PORT_HEADING;
-	// ....SEND
+	r += sHTTP_TS_IPADDR + dinfo.getThingspeakIpaddr() + sHTTP_ENDLABELQ + " Default=184.106.153.149";
+	r += sHTTP_DIVEND;
 	server.sendContent(r);
 
 	// Ports
 	for (int i = 0; i < dinfo.getPortMax(); i++) {
 		// Port Name and edit box
-		if (i > 0) {
-			r = "<br>";
-		}
-		else {
-			r = "";
-		}
+		r = "";
 		// Port Name
+		r += sHTTP_DIVSTART + String("port") + sHTTP_DIVSTART_CLOSE;
 		r += sHTTP_PORT_NUMBER + String(i) + sHTTP_PORT_NAME + String(i) + sHTTP_CLOSE_AND_VALUE
 				+ dinfo.getPortName(i) + sHTTP_ENDLABELQ;
 		// Current Values
@@ -168,11 +181,13 @@ void config(void) {
 			}
 			r += ">" + String(sensorList[static_cast<int>(j)].name);
 		}
-		server.sendContent(r + "<br>");
+		r += sHTTP_DIVEND;
+		server.sendContent(r);
 	}
 
 	// Buttons and links
 	r = sHTTP_BUTTONS;
+	r += sHTTP_DIVSTART + String("links") + sHTTP_DIVSTART_CLOSE;
 	r += sHTTP_AHREF_START + localIPstr() + "\">Show Measured data<br>" + sHTTP_AHREF_END;
 	r += sHTTP_AHREF_START + localIPstr() + "/csv\">Show current values in csv format<br>" + sHTTP_AHREF_END;
 	r += sHTTP_AHREF_START + localIPstr() + "/config\">Configure Device<br>" + sHTTP_AHREF_END;
@@ -180,6 +195,7 @@ void config(void) {
 	r += sHTTP_AHREF_START + localIPstr() + "/default_configuration\">D" + sHTTP_AHREF_END
 			+ "efault Configuration<br>"; // Only make the D clickable to help prevent accidents
 	r += sHTTP_AHREF_START + localIPstr() + "/reboot\">Reboot<br>" + sHTTP_AHREF_END;
+	r += sHTTP_DIVEND;
 	server.sendContent(r);
 
 	// End of page

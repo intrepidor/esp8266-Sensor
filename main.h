@@ -16,6 +16,7 @@
 extern long count;
 extern int PIRcount;
 extern int PIRcountLast;
+extern String ProgramInfo;
 
 extern const int SENSOR_COUNT;
 extern Sensor* sensors[];

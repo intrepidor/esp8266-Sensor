@@ -29,7 +29,7 @@ extern void ConfigurePorts(void);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("\r\nEnvironment Sensor v0.02 : Allan Inda 2016-May-29");
+String ProgramInfo("Environment Sensor v0.03 : Allan Inda 2016-June-02");
 
 // Other
 long count = 0;
@@ -277,7 +277,7 @@ void CopyCalibrationDataToSensors(void) {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 void printInfo(void) {
 // Print useful Information
-	debug.println(DebugLevel::ALWAYS, ProgramInfo);
+	debug.println(DebugLevel::ALWAYS, nl + ProgramInfo);
 	debug.println(DebugLevel::ALWAYS, "Device IP: " + localIPstr());
 	debug.println(DebugLevel::ALWAYS, "SSID: " + WiFi.SSID());
 	debug.println(DebugLevel::ALWAYS, "ESP8266_Device_ID=" + String(dinfo.getDeviceID()));
@@ -404,8 +404,10 @@ int task_serialport_menu(unsigned long now) {
 					if (sensors[s]) {
 						for (int v = 0; v < getSensorValueCount(); v++) {
 							if (sensors[s]->getValueEnable(v)) {
-								debug.print(DebugLevel::ALWAYS, sensors[s]->getRawValue(v) + String("/"));
-								debug.print(DebugLevel::ALWAYS, sensors[s]->getValue(v) + String("\t"));
+								debug.print(DebugLevel::ALWAYS,
+										String(sensors[s]->getRawValue(v)) + String("/"));
+								debug.print(DebugLevel::ALWAYS,
+										String(sensors[s]->getValue(v)) + String("\t"));
 							}
 						}
 					}
