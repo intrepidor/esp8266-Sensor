@@ -14,6 +14,7 @@
 #include "net_config.h"
 
 extern int ConfigurationChange(void);
+extern String getWebFooter(void);
 
 // Generic and reused statements
 //const char sHTTP_ENDLABEL_BR[] = "></label> <br>";
@@ -32,25 +33,121 @@ const char sHTTP_TOP[] =
 				"<head>"
 				"<title>Environment Sensor Configuration</title>"
 				"<STYLE type=\"text/css\">"
-				"label { font-weight:bold; height:18px; color:midnightblue;}"
-				".base {-webkit-font-smoothing:antialiased; font-family:\"Arial\"; font-size:15px;"
-				" border-style:solid; border-width:0px; border-radius:10px;"
-				" padding: 10px; margin-bottom:5px}"
-				".device {background-color:#edd9c0;}"
-				".thingspeak {background-color:#c9d8c5; }"
-				".port {background-color:#a8b6bf;}"
-				".links {background-color:#c9c9c9; float:left;}"
-				".button {background-color:#4CAF50; border:none; color:white; padding:15px 32px;"
-				" text-align:center; text-decoration:none; display:inline-block; font-size:16px;}"
-				".save {float:right;}"
-				".field {height:15px; background-color:lightgray; color:darkgreen; margin-top:-2px;border-radius:2px;}"
-				".fieldshort {width:80px;}"
-				".fieldmedium {width:170px;}"
-				".fieldlong {width:60%;}"
-				".newcheckbox {display:inline-block; width:15px; height:15px; margin:-1px 4px 0 4px;"
-				"   vertical-align:middle;}"
-				".newradio {display:inline-block; width:15px; height:15px; margin:-1px 0px 0 9px;"
-				"   vertical-align:middle;}"
+				"label{"
+				"  font-weight:bold;"
+				"  height:18px;"
+				"  color:midnightblue;"
+				"}"
+				".base{"
+				"  -webkit-font-smoothing:antialiased;"
+				"  font-family:\"Arial\";"
+				"  font-size:15px;"
+				"  border-style:solid;"
+				"  border-width:0px;"
+				"  border-radius:10px;"
+				"  padding:10px;"
+				"  margin-bottom:5px}"
+				".device{"
+				"  background-color:#edd9c0;"
+				"}"
+				".thingspeak{"
+				"  background-color:#c9d8c5;"
+				"}"
+				".port{"
+				"  background-color:#a8b6bf;"
+				"}"
+				".links{"
+				"  background-color:#c9c9c9;"
+				"  float:left;"
+				"}"
+				".basebutton{"
+				"  font-family:\"Arial\";"
+				"  font-size:16px;"
+				"  font-weight:bold;"
+				"  text-align:center;"
+				"  text-decoration:none;"
+				"  padding-left:10px;"
+				"  padding-right:10px;"
+				"  margin-left:4px;"
+				"  text-align:center;"
+				"  border:none;"
+				"  height:50px;"
+				"  width:80px;"
+				"  display:flex;"
+				"  flex-direction:column;"
+				"  justify-content:center;"
+				"  color:white;"
+				"}"
+				".savediv{"
+				"  float:right;"
+				"}"
+				".savebutton{"
+				"  background-color:#4CAF50;"
+				"}"
+				".hrefbutton{"
+				"  background-color:DarkCyan;"
+				"  float:left;"
+				"}"
+				".defaultbutton{"
+				"background-color:darksalmon;"
+				"  float:left;"
+				"  color:black;"
+				"}"
+				".rebootbutton {"
+				"background-color:chocolate;"
+				"  float:left;"
+				"  color:black;"
+				"}"
+				".hrefbutton:hover{"
+				"  background:cyan;"
+				"  color:blue;"
+				"  text-decoration:none;"
+				"}"
+				".savebutton:hover{"
+				"  background:green;"
+				"  color:black;"
+				"  text-decoration:none;"
+				"}"
+				".defaultbutton:hover{"
+				"  background:red;"
+				"  color:white;"
+				"  text-decoration:none;"
+				"}"
+				".rebootbutton:hover{"
+				"  background:crimson;"
+				"  color:white;"
+				"  text-decoration:none;"
+				"}"
+				".field{"
+				"  height:15px;"
+				"  background-color:lightgray;"
+				"  color:darkgreen;"
+				"  margin-top:-2px;"
+				"  border-radius:2px;"
+				"}"
+				".fieldshort{"
+				"  width:80px;"
+				"}"
+				".fieldmedium{"
+				"  width:170px;"
+				"}"
+				".fieldlong {"
+				"  width:60%;"
+				"}"
+				".newcheckbox{"
+				"  display:inline-block;"
+				"  width:15px;"
+				"  height:15px;"
+				"  margin:-1px 4px 0 4px;"
+				"  vertical-align:middle;"
+				"}"
+				".newradio{"
+				"  display:inline-block;"
+				"  width:15px;"
+				"  height:15px;"
+				"  margin:-1px 0px 0 9px;"
+				"  vertical-align:middle;"
+				"}"
 				"</STYLE>"
 				"</head>"
 				"<body>"
@@ -110,17 +207,30 @@ const char sHTTP_PORT_RADIO_START[] = "<input type=\"radio\" class=\"newradio\" 
 // Print the sensor name to present to the user, same value as above, but without the port number
 //
 // ## Submit Buttons
-const char sHTTP_BUTTONS[] = ""
-		"<div class=\"save\"><input type=\"submit\" class=\"button\" name=\"submit\" value=\"SAVE\"></div>"
-		/*		"<input type=\"submit\" name=\"reboot\" value=\"reboot\">"*/
-		"</form>";
-const char sHTTP_AHREF_START[] = "<a href=\"http://";
+const char sHTTP_BUTTONS[] = "<div class=\"savediv\">"
+		"<input type=\"submit\" class=\"basebutton savebutton\" name=\"submit\" value=\"SAVE\"></div></form>";
 const char sHTTP_AHREF_END[] = "</a>";
+
+String getWebFooter(void) {
+	String wf("<div>");
+	String lin("\" href=\"http://" + localIPstr());
+	const String a("<a class=\"basebutton");
+	const String hre(" hrefbutton");
+	const String reb(" rebootbutton");
+	const String def(" defaultbutton");
+	wf += a + hre + lin + "\">Show Data" + sHTTP_AHREF_END;
+	wf += a + hre + lin + "/csv\">Show CSV" + sHTTP_AHREF_END;
+	wf += a + hre + lin + "/config\">Configure" + sHTTP_AHREF_END;
+	wf += a + hre + lin + "/status\">Status" + sHTTP_AHREF_END;
+	wf += a + def + lin + "/default_configuration\">Factory Defaults" + sHTTP_AHREF_END;
+	wf += a + reb + lin + "/reboot\">Reboot" + sHTTP_AHREF_END;
+	wf += sHTTP_DIVEND;
+	return wf;
+}
 
 void config(void) {
 	// If there was a submit, then process the changes
-	int configChanges = ConfigurationChange();
-	unsigned long t0 = millis();
+	ConfigurationChange();
 
 	// Show the current values and ask for updated input
 	server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -185,26 +295,9 @@ void config(void) {
 		server.sendContent(r);
 	}
 
-	// Buttons and links
-	r = sHTTP_BUTTONS;
-	r += sHTTP_DIVSTART + String("links") + sHTTP_DIVSTART_CLOSE;
-	r += sHTTP_AHREF_START + localIPstr() + "\">Show Measured data<br>" + sHTTP_AHREF_END;
-	r += sHTTP_AHREF_START + localIPstr() + "/csv\">Show current values in csv format<br>" + sHTTP_AHREF_END;
-	r += sHTTP_AHREF_START + localIPstr() + "/config\">Configure Device<br>" + sHTTP_AHREF_END;
-	r += sHTTP_AHREF_START + localIPstr() + "/status\">Show Device Status<br>" + sHTTP_AHREF_END;
-	r += sHTTP_AHREF_START + localIPstr() + "/default_configuration\">D" + sHTTP_AHREF_END
-			+ "efault Configuration<br>"; // Only make the D clickable to help prevent accidents
-	r += sHTTP_AHREF_START + localIPstr() + "/reboot\">Reboot<br>" + sHTTP_AHREF_END;
-	r += sHTTP_DIVEND;
-	server.sendContent(r);
-
-	// End of page
-	unsigned long tdiff = millis() - t0;
-	server.sendContent(
-			"<pre>time:" + String(tdiff) + "ms\nConfig:" + String(configChanges) + "</pre>" + sHTTP_END);
-
-// Stop client because ...
-//	server.client().stop();
+	// Buttons and links then END of Page
+	r = sHTTP_BUTTONS + getWebFooter();
+	server.sendContent(r + sHTTP_END);
 }
 
 int ConfigurationChange(void) {
@@ -253,7 +346,7 @@ int ConfigurationChange(void) {
 		for (uint8_t i = 0; i < server.args(); i++) {
 			String sarg = server.argName(i);
 			String varg = server.arg(i);
-			debug.print(DebugLevel::DEBUGMORE, "NAME=" + sarg + "  VALUE=" + varg);
+			debug.print(DebugLevel::DEBUGMORE, "NAME=" + sarg + ", VALUE=" + varg);
 			if (sarg == String("name")) {
 				dinfo.setDeviceName(varg);
 				debug.println(DebugLevel::DEBUGMORE, " ok name");
@@ -390,8 +483,17 @@ int ConfigurationChange(void) {
 			}
 
 			if (sarg == "reboot") {
-				debug.println(DebugLevel::DEBUGMORE, ", reboot");
+				debug.println(DebugLevel::DEBUGMORE, ", reboot button pressed");
 				found = true;
+				// do the action
+				reset();
+			}
+
+			if (sarg == "status") {
+				debug.println(DebugLevel::DEBUGMORE, ", status button pressed");
+				found = true;
+				// do the action
+				server.send(200, "text/plain", dinfo.databaseToString(",\n"));
 			}
 
 			if (!found) {
