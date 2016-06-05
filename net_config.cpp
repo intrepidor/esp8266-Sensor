@@ -14,7 +14,6 @@
 #include "net_config.h"
 
 extern int ConfigurationChange(void);
-extern String getWebFooter(void);
 
 // Generic and reused statements
 //const char sHTTP_ENDLABEL_BR[] = "></label> <br>";
@@ -26,133 +25,143 @@ const char sHTTP_END[] = "</body></html>";
 // ## Header
 const char sHTTP_DIVSTART[] = "<div class=\"base ";
 const char sHTTP_DIVSTART_CLOSE[] = "\">";
+const char sHTTP_DIVBASE[] = "<div class=\"sensorblock\">";
 const char sHTTP_DIVEND[] = "</div>";
 const char sHTTP_TOP[] =
 		"<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
-				"<html>"
-				"<head>"
-				"<title>Environment Sensor Configuration</title>"
-				"<STYLE type=\"text/css\">"
-				"label{"
-				"  font-weight:bold;"
-				"  height:18px;"
-				"  color:midnightblue;"
-				"}"
-				".base{"
-				"  -webkit-font-smoothing:antialiased;"
-				"  font-family:\"Arial\";"
-				"  font-size:15px;"
-				"  border-style:solid;"
-				"  border-width:0px;"
-				"  border-radius:10px;"
-				"  padding:10px;"
-				"  margin-bottom:5px}"
-				".device{"
-				"  background-color:#edd9c0;"
-				"}"
-				".thingspeak{"
-				"  background-color:#c9d8c5;"
-				"}"
-				".port{"
-				"  background-color:#a8b6bf;"
-				"}"
-				".links{"
-				"  background-color:#c9c9c9;"
-				"  float:left;"
-				"}"
-				".basebutton{"
-				"  font-family:\"Arial\";"
-				"  font-size:16px;"
-				"  font-weight:bold;"
-				"  text-align:center;"
-				"  text-decoration:none;"
-				"  padding-left:10px;"
-				"  padding-right:10px;"
-				"  margin-left:4px;"
-				"  text-align:center;"
-				"  border:none;"
-				"  height:50px;"
-				"  width:80px;"
-				"  display:flex;"
-				"  flex-direction:column;"
-				"  justify-content:center;"
-				"  color:white;"
-				"}"
-				".savediv{"
-				"  float:right;"
-				"}"
-				".savebutton{"
-				"  background-color:#4CAF50;"
-				"}"
-				".hrefbutton{"
-				"  background-color:DarkCyan;"
-				"  float:left;"
-				"}"
-				".defaultbutton{"
-				"background-color:darksalmon;"
-				"  float:left;"
-				"  color:black;"
-				"}"
-				".rebootbutton {"
-				"background-color:chocolate;"
-				"  float:left;"
-				"  color:black;"
-				"}"
-				".hrefbutton:hover{"
-				"  background:cyan;"
-				"  color:blue;"
-				"  text-decoration:none;"
-				"}"
-				".savebutton:hover{"
-				"  background:green;"
-				"  color:black;"
-				"  text-decoration:none;"
-				"}"
-				".defaultbutton:hover{"
-				"  background:red;"
-				"  color:white;"
-				"  text-decoration:none;"
-				"}"
-				".rebootbutton:hover{"
-				"  background:crimson;"
-				"  color:white;"
-				"  text-decoration:none;"
-				"}"
-				".field{"
-				"  height:15px;"
-				"  background-color:lightgray;"
-				"  color:darkgreen;"
-				"  margin-top:-2px;"
-				"  border-radius:2px;"
-				"}"
-				".fieldshort{"
-				"  width:80px;"
-				"}"
-				".fieldmedium{"
-				"  width:170px;"
-				"}"
-				".fieldlong {"
-				"  width:60%;"
-				"}"
-				".newcheckbox{"
-				"  display:inline-block;"
-				"  width:15px;"
-				"  height:15px;"
-				"  margin:-1px 4px 0 4px;"
-				"  vertical-align:middle;"
-				"}"
-				".newradio{"
-				"  display:inline-block;"
-				"  width:15px;"
-				"  height:15px;"
-				"  margin:-1px 0px 0 9px;"
-				"  vertical-align:middle;"
-				"}"
-				"</STYLE>"
-				"</head>"
-				"<body>"
-//				"<h1>Environment Sensor Configuration</h1>"
-				"<form action=\"config\" method=\"get\" name=\"Configuration\"> ";// extra character to make it word aligned
+				"<html><head><title>Environment Sensor</title>";
+const char sHTTP_CSS[] = "<STYLE type=\"text/css\">"
+		"label{"
+		"  font-weight:bold;"
+		"  height:18px;"
+		"  color:midnightblue;"
+		"}"
+		".base{"
+		"  -webkit-font-smoothing:antialiased;"
+		"  font-family:\"Arial\";"
+		"  font-size:15px;"
+		"  border-style:solid;"
+		"  border-width:0px;"
+		"  border-radius:10px;"
+		"  padding:10px;"
+		"  margin-bottom:5px;"
+		"}"
+		".sensorblock{"
+		"  -webkit-font-smoothing:antialiased;"
+		"  font-family:\"Arial\";"
+		"  font-size:15px;"
+		"  border-style:solid;"
+		"  border-width:1px;"
+		"  border-radius:10px;"
+		"  padding:5px;"
+		"  margin-bottom:5px;"
+		"  background-color:gray"
+		"  color:black;"
+		"  float:left;"
+		"}"
+		".device{"
+		"  background-color:#edd9c0;"
+		"}"
+		".thingspeak{"
+		"  background-color:#c9d8c5;"
+		"}"
+		".port{"
+		"  background-color:#a8b6bf;"
+		"}"
+		".links{"
+		"  background-color:#c9c9c9;"
+		"  float:left;"
+		"}"
+		".basebutton{"
+		"  font-family:\"Arial\";"
+		"  font-size:16px;"
+		"  font-weight:bold;"
+		"  text-align:center;"
+		"  text-decoration:none;"
+		"  padding-left:10px;"
+		"  padding-right:10px;"
+		"  margin-left:4px;"
+		"  text-align:center;"
+		"  border:none;"
+		"  height:50px;"
+		"  width:80px;"
+		"  display:flex;"
+		"  flex-direction:column;"
+		"  justify-content:center;"
+		"  color:white;"
+		"}"
+		".savediv{"
+		"  float:right;"
+		"}"
+		".savebutton{"
+		"  background-color:#4CAF50;"
+		"}"
+		".hrefbutton{"
+		"  background-color:DarkCyan;"
+		"  float:left;"
+		"}"
+		".defaultbutton{"
+		"background-color:darksalmon;"
+		"  float:left;"
+		"  color:black;"
+		"}"
+		".rebootbutton {"
+		"background-color:chocolate;"
+		"  float:left;"
+		"  color:black;"
+		"}"
+		".hrefbutton:hover{"
+		"  background:cyan;"
+		"  color:blue;"
+		"  text-decoration:none;"
+		"}"
+		".savebutton:hover{"
+		"  background:green;"
+		"  color:black;"
+		"  text-decoration:none;"
+		"}"
+		".defaultbutton:hover{"
+		"  background:red;"
+		"  color:white;"
+		"  text-decoration:none;"
+		"}"
+		".rebootbutton:hover{"
+		"  background:crimson;"
+		"  color:white;"
+		"  text-decoration:none;"
+		"}"
+		".field{"
+		"  height:15px;"
+		"  background-color:lightgray;"
+		"  color:darkgreen;"
+		"  margin-top:-2px;"
+		"  border-radius:2px;"
+		"}"
+		".fieldshort{"
+		"  width:80px;"
+		"}"
+		".fieldmedium{"
+		"  width:170px;"
+		"}"
+		".fieldlong {"
+		"  width:60%;"
+		"}"
+		".newcheckbox{"
+		"  display:inline-block;"
+		"  width:15px;"
+		"  height:15px;"
+		"  margin:-1px 4px 0 4px;"
+		"  vertical-align:middle;"
+		"}"
+		".newradio{"
+		"  display:inline-block;"
+		"  width:15px;"
+		"  height:15px;"
+		"  margin:-1px 0px 0 9px;"
+		"  vertical-align:middle;"
+		"}"
+		"</STYLE>";
+const char sHTTP_START_BODY[] = "</head><body>";
 //
 // ## Device Name
 const char sHTTP_DEVICE_NAME[] = ""
@@ -207,11 +216,13 @@ const char sHTTP_PORT_RADIO_START[] = "<input type=\"radio\" class=\"newradio\" 
 // Print the sensor name to present to the user, same value as above, but without the port number
 //
 // ## Submit Buttons
-const char sHTTP_BUTTONS[] = "<div class=\"savediv\">"
-		"<input type=\"submit\" class=\"basebutton savebutton\" name=\"submit\" value=\"SAVE\"></div></form>";
+// Misc
 const char sHTTP_AHREF_END[] = "</a>";
 
-String getWebFooter(void) {
+//-----------------------------------------------------------------------------------
+const char sHTTP_BUTTONS[] = "<div class=\"savediv\">"
+		"<input type=\"submit\" class=\"basebutton savebutton\" name=\"submit\" value=\"SAVE\"></div>";
+String getWebFooter(bool all) {
 	String wf("<div>");
 	String lin("\" href=\"http://" + localIPstr());
 	const String a("<a class=\"basebutton");
@@ -222,24 +233,37 @@ String getWebFooter(void) {
 	wf += a + hre + lin + "/csv\">Show CSV" + sHTTP_AHREF_END;
 	wf += a + hre + lin + "/config\">Configure" + sHTTP_AHREF_END;
 	wf += a + hre + lin + "/status\">Status" + sHTTP_AHREF_END;
-	wf += a + def + lin + "/default_configuration\">Factory Defaults" + sHTTP_AHREF_END;
-	wf += a + reb + lin + "/reboot\">Reboot" + sHTTP_AHREF_END;
+	if (all) {
+		wf += a + def + lin + "/default_configuration\">Factory Defaults" + sHTTP_AHREF_END;
+		wf += a + reb + lin + "/reboot\">Reboot" + sHTTP_AHREF_END;
+		wf += sHTTP_BUTTONS;
+	}
 	wf += sHTTP_DIVEND;
 	return wf;
 }
 
-void config(void) {
-	// If there was a submit, then process the changes
-	ConfigurationChange();
-
-	// Show the current values and ask for updated input
+//-----------------------------------------------------------------------------------
+void sendHTML_Header(bool sendCSS) {
 	server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 	server.sendHeader("Pragma", "no-cache");
 	server.sendHeader("Expires", "-1");
 	server.send(200, "text/html", ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
+	String r = String(sHTTP_TOP);
+	if (sendCSS) {
+		r += sHTTP_CSS;
+	}
+	r += sHTTP_START_BODY;
+	server.sendContent(r);
+}
+
+//-----------------------------------------------------------------------------------
+void config(void) {
+	// If there was a submit, then process the changes
+	ConfigurationChange();
 
 	// Start of page
-	String r = String(sHTTP_TOP);
+	sendHTML_Header(true);
+	String r("<form action=\"config\" method=\"get\" name=\"Configuration\">");
 	r += "<h2>Device Configuration :: " + ProgramInfo + "</h2>";
 	server.sendContent(r);
 
@@ -261,12 +285,11 @@ void config(void) {
 
 	// Ports
 	for (int i = 0; i < dinfo.getPortMax(); i++) {
-		// Port Name and edit box
-		r = "";
 		// Port Name
-		r += sHTTP_DIVSTART + String("port") + sHTTP_DIVSTART_CLOSE;
+		r = sHTTP_DIVSTART + String("port") + sHTTP_DIVSTART_CLOSE;
 		r += sHTTP_PORT_NUMBER + String(i) + sHTTP_PORT_NAME + String(i) + sHTTP_CLOSE_AND_VALUE
 				+ dinfo.getPortName(i) + sHTTP_ENDLABELQ;
+
 		// Current Values
 		for (int vindx = 0; vindx < getSensorValueCount(); vindx++) {
 			r += " raw/val" + String(i) + String(vindx) + "= " + sensors[i]->getRawValue(vindx) + "/"
@@ -296,10 +319,11 @@ void config(void) {
 	}
 
 	// Buttons and links then END of Page
-	r = sHTTP_BUTTONS + getWebFooter();
-	server.sendContent(r + sHTTP_END);
+	r = getWebFooter(true) + "</form>" + sHTTP_END;
+	server.sendContent(r);
 }
 
+//-----------------------------------------------------------------------------------
 int ConfigurationChange(void) {
 	/* Sample input
 	 http://192.168.0.74/change?name=house&apikey=ABC&ipaddr=184.106.153.149&port0=&radport0=off0&port1=&radport1=DHT111&port2=&radport2=DHT222&port3=&radport3=DHT113&submit=submit

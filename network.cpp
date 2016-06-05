@@ -100,29 +100,36 @@ void WebInit(void) {
 
 	server.on("/", []() {
 		String response("");
-		response += "\nCount=" + String(count);
-		response += "\nPIR=" + String(PIRcount);
-		response += "\nPIRLast="+String(PIRcountLast);
-		response += "\nThingspeakUpdates="+String(thingspeak_update_counter);
-		response += "\nThingspeakerrors="+String(thingspeak_error_counter);
-		response += "\nThinkspeakentries="+String(thinkspeak_total_entries);
+		sendHTML_Header(true);
+		response += "<h2>Show Data</h2>";
+		response += sHTTP_DIVBASE;
+		response += "Count=" + String(count);
+		response += "<br>PIR=" + String(PIRcount);
+		response += "<br>PIRLast="+String(PIRcountLast);
+		response += String(sHTTP_DIVEND) + sHTTP_DIVBASE;
+		response += "ThingspeakUpdates="+String(thingspeak_update_counter);
+		response += "<br>Thingspeakerrors="+String(thingspeak_error_counter);
+		response += "<br>Thinkspeakentries="+String(thinkspeak_total_entries);
+		response += sHTTP_DIVEND;
 		for (int i=0; i<SENSOR_COUNT; i++) {
 			if (sensors[i]) {
+				response += sHTTP_DIVBASE;
 				for (int j=0; j<getSensorValueCount(); j++) {
 					if (sensors[i]->getValueEnable(j)) {
-						response+="\nval" + String(i) + String(j) + ":" +
+						response+="<br>val" + String(i) + String(j) + ":" +
 						String(sensors[i]->getValueName(j)) + "=" +
 						String(sensors[i]->getValue(j));
-						response+="\nval" + String(i) + String(j) + ":" +
+						response+="<br>val" + String(i) + String(j) + ":" +
 						String(sensors[i]->getValueName(j)) + "=" +
 						String(sensors[i]->getRawValue(j));
 
 					}
 				}
+				response += sHTTP_DIVEND;
 			}
 		}
-		response += "\n";
-		server.send(200, "text/plain", response);
+		response += getWebFooter(false) + sHTTP_END;
+		server.sendContent(response);
 	});
 
 	server.on("/csv", []() {
@@ -158,7 +165,7 @@ void WebInit(void) {
 	server.on("/erase_eeprom", _EraseEEPROM);
 
 	server.on("/status", []() {
-		server.send(200, "text/plain", dinfo.databaseToString(",\n"));
+		server.send(200, "text/plain", dinfo.databaseToString(",\n") + getWebFooter(false));
 	});
 
 	server.on(uri_v.c_str(), sendValue);
