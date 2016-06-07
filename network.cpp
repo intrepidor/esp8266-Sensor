@@ -102,33 +102,35 @@ void WebInit(void) {
 		String response("");
 		sendHTML_Header(true);
 		response += "<h2>Show Data</h2>";
-		response += sHTTP_DIVBASE;
 		response += "Count=" + String(count);
 		response += "<br>PIR=" + String(PIRcount);
-		response += "<br>PIRLast="+String(PIRcountLast);
-		response += String(sHTTP_DIVEND) + sHTTP_DIVBASE;
+		response += "<br>PIRLast=" + String(PIRcountLast);
 		response += "ThingspeakUpdates="+String(thingspeak_update_counter);
 		response += "<br>Thingspeakerrors="+String(thingspeak_error_counter);
 		response += "<br>Thinkspeakentries="+String(thinkspeak_total_entries);
-		response += sHTTP_DIVEND;
 		for (int i=0; i<SENSOR_COUNT; i++) {
 			if (sensors[i]) {
-				response += sHTTP_DIVBASE;
 				for (int j=0; j<getSensorValueCount(); j++) {
 					if (sensors[i]->getValueEnable(j)) {
-						response+="<br>val" + String(i) + String(j) + ":" +
+						response+="val" + String(i) + String(j) + ":" +
 						String(sensors[i]->getValueName(j)) + "=" +
-						String(sensors[i]->getValue(j));
-						response+="<br>val" + String(i) + String(j) + ":" +
+						String(sensors[i]->getValue(j)) + "<br>";
+						response+="raw" + String(i) + String(j) + ":" +
 						String(sensors[i]->getValueName(j)) + "=" +
-						String(sensors[i]->getRawValue(j));
+						String(sensors[i]->getRawValue(j)) + "<br>";
 
 					}
 				}
-				response += sHTTP_DIVEND;
 			}
 		}
-		response += getWebFooter(false) + sHTTP_END;
+		response += "<br>" + getWebFooter(false) + sHTTP_END;
+		server.sendContent(response);
+	});
+
+	server.on("/status", []() {
+		sendHTML_Header(true);
+		String response("<h2>Show Status</h2><div style=\"width:99%\">");
+		response += dinfo.databaseToString("<br>") +"</div>" + getWebFooter(false);
 		server.sendContent(response);
 	});
 
@@ -159,17 +161,10 @@ void WebInit(void) {
 		server.send(200, "text/plain", response);
 	});
 
+	server.on(uri_v.c_str(), sendValue);
 	server.on("/config", config);
-
 	server.on("/default_configuration", _WriteDefaultsToDatabase);
 	server.on("/erase_eeprom", _EraseEEPROM);
-
-	server.on("/status", []() {
-		server.send(200, "text/plain", dinfo.databaseToString(",\n") + getWebFooter(false));
-	});
-
-	server.on(uri_v.c_str(), sendValue);
-
 	server.on("/reboot", reset);
 
 	server.begin();

@@ -23,6 +23,7 @@ const char sHTTP_ENDLABELQ[] = "\"></label>";
 const char sHTTP_CLOSE_AND_VALUE[] = "\"  value=\"";
 const char sHTTP_END[] = "</body></html>";
 // ## Header
+const char sHTTP_BR[] = "<br>";
 const char sHTTP_DIVSTART[] = "<div class=\"base ";
 const char sHTTP_DIVSTART_CLOSE[] = "\">";
 const char sHTTP_DIVBASE[] = "<div class=\"sensorblock\">";
@@ -129,6 +130,12 @@ const char sHTTP_CSS[] = "<STYLE type=\"text/css\">"
 		"  background:crimson;"
 		"  color:white;"
 		"  text-decoration:none;"
+		"}"
+		".showdatacontainer{"
+		"  display:flex;"
+		"  flex-direction:column;"
+		"  flex-wrap:nowrap;"
+		"  flex-flow:center;"
 		"}"
 		".field{"
 		"  height:15px;"
