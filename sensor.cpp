@@ -24,7 +24,7 @@ String Sensor::getModuleName(void) {
 // Values
 //--------------------------------
 bool Sensor::isValueIndexValid(int _index) {
-	if (_index >= 0 && _index < getSensorValueCount()) {
+	if (_index >= 0 && _index < VALUE_COUNT) { // FIXME getSensorValueCount()) {
 		return true;
 	}
 	debug.println(DebugLevel::ERROR, nl + "ERROR: isValueIndexValid() index out of bounds");

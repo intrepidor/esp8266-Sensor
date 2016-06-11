@@ -52,6 +52,9 @@ public:
 	}
 	// CONSIDER creating a constructor that includes the init parameters, then call init via the constructor
 	Sensor(void) {
+		sensorName = "";
+		memset(value, 0, sizeof(value));
+		memset(cal, 0, sizeof(cal));
 		this->module = sensorModule::off;
 		// SensorValue's have their own constructor
 		// SensorPins has its own constructor

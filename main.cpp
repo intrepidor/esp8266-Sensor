@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <Esp.h>
+#include <Ticker.h>
 #include "main.h"
 #include "temperature.h"
 #include "network.h"
@@ -64,7 +65,28 @@ DebugPrint debug;	// This must appear before Sensor and Device class declaration
 const int SENSOR_COUNT = 4; // should be at least equal to the value of MAX_PORTS
 Sensor* sensors[SENSOR_COUNT] = { nullptr, nullptr, nullptr, nullptr };
 
-Device dinfo; // create AFTER Sensor declaration
+Device dinfo; // create AFTER Sensor declaration above
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+Ticker SWWatchdog;
+// There is one watchdog lasttime variable for each task being monitored
+enum class TaskName
+	: int {
+		menu = 0, pir, acquire, thingspeak, led, webserver, NUM_TASKS
+};
+static unsigned long wdog_timer[static_cast<int>(TaskName::NUM_TASKS)];
+
+const unsigned long WATCHDOG_TIMEOUT = 30000; // reset after this many milliseconds of no kicking
+
+void softwareWatchdog(void) {
+	unsigned long now = millis();
+	// loop through each watchdog timer for the different tasks and reset if any are too old
+	for (int i = 0; i < static_cast<int>(TaskName::NUM_TASKS); i++) {
+		if ((now - wdog_timer[i]) >= WATCHDOG_TIMEOUT) {
+			ESP.reset();
+		}
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //lint -e{1784}   // suppress message about signature conflict between C++ and C
@@ -75,11 +97,18 @@ void loop(void) {
 void setup(void) {
 
 // Setup GPIO
-	pinMode(PIN_PIRSENSOR, INPUT);			// Initialize the PIR sensor pin as an input
-	pinMode(PIN_BUILTIN_LED, OUTPUT);		// Initialize the BUILTIN_LED pin as an output
+	pinMode(PIN_PIRSENSOR, INPUT); // Initialize the PIR sensor pin as an input
+	pinMode(PIN_BUILTIN_LED, OUTPUT); // Initialize the BUILTIN_LED pin as an output
 
 // Signal that setup is proceeding
 	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_ON);
+
+// Reset watchdogs
+	for (int i = 0; i < static_cast<int>(TaskName::NUM_TASKS); i++) {
+		wdog_timer[i] = millis();
+	}
+	// Call the routine to check the watchdogs 3 times per expiration period.
+	SWWatchdog.attach_ms(WATCHDOG_TIMEOUT / 3, softwareWatchdog);
 
 // Finish any object initializations -- stuff that could not go into the constructors
 	dinfo.init(); // this must be done before calling any other member functions
@@ -290,6 +319,7 @@ void printInfo(void) {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 int task_readpir(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
+	wdog_timer[static_cast<int>(TaskName::pir)] = millis();
 	if (digitalRead(PIN_PIRSENSOR)) {
 		PIRcount++;
 	}
@@ -298,6 +328,7 @@ int task_readpir(unsigned long now) {
 
 int task_acquire(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
+	wdog_timer[static_cast<int>(TaskName::acquire)] = millis();
 	unsigned int r = 0;
 	for (int i = 0; i < SENSOR_COUNT; i++) {
 		if (sensors[i]) {
@@ -311,6 +342,7 @@ int task_acquire(unsigned long now) {
 
 int task_updatethingspeak(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
+	wdog_timer[static_cast<int>(TaskName::thingspeak)] = millis();
 	if (dinfo.getThingspeakEnable()) {
 		updateThingspeak();
 	}
@@ -321,6 +353,7 @@ int task_updatethingspeak(unsigned long now) {
 
 int task_flashled(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
+	wdog_timer[static_cast<int>(TaskName::led)] = millis();
 	static uint8_t current_state = 0;
 	if (current_state == 0) {
 		digitalWrite(BUILTIN_LED, BUILTIN_LED_ON);
@@ -352,8 +385,9 @@ void printExtendedMenu(void) {
 	debug.println(DebugLevel::ALWAYS, "R  show reason for last reset");
 	debug.println(DebugLevel::ALWAYS, "I  show ESP information");
 	debug.println(DebugLevel::ALWAYS, "Q  reset()");
-	debug.println(DebugLevel::ALWAYS, "W  EspClass::reset()");
+	debug.println(DebugLevel::ALWAYS, "S  EspClass::reset()");
 	debug.println(DebugLevel::ALWAYS, "A  EspClass::restart()");
+	debug.println(DebugLevel::ALWAYS, "W  Test Watchdog (block here forever)");
 	debug.println(DebugLevel::ALWAYS,
 			"D  [" + debug.getDebugLevelString() + "] Debug level for logging to serial port");
 	debug.println(DebugLevel::ALWAYS, "");
@@ -361,6 +395,7 @@ void printExtendedMenu(void) {
 
 int task_serialport_menu(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
+	wdog_timer[static_cast<int>(TaskName::menu)] = millis();
 	count++;
 	static bool need_new_heading = true;
 
@@ -503,7 +538,7 @@ int task_serialport_menu(unsigned long now) {
 				debug.println(DebugLevel::ALWAYS, "Calling reset() in 2 seconds ...");
 				reset();
 				break;
-			case 'W':
+			case 'S':
 				debug.println(DebugLevel::ALWAYS, "Calling EspClass::reset() in 2 seconds ...");
 				delay(2000); // CONSIDER using an optimistic_yield(200000) instead so background tasks can still run
 				ESP.reset();
@@ -512,6 +547,13 @@ int task_serialport_menu(unsigned long now) {
 				debug.println(DebugLevel::ALWAYS, "Calling EspClass::restart() in 2 seconds ...");
 				delay(2000); // CONSIDER using an optimistic_yield(200000) instead so background tasks can still run
 				ESP.restart();
+				break;
+			case 'W':
+				debug.println(DebugLevel::ALWAYS,
+						"Looping here forever - Software Watchdog for Menu should trip ... ");
+				while (1) {
+					yield();
+				}	// loop forever so the watchdog trips, but yield to the ESP OS
 				break;
 			default:
 				debug.println(DebugLevel::ALWAYS, "Unknown command: " + String(ch));
@@ -523,6 +565,7 @@ int task_serialport_menu(unsigned long now) {
 
 int task_webServer(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
+	wdog_timer[static_cast<int>(TaskName::webserver)] = millis();
 	WebWorker();
 	return 0;
 }
