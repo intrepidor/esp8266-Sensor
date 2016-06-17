@@ -31,7 +31,7 @@ extern const uint8_t DIGITAL_PIN_1;
 extern const uint8_t DIGITAL_PIN_2;
 extern const uint8_t DIGITAL_PIN_3;
 extern const uint8_t DIGITAL_PIN_4;
-extern const uint8_t DIGITAL_PIN_5;
+extern const uint8_t WATCHDOG_WOUT_PIN;
 extern const uint8_t ANALOG_PIN;
 extern const uint8_t I2C_SDA_PIN;
 extern const uint8_t I2C_SCL_PIN;

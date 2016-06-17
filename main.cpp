@@ -13,6 +13,10 @@
 #include "reset.h"
 #include "debugprint.h"
 #include "thingspeak.h"
+#include "wdog.h"
+#ifdef GDBSTUB
+//#include <GDBStub.h>
+#endif
 
 // Forward declarations
 extern int task_readpir(unsigned long now);
@@ -49,7 +53,7 @@ const uint8_t DIGITAL_PIN_1 = D2;
 const uint8_t DIGITAL_PIN_2 = D3;
 const uint8_t DIGITAL_PIN_3 = D6;
 const uint8_t DIGITAL_PIN_4 = D7;
-const uint8_t DIGITAL_PIN_5 = D8;
+const uint8_t WATCHDOG_WOUT_PIN = D8; // toggle this pin for the external watchdog
 
 const uint8_t ANALOG_PIN = A0;
 const uint8_t I2C_SDA_PIN = D4;
@@ -68,27 +72,6 @@ Sensor* sensors[SENSOR_COUNT] = { nullptr, nullptr, nullptr, nullptr };
 Device dinfo; // create AFTER Sensor declaration above
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-Ticker SWWatchdog;
-// There is one watchdog lasttime variable for each task being monitored
-enum class TaskName
-	: int {
-		menu = 0, pir, acquire, thingspeak, led, webserver, NUM_TASKS
-};
-static unsigned long wdog_timer[static_cast<int>(TaskName::NUM_TASKS)];
-
-const unsigned long WATCHDOG_TIMEOUT = 30000; // reset after this many milliseconds of no kicking
-
-void softwareWatchdog(void) {
-	unsigned long now = millis();
-	// loop through each watchdog timer for the different tasks and reset if any are too old
-	for (int i = 0; i < static_cast<int>(TaskName::NUM_TASKS); i++) {
-		if ((now - wdog_timer[i]) >= WATCHDOG_TIMEOUT) {
-			ESP.reset();
-		}
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
 //lint -e{1784}   // suppress message about signature conflict between C++ and C
 void loop(void) {
 }
@@ -103,12 +86,8 @@ void setup(void) {
 // Signal that setup is proceeding
 	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_ON);
 
-// Reset watchdogs
-	for (int i = 0; i < static_cast<int>(TaskName::NUM_TASKS); i++) {
-		wdog_timer[i] = millis();
-	}
-	// Call the routine to check the watchdogs 3 times per expiration period.
-	SWWatchdog.attach_ms(WATCHDOG_TIMEOUT / 3, softwareWatchdog);
+// Start the external Watchdog. This also configures the Software Watchdog.
+	kickExternalWatchdog(); // The first kick calls setup and starts the external and software watchdogs.
 
 // Finish any object initializations -- stuff that could not go into the constructors
 	dinfo.init(); // this must be done before calling any other member functions
@@ -119,39 +98,49 @@ void setup(void) {
 // Setup Serial port
 	Serial.begin(115200);
 
+// Start the Debugger
+#ifdef GDBSTUB
+//	gdbstub_init();
+#endif
+
 // Start EEPROM and setup the Persisted Database
 	EEPROM.begin(512);
-	// Copy persisted data from EEPROM into RAM
+// Copy persisted data from EEPROM into RAM
 	dinfo.restoreDatabaseFromEEPROM();
-	// Get DebugLevel from EEPROM
-	// Copy debug level from RAM, which was just copied from the EEPROM
+// Get DebugLevel from EEPROM
+// Copy debug level from RAM, which was just copied from the EEPROM
 	debug.setDebugLevel(static_cast<DebugLevel>(dinfo.getDebugLevel()));
-	// write it back to dinfo since debug would have validated it, and potentially changed it to fix errors.
+// write it back to dinfo since debug would have validated it, and potentially changed it to fix errors.
 	dinfo.setDebugLevel(static_cast<int>(debug.getDebugLevel()));
-	// if value is invalid, then fix it and rewrite the EEPROM
+// if value is invalid, then fix it and rewrite the EEPROM
 	if (eeprom_is_dirty) {
 		dinfo.saveDatabaseToEEPROM();
 	}
 
 // Setup the WebServer
-	WebInit();
+	kickAllWatchdogs();
+	WebInit(); // Calls WiFiManager to make sure connected to access point.
+	kickAllWatchdogs();
 
 // Configure Sensors
 	ConfigurePorts();
+	kickAllWatchdogs();
 
 // Configure Scheduler
 	Queue myQueue;
-	// scheduleFunction (function pointer, task name, start delay in ms, repeat interval in ms)
+// scheduleFunction (function pointer, task name, start delay in ms, repeat interval in ms)
 	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
 	myQueue.scheduleFunction(task_acquire, "acquire", 1000, 499);
 	myQueue.scheduleFunction(task_updatethingspeak, "thingspeak", 2000, 20000);
 	myQueue.scheduleFunction(task_flashled, "led", 250, 1000);
 	myQueue.scheduleFunction(task_serialport_menu, "menu", 2000, 500);
 	myQueue.scheduleFunction(task_webServer, "webserver", 3000, 1);
+	kickAllWatchdogs();
 
 // Print boot up information and menu
 	printInfo();
 	printMenu();
+	kickAllWatchdogs();
 
 // Signal that setup is complete
 	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_OFF);
@@ -165,11 +154,11 @@ void setup(void) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 void ConfigurePorts(void) {
-	// Each port has access to a predefined subset of the following pin types, and for
-	//    each port, the pin assignments may differ, and some will be the same.
+// Each port has access to a predefined subset of the following pin types, and for
+//    each port, the pin assignments may differ, and some will be the same.
 	SensorPins p;
 
-	// Loop through each of the ports
+// Loop through each of the ports
 	for (int portNumber = 0; portNumber < dinfo.getPortMax(); portNumber++) {
 		// Get the pins used for this port
 		debug.println(DebugLevel::DEBUGMORE, "portNumber=" + String(portNumber));
@@ -287,12 +276,12 @@ void ConfigurePorts(void) {
 
 	} // for (portNumber ...)
 
-	// Copy the calibration data to the sensors
+// Copy the calibration data to the sensors
 	CopyCalibrationDataToSensors();
 }
 
 void CopyCalibrationDataToSensors(void) {
-	// Note: This routine assumes the SENSOR_COUNT and getPortMax() are identical values
+// Note: This routine assumes the SENSOR_COUNT and getPortMax() are identical values
 	for (int idx = 0; idx < SENSOR_COUNT && idx < dinfo.getPortMax(); idx++) {
 		if (sensors[idx] /* make sure it exists*/) {
 			// copy each of the multiple calibration values into the sensor

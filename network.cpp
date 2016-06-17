@@ -13,6 +13,7 @@
 #include "net_config.h"
 #include "net_value.h"
 #include "thingspeak.h"
+#include "wdog.h"
 
 const char* const factory_default_ssid = "ssid";
 ESP8266WebServer server(80);
@@ -47,6 +48,7 @@ void WebInit(void) {
 	//and goes into a blocking loop awaiting configuration
 	String APname("ESPsAP" + String(dinfo.getDeviceID()));
 	wifiManager.autoConnect(APname.c_str());
+	kickAllWatchdogs();
 	//or use this for auto generated name ESP + ChipID
 	//wifiManager.autoConnect();
 
@@ -67,6 +69,7 @@ void WebInit(void) {
 	debug.println(DebugLevel::ALWAYS, "Connected to " + WiFi.SSID());
 	debug.print(DebugLevel::ALWAYS, "IP address: ");
 	debug.println(DebugLevel::ALWAYS, WiFi.localIP());
+	kickAllWatchdogs();
 
 	uint8_t available_networks = static_cast<uint8_t>(WiFi.scanNetworks());
 	for (uint8_t network = 0; network < available_networks; network++) {
@@ -75,10 +78,12 @@ void WebInit(void) {
 			debug.println(DebugLevel::ALWAYS, "RSSI: " + String(rssi) + " dBm");
 		}
 	}
+	kickAllWatchdogs();
 
 	if (MDNS.begin("esp8266")) {
 		debug.println(DebugLevel::ALWAYS, "mDNS started");
 	}
+	kickAllWatchdogs();
 
 	// Configure webserver
 	server.onNotFound([] () {
@@ -97,6 +102,7 @@ void WebInit(void) {
 		message += "\n" + WebPrintInfo("\n");
 		server.send(404, "text/plain", message);
 	});
+	kickAllWatchdogs();
 
 	server.on("/", []() {
 		String response("");
@@ -126,6 +132,7 @@ void WebInit(void) {
 		response += "<br>" + getWebFooter(false) + sHTTP_END;
 		server.sendContent(response);
 	});
+	kickAllWatchdogs();
 
 	server.on("/status", []() {
 		sendHTML_Header(true);
@@ -133,6 +140,7 @@ void WebInit(void) {
 		response += dinfo.databaseToString("<br>") +"</div>" + getWebFooter(false);
 		server.sendContent(response);
 	});
+	kickAllWatchdogs();
 
 	server.on("/csv", []() {
 		String response("");
@@ -160,6 +168,7 @@ void WebInit(void) {
 		response += "ts=" + String(dinfo.getThingspeakStatus()) + ",";
 		server.send(200, "text/plain", response);
 	});
+	kickAllWatchdogs();
 
 	server.on(uri_v.c_str(), sendValue);
 	server.on("/config", config);
@@ -167,6 +176,7 @@ void WebInit(void) {
 	server.on("/erase_eeprom", _EraseEEPROM);
 	server.on("/reboot", reset);
 
+	kickAllWatchdogs();
 	server.begin();
 	debug.println(DebugLevel::ALWAYS, "Web server started");
 }
