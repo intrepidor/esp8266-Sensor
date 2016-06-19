@@ -97,6 +97,8 @@ void setup(void) {
 
 // Setup Serial port
 	Serial.begin(115200);
+	Serial.print("Starting ... ");
+	Serial.println(millis());
 
 // Start the Debugger
 #ifdef GDBSTUB

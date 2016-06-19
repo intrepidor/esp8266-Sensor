@@ -24,6 +24,7 @@ void kickAllWatchdogs(void) {
 }
 
 void kickAllSoftwareWatchdogs(void) {
+//	Serial.print("{s}");
 	for (int i = 0; i < NUM_TASKS; i++) {
 		wdog_timer[i] = millis();
 	}
@@ -52,6 +53,7 @@ void kickExternalWatchdog(void) {
 		SWWatchdog.attach_ms(100, softwareWatchdog);
 		wdog_configured = true;
 	}
+	//Serial.print("{e}");
 	if (wdog_state) {
 		digitalWrite(WATCHDOG_WOUT_PIN, HIGH);
 		wdog_state = false;

@@ -251,10 +251,11 @@ String getWebFooter(bool all) {
 
 //-----------------------------------------------------------------------------------
 void sendHTML_Header(bool sendCSS) {
-	server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-	server.sendHeader("Pragma", "no-cache");
-	server.sendHeader("Expires", "-1");
-	server.send(200, "text/html", ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
+//	server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+//	server.sendHeader("Pragma", "no-cache");
+//	server.sendHeader("Expires", "-1");
+//	server.send(200, "text/html", ""); 	// Empty content inhibits Content-length header so we have to close the socket ourselves.
+
 	String r = String(sHTTP_TOP);
 	if (sendCSS) {
 		r += sHTTP_CSS;
@@ -269,8 +270,12 @@ void config(void) {
 	ConfigurationChange();
 
 	// Start of page
+	String r("");
+//	r = +sHTTP_TOP;
+//	r += sHTTP_CSS;
+//	r += sHTTP_START_BODY;
 	sendHTML_Header(true);
-	String r("<form action=\"config\" method=\"get\" name=\"Configuration\">");
+	r += "<form action=\"config\" method=\"get\" name=\"Configuration\">";
 	r += "<h2>Device Configuration :: " + ProgramInfo + "</h2>";
 	server.sendContent(r);
 
