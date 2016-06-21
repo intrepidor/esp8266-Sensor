@@ -19,4 +19,6 @@ extern unsigned long wdog_timer[NUM_TASKS];
 extern void kickExternalWatchdog(void);
 extern void kickAllSoftwareWatchdogs(void);
 extern void kickAllWatchdogs(void);
+extern void setStartupComplete(void);
+
 #endif /* WDOG_H_ */

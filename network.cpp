@@ -13,6 +13,7 @@
 #include "net_config.h"
 #include "net_value.h"
 #include "thingspeak.h"
+#include "debugprint.h"
 #include "wdog.h"
 
 const char* const factory_default_ssid = "ssid";
@@ -48,6 +49,11 @@ void WebInit(void) {
 	//and goes into a blocking loop awaiting configuration
 	String APname("ESPsAP" + String(dinfo.getDeviceID()));
 	wifiManager.autoConnect(APname.c_str());
+//	while (1) {
+//		ESP.wdtFeed();
+//		yield();
+//	}
+
 	kickAllWatchdogs();
 	//or use this for auto generated name ESP + ChipID
 	//wifiManager.autoConnect();

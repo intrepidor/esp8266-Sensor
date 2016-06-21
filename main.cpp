@@ -34,14 +34,17 @@ extern void ConfigurePorts(void);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.03 : Allan Inda 2016-June-02");
+String ProgramInfo("Environment Sensor v0.03 : Allan Inda 2016-June-20");
 
 // Other
 long count = 0;
-
 // PIR Sensor
 int PIRcount = 0;     // current PIR count
 int PIRcountLast = 0; // last PIR count
+
+//----------------------------------------------------
+// D0..D16, SDA, SCL defined by arduino.h
+//
 const uint8_t PIN_PIRSENSOR = D1;
 
 // Reset and LED
@@ -53,11 +56,12 @@ const uint8_t DIGITAL_PIN_1 = D2;
 const uint8_t DIGITAL_PIN_2 = D3;
 const uint8_t DIGITAL_PIN_3 = D6;
 const uint8_t DIGITAL_PIN_4 = D7;
-const uint8_t WATCHDOG_WOUT_PIN = D8; // toggle this pin for the external watchdog
+const uint8_t WATCHDOG_WOUT_PIN = D7; // toggle this pin for the external watchdog
 
 const uint8_t ANALOG_PIN = A0;
-const uint8_t I2C_SDA_PIN = D4;
-const uint8_t I2C_SCL_PIN = D5;
+const uint8_t I2C_SDA_PIN = SDA;
+const uint8_t I2C_SCL_PIN = SCL;
+//--------------------------------------------------
 
 // LED on the ESP board
 #define BUILTIN_LED_ON LOW
@@ -80,30 +84,28 @@ void loop(void) {
 void setup(void) {
 
 // Setup GPIO
-	pinMode(PIN_PIRSENSOR, INPUT); // Initialize the PIR sensor pin as an input
+	pinMode(PIN_PIRSENSOR, INPUT_PULLUP); // Initialize the PIR sensor pin as an input
 	pinMode(PIN_BUILTIN_LED, OUTPUT); // Initialize the BUILTIN_LED pin as an output
 
 // Signal that setup is proceeding
 	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_ON);
 
-// Start the external Watchdog. This also configures the Software Watchdog.
-	kickExternalWatchdog(); // The first kick calls setup and starts the external and software watchdogs.
-
-// Finish any object initializations -- stuff that could not go into the constructors
-	dinfo.init(); // this must be done before calling any other member functions
-
-// Setup Reset circuit
-	reset_config();
-
 // Setup Serial port
 	Serial.begin(115200);
+
+// Start the external Watchdog. This also configures the Software Watchdog.
+	reset_config();
+	kickExternalWatchdog(); // The first kick calls setup and starts the external and software watchdogs.
 	Serial.print("Starting ... ");
 	Serial.println(millis());
 
 // Start the Debugger
 #ifdef GDBSTUB
-//	gdbstub_init();
+	//	gdbstub_init();
 #endif
+
+// Finish any object initializations -- stuff that could not go into the constructors
+	dinfo.init(); // this must be done before calling any other member functions
 
 // Start EEPROM and setup the Persisted Database
 	EEPROM.begin(512);
@@ -148,9 +150,10 @@ void setup(void) {
 	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_OFF);
 
 // Start the task scheduler
+	setStartupComplete(); // tell the watchdog the long startup is done and to use normal watchdog timeouts
 	for (;;) {
 		myQueue.Run(millis());
-		delay(10); // CONSIDER using an optimistic_yield(10000) instead so background tasks can still run
+		yield(); // CONSIDER using an optimistic_yield(10000) instead so background tasks can still run
 	}
 }
 
