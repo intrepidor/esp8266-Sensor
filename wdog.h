@@ -9,12 +9,17 @@
 #define WDOG_H_
 
 // There is one watchdog lasttime variable for each task being monitored
-enum class TaskName {
-	menu = 0, pir, acquire, thingspeak, led, webserver, NUM_TASKS
+enum taskname_t {
+	taskname_menu = 0,
+	taskname_pir,
+	taskname_acquire,
+	taskname_thingspeak,
+	taskname_led,
+	taskname_webserver,
+	taskname_NUM_TASKS
 };
-const int NUM_TASKS = static_cast<int>(TaskName::NUM_TASKS);
 
-extern unsigned long wdog_timer[NUM_TASKS];
+extern unsigned long wdog_timer[static_cast<int>(taskname_NUM_TASKS)];
 
 extern void kickExternalWatchdog(void);
 extern void kickAllSoftwareWatchdogs(void);

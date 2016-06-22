@@ -13,9 +13,9 @@
 
 Ticker SWWatchdog;
 
-unsigned long wdog_timer[NUM_TASKS];
+unsigned long wdog_timer[static_cast<int>(taskname_NUM_TASKS)];
 const unsigned long WATCHDOG_TIMEOUT_MS = 30000; // reset after this many milliseconds of no kicking
-const unsigned long EXTERNAL_WATCHDOG_TIMEOUT_MS = 1600; // resets after this many milliseconds
+//const unsigned long EXTERNAL_WATCHDOG_TIMEOUT_MS = 1600; // resets after this many milliseconds
 
 bool stillStartingUp = true;	// if starting up is not set to false within set time, the watchdog resets
 unsigned long startedTime = millis();
@@ -31,7 +31,7 @@ void kickAllWatchdogs(void) {
 }
 
 void kickAllSoftwareWatchdogs(void) {
-	for (int i = 0; i < NUM_TASKS; i++) {
+	for (int i = 0; i < static_cast<int>(taskname_NUM_TASKS); i++) {
 		wdog_timer[i] = millis();
 	}
 }
@@ -47,7 +47,7 @@ void softwareWatchdog(void) {
 		}
 	}
 	else {
-		for (int i = 0; i < NUM_TASKS; i++) {
+		for (int i = 0; i < static_cast<int>(taskname_NUM_TASKS); i++) {
 			if ((now - wdog_timer[i]) >= WATCHDOG_TIMEOUT_MS) {
 				ESP.reset();
 			}

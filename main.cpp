@@ -313,7 +313,7 @@ void printInfo(void) {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 int task_readpir(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(TaskName::pir)] = millis();
+	wdog_timer[static_cast<int>(taskname_pir)] = millis();
 	if (digitalRead(PIN_PIRSENSOR)) {
 		PIRcount++;
 	}
@@ -322,7 +322,7 @@ int task_readpir(unsigned long now) {
 
 int task_acquire(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(TaskName::acquire)] = millis();
+	wdog_timer[static_cast<int>(taskname_acquire)] = millis();
 	unsigned int r = 0;
 	for (int i = 0; i < SENSOR_COUNT; i++) {
 		if (sensors[i]) {
@@ -336,7 +336,7 @@ int task_acquire(unsigned long now) {
 
 int task_updatethingspeak(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(TaskName::thingspeak)] = millis();
+	wdog_timer[static_cast<int>(taskname_thingspeak)] = millis();
 	if (dinfo.getThingspeakEnable()) {
 		updateThingspeak();
 	}
@@ -347,7 +347,7 @@ int task_updatethingspeak(unsigned long now) {
 
 int task_flashled(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(TaskName::led)] = millis();
+	wdog_timer[static_cast<int>(taskname_led)] = millis();
 	static uint8_t current_state = 0;
 	if (current_state == 0) {
 		digitalWrite(BUILTIN_LED, BUILTIN_LED_ON);
@@ -389,7 +389,7 @@ void printExtendedMenu(void) {
 
 int task_serialport_menu(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(TaskName::menu)] = millis();
+	wdog_timer[static_cast<int>(taskname_menu)] = millis();
 	count++;
 	static bool need_new_heading = true;
 
@@ -545,9 +545,9 @@ int task_serialport_menu(unsigned long now) {
 			case 'W':
 				debug.println(DebugLevel::ALWAYS,
 						"Looping here forever - Software Watchdog for Menu should trip ... ");
-				while (1) {
+				for (;;) {
 					yield();
-				}	// loop forever so the watchdog trips, but yield to the ESP OS
+				}	// loop forever so the software watchdog for this task trips, but yield to the ESP OS
 				break;
 			default:
 				debug.println(DebugLevel::ALWAYS, "Unknown command: " + String(ch));
@@ -559,7 +559,7 @@ int task_serialport_menu(unsigned long now) {
 
 int task_webServer(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(TaskName::webserver)] = millis();
+	wdog_timer[static_cast<int>(taskname_webserver)] = millis();
 	WebWorker();
 	return 0;
 }
