@@ -10,7 +10,6 @@
 #include "deviceinfo.h"
 #include "sensor.h"
 #include "util.h"
-#include "reset.h"
 #include "debugprint.h"
 #include "thingspeak.h"
 #include "wdog.h"
@@ -41,7 +40,7 @@ long count = 0;
 // PIR Sensor
 int PIRcount = 0;     // current PIR count
 int PIRcountLast = 0; // last PIR count
-int startup_millis = millis();
+unsigned long startup_millis = millis();
 
 //----------------------------------------------------
 // D0..D16, SDA, SCL defined by arduino.h
@@ -366,6 +365,8 @@ int task_acquire(unsigned long now) {
 			break;
 		case 2:
 			sensors[sensor_number]->acquire2();
+			break;
+		default:
 			break;
 	}
 	next_acquire_number++;

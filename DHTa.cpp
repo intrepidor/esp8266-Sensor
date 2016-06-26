@@ -6,7 +6,7 @@
 
 #include "DHTa.h"
 
-#define MIN_INTERVAL 2000
+const uint32_t MIN_INTERVAL = 2000;
 
 DHT::DHT(uint8_t pin, uint8_t type, uint8_t count) {
 	_pin = pin;
@@ -18,7 +18,10 @@ DHT::DHT(uint8_t pin, uint8_t type, uint8_t count) {
 	_maxcycles = microsecondsToClockCycles(1000);  // 1 millisecond timeout for
 												   // reading pulses from DHT sensor.
 	// Note that count is now ignored as the DHT reading algorithm adjusts itself
-	// basd on the speed of the processor.
+	// based on the speed of the processor.
+	data[0] = data[1] = data[2] = data[3] = data[4] = 0;
+	_lastreadtime = -MIN_INTERVAL;
+	_lastresult = false;
 }
 
 void DHT::begin(void) {
@@ -57,6 +60,8 @@ float DHT::readTemperature(bool S, bool force) {
 					f = convertCtoF(f);
 				}
 				break;
+			default:
+				break;
 		}
 	}
 	return f;
@@ -84,6 +89,9 @@ float DHT::readHumidity(bool force) {
 				f += data[1];
 				f *= 0.1;
 				break;
+			default:
+				break;
+
 		}
 	}
 	return f;

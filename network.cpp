@@ -8,7 +8,6 @@
 #include "network.h"
 #include "temperature.h"
 #include "main.h"
-#include "reset.h"
 #include "deviceinfo.h"
 #include "net_config.h"
 #include "net_value.h"

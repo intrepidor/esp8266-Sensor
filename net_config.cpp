@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include "network.h"
 #include "util.h"
-#include "reset.h"
 #include "main.h"
 #include "deviceinfo.h"
 #include "net_config.h"
