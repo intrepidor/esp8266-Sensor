@@ -121,10 +121,15 @@ void DHT::read_setup(void) {
 	// start the reading process.
 	digitalWrite(_pin, HIGH);
 //  delay(250);
-	unsigned long start = millis();
-	while ((millis() - start) < 250) {
-		yield();
-	}
+
+//This is commented out because the the Queue library used for scheduling will not call
+// sensors[x].acquire again for 500 ms. So there is a natural delay and no need to hog
+// the CPU for 1/4 second.
+//
+//	unsigned long start = millis();
+//	while ((millis() - start) < 250) {
+//		yield();
+//	}
 }
 
 boolean DHT::read(bool force) {
