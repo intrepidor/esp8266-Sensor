@@ -23,6 +23,13 @@ const unsigned long STARTUP_ABORT_TIMEOUT_MS = 60000; // allow 60 seconds to sta
 
 void setStartupComplete(void) {
 	stillStartingUp = false;
+	kickExternalWatchdog();
+
+	/* Remove the call to "softwareWatchdog" from the Ticker. The task schedule
+	 will need to take over calling softwareWatch(). This helps avoid too long
+	 of delays calling it because of blocking by the ESP8266 internal code.
+	 */
+//	SWWatchdog.detach();
 }
 
 void kickAllWatchdogs(void) {
@@ -37,47 +44,63 @@ void kickAllSoftwareWatchdogs(void) {
 }
 
 void softwareWatchdog(void) {
-	unsigned long now = millis();
-	// loop through each watchdog timer for the different tasks and reset if any are too old
-	if (stillStartingUp) {
-		kickExternalWatchdog();
-		if ((now - startedTime) > STARTUP_ABORT_TIMEOUT_MS) {
-			debug.println(DebugLevel::ALWAYS, "Startup time exceeded, restarting");
-			ESP.reset();
-		}
+	static bool locked = false;
+	noInterrupts();
+	if (locked) {
+		interrupts();
 	}
 	else {
-		for (int i = 0; i < static_cast<int>(taskname_NUM_TASKS); i++) {
-			if ((now - wdog_timer[i]) >= WATCHDOG_TIMEOUT_MS) {
+		locked = true;
+		interrupts();
+		unsigned long now = millis();
+		// loop through each watchdog timer for the different tasks and reset if any are too old
+		if (stillStartingUp) {
+			kickExternalWatchdog();
+			if ((now - startedTime) > STARTUP_ABORT_TIMEOUT_MS) {
+				debug.println(DebugLevel::ALWAYS, "Startup time exceeded, restarting");
 				ESP.reset();
 			}
-			else {
-				kickExternalWatchdog();
+		}
+		else {
+			for (int i = 0; i < static_cast<int>(taskname_NUM_TASKS); i++) {
+				if ((now - wdog_timer[i]) >= WATCHDOG_TIMEOUT_MS) {
+					ESP.reset();
+				}
+				else {
+					kickExternalWatchdog();
+				}
 			}
 		}
+		locked = false;
 	}
 }
 
 void kickExternalWatchdog(void) {
+	static bool locked = false;
 	static bool wdog_state = false;
 	static bool wdog_configured = false;
 	if (!wdog_configured) {
-//		pinMode(WATCHDOG_WOUT_PIN, OUTPUT);
+		pinMode(WATCHDOG_WOUT_PIN, OUTPUT);
 		kickAllSoftwareWatchdogs();
-		// Call the routine to check the watchdog every 1/2 second.
-		SWWatchdog.attach_ms(1000, softwareWatchdog);
+		SWWatchdog.attach_ms(300, softwareWatchdog); // Check for stuck tasks and kick external Watchdog
+		// The external wdog trips after 1.6s, but the timing is sloppy for the ESP8266, need this as 300ms.
 		wdog_configured = true;
 		startedTime = millis();
 		Serial.println("Software watchdog initialized.");
 	}
-	pinMode(WATCHDOG_WOUT_PIN, OUTPUT);
-	if (wdog_state) {
-		digitalWrite(WATCHDOG_WOUT_PIN, HIGH);
-		wdog_state = false;
-	}
-	else {
-		digitalWrite(WATCHDOG_WOUT_PIN, LOW);
-		wdog_state = true;
+
+	if (!locked) {
+		locked = true;
+		pinMode(WATCHDOG_WOUT_PIN, OUTPUT);
+		if (wdog_state) {
+			digitalWrite(WATCHDOG_WOUT_PIN, HIGH);
+			wdog_state = false;
+		}
+		else {
+			digitalWrite(WATCHDOG_WOUT_PIN, LOW);
+			wdog_state = true;
+		}
+		locked = false;
 	}
 }
 

@@ -121,19 +121,25 @@ void updateThingspeak(void) {
 		debug.println(DebugLevel::DEBUG,
 				nl + "Connecting to " + dinfo.getThingspeakIpaddr() + ": "
 						+ getTCPStatusString(client.status()) + " : Success");
+		yield();
 
 		// Create the command
 		String getStr = "GET " + getThingspeakGET() + "HTTP/1.1";
+		yield();
 
 		// Send the command
 		debug.println(DebugLevel::DEBUG, "Sending -> " + getStr);
+		yield();
 		unsigned int r = client.println(getStr);
+		yield();
 		r += client.println("Host: " + dinfo.getThingspeakIpaddr());
 		r += client.println("Connection: close");
 		r += client.println();
+		yield();
 
 		// Read the response
 		debug.println(DebugLevel::DEBUG, "        -> " + String(r) + " bytes sent");
+		yield();
 		if (r == 0) {
 			debug.println(DebugLevel::ALWAYS, getStr + "  Send FAILED");
 			thingspeak_error_counter++;

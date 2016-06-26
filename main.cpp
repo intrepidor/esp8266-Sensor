@@ -94,7 +94,7 @@ void setup(void) {
 	Serial.begin(115200);
 
 // Start the external Watchdog. This also configures the Software Watchdog.
-	reset_config();
+	//reset_config();
 	kickExternalWatchdog(); // The first kick calls setup and starts the external and software watchdogs.
 	Serial.print("Starting ... ");
 	Serial.println(millis());
@@ -136,7 +136,7 @@ void setup(void) {
 	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
 	myQueue.scheduleFunction(task_acquire, "acquire", 1000, 499);
 	myQueue.scheduleFunction(task_updatethingspeak, "thingspeak", 2000, 20000);
-	myQueue.scheduleFunction(task_flashled, "led", 250, 1000);
+	myQueue.scheduleFunction(task_flashled, "led", 250, 100);
 	myQueue.scheduleFunction(task_serialport_menu, "menu", 2000, 500);
 	myQueue.scheduleFunction(task_webServer, "webserver", 3000, 1);
 	kickAllWatchdogs();
@@ -152,8 +152,9 @@ void setup(void) {
 // Start the task scheduler
 	setStartupComplete(); // tell the watchdog the long startup is done and to use normal watchdog timeouts
 	for (;;) {
+		softwareWatchdog(); // must call minimally every 1.6s to avoid the external watchdog reseting the ESP8266
 		myQueue.Run(millis());
-		yield(); // CONSIDER using an optimistic_yield(10000) instead so background tasks can still run
+		yield(); // CONSIDER using an optimistic_yield(xx) instead so background tasks can still run
 	}
 }
 
@@ -322,16 +323,29 @@ int task_readpir(unsigned long now) {
 
 int task_acquire(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
+	static int next_acquire_number = 0;
 	wdog_timer[static_cast<int>(taskname_acquire)] = millis();
-	unsigned int r = 0;
-	for (int i = 0; i < SENSOR_COUNT; i++) {
-		if (sensors[i]) {
-			if (sensors[i]->acquire()) {
-				r |= (1U << i);
-			}
-		}
+	const int MAX_ACQUIRES = ACQUIRES_PER_SENSOR * SENSOR_COUNT;
+
+	if (next_acquire_number < 0 || next_acquire_number > (MAX_ACQUIRES - 1)) {
+		next_acquire_number = 0;
 	}
-	return static_cast<int>(r);
+	int sensor_number = next_acquire_number / ACQUIRES_PER_SENSOR;
+	int subacquire_number = next_acquire_number - int((sensor_number * ACQUIRES_PER_SENSOR));
+
+	switch (subacquire_number) {
+		case 0:
+			sensors[sensor_number]->acquire_setup();
+			break;
+		case 1:
+			sensors[sensor_number]->acquire1();
+			break;
+		case 2:
+			sensors[sensor_number]->acquire2();
+			break;
+	}
+	next_acquire_number++;
+	return next_acquire_number;
 }
 
 int task_updatethingspeak(unsigned long now) {
@@ -378,7 +392,6 @@ void printExtendedMenu(void) {
 	debug.println(DebugLevel::ALWAYS, "M  show data structure in RAM");
 	debug.println(DebugLevel::ALWAYS, "R  show reason for last reset");
 	debug.println(DebugLevel::ALWAYS, "I  show ESP information");
-	debug.println(DebugLevel::ALWAYS, "Q  reset()");
 	debug.println(DebugLevel::ALWAYS, "S  EspClass::reset()");
 	debug.println(DebugLevel::ALWAYS, "A  EspClass::restart()");
 	debug.println(DebugLevel::ALWAYS, "W  Test Watchdog (block here forever)");
@@ -528,10 +541,6 @@ int task_serialport_menu(unsigned long now) {
 				debug.println(DebugLevel::ALWAYS, "Last Reset --> " + ESP.getResetInfo());
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
-			case 'Q':
-				debug.println(DebugLevel::ALWAYS, "Calling reset() in 2 seconds ...");
-				reset();
-				break;
 			case 'S':
 				debug.println(DebugLevel::ALWAYS, "Calling EspClass::reset() in 2 seconds ...");
 				delay(2000); // CONSIDER using an optimistic_yield(200000) instead so background tasks can still run
@@ -547,7 +556,7 @@ int task_serialport_menu(unsigned long now) {
 						"Looping here forever - Software Watchdog for Menu should trip ... ");
 				for (;;) {
 					yield();
-				}	// loop forever so the software watchdog for this task trips, but yield to the ESP OS
+				} // loop forever so the software watchdog for this task trips, but yield to the ESP OS
 				break;
 			default:
 				debug.println(DebugLevel::ALWAYS, "Unknown command: " + String(ch));

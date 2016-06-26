@@ -25,5 +25,6 @@ extern void kickExternalWatchdog(void);
 extern void kickAllSoftwareWatchdogs(void);
 extern void kickAllWatchdogs(void);
 extern void setStartupComplete(void);
+extern void softwareWatchdog(void);
 
 #endif /* WDOG_H_ */

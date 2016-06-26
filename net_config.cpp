@@ -522,7 +522,7 @@ int ConfigurationChange(void) {
 				debug.println(DebugLevel::DEBUGMORE, ", reboot button pressed");
 				found = true;
 				// do the action
-				reset();
+				ESP.reset();
 			}
 
 			if (sarg == "status") {
@@ -540,7 +540,7 @@ int ConfigurationChange(void) {
 
 		dinfo.saveDatabaseToEEPROM();
 		if (need_reboot) {
-			reset();
+			ESP.reset();
 		}
 
 		// Regardless if the calibration data changed or not, recopy it into the Sensors

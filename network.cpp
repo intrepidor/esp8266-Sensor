@@ -29,6 +29,10 @@ void _EraseEEPROM(void) {
 	dinfo.eraseEEPROM();
 }
 
+void ESPreset(void) {
+	ESP.reset();
+}
+
 void WebInit(void) {
 // There are problems with linting ESP8266WebServer, specifically the 'on' member function.
 //lint --e{64}   Ignore error about type mismatch (pertains to server.on)
@@ -180,7 +184,7 @@ void WebInit(void) {
 	server.on("/config", config);
 	server.on("/default_configuration", _WriteDefaultsToDatabase);
 	server.on("/erase_eeprom", _EraseEEPROM);
-	server.on("/reboot", reset);
+	server.on("/reboot", ESPreset);
 
 	kickAllWatchdogs();
 	server.begin();

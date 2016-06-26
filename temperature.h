@@ -8,8 +8,7 @@
 #ifndef TEMPERATURE_H_
 #define TEMPERATURE_H_
 
-#include <DHT.h>
-
+#include "DHTa.h"
 #include "sensor.h"
 
 const int TEMP_VALUE_INDEX_TEMPERATURE = 0;
@@ -34,7 +33,9 @@ public:
 
 	// Interface Functions (virtual in Sensor class)
 	void init(sensorModule, SensorPins&);
-	bool acquire(void);
+	bool acquire_setup(void);
+	bool acquire1(void);
+	bool acquire2(void);
 
 	// getters and setters
 	float getHumidity() {

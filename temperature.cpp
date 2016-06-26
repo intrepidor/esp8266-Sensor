@@ -41,7 +41,7 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	}
 }
 
-bool TemperatureSensor::acquire(void) {
+bool TemperatureSensor::acquire_setup(void) {
 	if (getModule() == sensorModule::ds18b20) {
 		return false; // FIXME not yet implemented
 	}
@@ -49,23 +49,64 @@ bool TemperatureSensor::acquire(void) {
 		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht) {
-			float h = dht->readHumidity();
-			float t = dht->readTemperature(true);
+			dht->read_setup();
+			return true;
+		}
+		return false;       // error: DHT object not created
+	}
+}
 
-			if (isnan(h) || isnan(t)) {
+bool TemperatureSensor::acquire1(void) {
+	if (getModule() == sensorModule::ds18b20) {
+		return false; // FIXME not yet implemented
+	}
+	else {
+		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
+		// Reading temperature or humidity takes about 250 milliseconds!
+		if (dht) {
+			float t = dht->readTemperature(true);
+			yield();
+
+			if (isnan(t)) {
 				return false;   // error: read failed
 			}
 
 			// raw, non-corrected, values
 			setRawTemperature(t);
-			setRawHumidity(h);
 
-			h = h * getCal(TEMP_CAL_INDEX_HUMIDITY_SLOPE) + getCal(TEMP_CAL_INDEX_HUMIDITY_OFFSET);
 			t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
 
 			// Calibration corrected values
 			setTemperature(t);
+			return true;
+		}
+		return false;       // error: DHT object not created
+	}
+}
+
+bool TemperatureSensor::acquire2(void) {
+	if (getModule() == sensorModule::ds18b20) {
+		return false; // ds18b20 only has one sensor
+	}
+	else {
+		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
+		// Reading temperature or humidity takes about 250 milliseconds!
+		if (dht) {
+			float h = dht->readHumidity();
+			yield();
+
+			if (isnan(h)) {
+				return false;   // error: read failed
+			}
+
+			// raw, non-corrected, values
+			setRawHumidity(h);
+
+			h = h * getCal(TEMP_CAL_INDEX_HUMIDITY_SLOPE) + getCal(TEMP_CAL_INDEX_HUMIDITY_OFFSET);
+
+			// Calibration corrected values
 			setHumidity(h);
+			return true;
 		}
 		return false;       // error: DHT object not created
 	}

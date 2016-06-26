@@ -75,7 +75,7 @@ void sendValue(void) {
 	}
 
 	if (server.hasArg("reset")) {
-		reset();
+		ESP.reset();
 	}
 
 	file += value;

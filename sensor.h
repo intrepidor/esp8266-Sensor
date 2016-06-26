@@ -6,6 +6,10 @@
 #include <cstring>
 #include "sensor_support.h"
 
+const int ACQUIRE_READS_PER_SENSOR = 2;
+const int ACQUIRE_SETUPS_PER_SENSOR = 1;
+const int ACQUIRES_PER_SENSOR = (ACQUIRE_READS_PER_SENSOR + ACQUIRE_SETUPS_PER_SENSOR);
+
 //-------------------------------------------------------------------
 class SensorPins {
 public:
@@ -60,7 +64,9 @@ public:
 		// SensorPins has its own constructor
 	}
 	virtual void init(sensorModule, SensorPins&) = 0;
-	virtual bool acquire(void) = 0;
+	virtual bool acquire_setup(void) = 0;
+	virtual bool acquire1(void) = 0;
+	virtual bool acquire2(void) = 0;
 
 	// General
 	String getName(void) {

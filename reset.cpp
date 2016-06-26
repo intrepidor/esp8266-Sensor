@@ -5,6 +5,8 @@
  *      Author: allan
  */
 
+#if 0
+
 #include <Arduino.h>
 #include "main.h"
 #include "debugprint.h"
@@ -49,7 +51,8 @@ void reset(void) {
 		digitalWrite(PIN_SOFTRESET, LOW);
 		delay(1000); // CONSIDER using an optimistic_yield(1000000) instead so background tasks can still run
 		digitalWrite(PIN_SOFTRESET, HIGH);
-		delay(1000); // CONSIDER using an optimistic_yield(1000000) instead so background tasks can still run
+		delay(1000);// CONSIDER using an optimistic_yield(1000000) instead so background tasks can still run
 	}
 }
 
+#endif
