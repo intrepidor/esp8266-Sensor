@@ -12,6 +12,7 @@
 #include "debugprint.h"
 #include "main.h"
 #include "deviceinfo.h"
+#include "wdog.h"
 
 size_t thingspeak_update_counter = 0;
 size_t thingspeak_error_counter = 0;
@@ -19,16 +20,17 @@ long thinkspeak_total_entries = 0; // this is filled in by the response from the
 String getThingspeakGET(void);
 String getTCPStatusString(uint8_t s);
 
-void printThingspeakInfo(void) {
-	debug.println(DebugLevel::ALWAYS, "== Thingspeak Information ==");
-	debug.println(DebugLevel::ALWAYS, "Enabled: " + dinfo.getThingspeakEnableString());
-	debug.println(DebugLevel::ALWAYS, "URL: " + dinfo.getThingspeakURL() + " (future use)");
-	debug.println(DebugLevel::ALWAYS, "Write Key: " + dinfo.getThingspeakApikey());
-	debug.println(DebugLevel::ALWAYS, "Channel: " + dinfo.getThingspeakChannel() + " (future use)");
-	debug.println(DebugLevel::ALWAYS, "IP Address: " + dinfo.getThingspeakIpaddr());
-	debug.println(DebugLevel::ALWAYS, "Updates: " + String(thingspeak_update_counter));
-	debug.println(DebugLevel::ALWAYS, "Errors: " + String(thingspeak_error_counter));
-	debug.println(DebugLevel::ALWAYS, "Entries: " + String(thinkspeak_total_entries));
+String getsThingspeakInfo(String eol) {
+	String s("== Thingspeak Information ==" + eol);
+	s += "Enabled: " + dinfo.getThingspeakEnableString() + eol;
+	s += "URL: " + dinfo.getThingspeakURL() + " (future use)" + eol;
+	s += "Write Key: " + dinfo.getThingspeakApikey() + eol;
+	s += "Channel: " + dinfo.getThingspeakChannel() + " (future use)" + eol;
+	s += "IP Address: " + dinfo.getThingspeakIpaddr() + eol;
+	s += "Updates: " + String(thingspeak_update_counter) + eol;
+	s += "Errors: " + String(thingspeak_error_counter) + eol;
+	s += "Entries: " + String(thinkspeak_total_entries) + eol;
+	return s;
 }
 
 String getTCPStatusString(uint8_t s) {
@@ -111,6 +113,7 @@ void updateThingspeak(void) {
 	WiFiClient client;
 
 	// Create the connection
+	kickExternalWatchdog();
 	if (!client.connect(dinfo.getThingspeakIpaddr_c(), 80)) {
 		debug.println(DebugLevel::ALWAYS,
 				nl + "Connecting to " + dinfo.getThingspeakIpaddr() + ": "
@@ -118,28 +121,28 @@ void updateThingspeak(void) {
 		thingspeak_error_counter++;
 	}
 	else {
+		kickExternalWatchdog();
 		debug.println(DebugLevel::DEBUG,
 				nl + "Connecting to " + dinfo.getThingspeakIpaddr() + ": "
 						+ getTCPStatusString(client.status()) + " : Success");
-		yield();
 
 		// Create the command
 		String getStr = "GET " + getThingspeakGET() + "HTTP/1.1";
-		yield();
 
 		// Send the command
 		debug.println(DebugLevel::DEBUG, "Sending -> " + getStr);
 		yield();
-		unsigned int r = client.println(getStr);
+		kickExternalWatchdog();
+		unsigned int r = client.println(getStr); // this takes about 1 second (no watchdogs during this time)
+		kickExternalWatchdog();
 		yield();
 		r += client.println("Host: " + dinfo.getThingspeakIpaddr());
 		r += client.println("Connection: close");
 		r += client.println();
-		yield();
 
 		// Read the response
 		debug.println(DebugLevel::DEBUG, "        -> " + String(r) + " bytes sent");
-		yield();
+
 		if (r == 0) {
 			debug.println(DebugLevel::ALWAYS, getStr + "  Send FAILED");
 			thingspeak_error_counter++;

@@ -37,5 +37,6 @@ extern const uint8_t I2C_SDA_PIN;
 extern const uint8_t I2C_SCL_PIN;
 
 extern void CopyCalibrationDataToSensors(void);
+extern String getsDeviceInfo(String eol);
 
 #endif /* MAIN_H_ */

@@ -121,9 +121,10 @@ void WebInit(void) {
 		response += "Count=" + String(count);
 		response += "<br>PIR=" + String(PIRcount);
 		response += "<br>PIRLast=" + String(PIRcountLast);
-		response += "ThingspeakUpdates="+String(thingspeak_update_counter);
+		response += "<br>ThingspeakUpdates="+String(thingspeak_update_counter);
 		response += "<br>Thingspeakerrors="+String(thingspeak_error_counter);
 		response += "<br>Thinkspeakentries="+String(thinkspeak_total_entries);
+		response += "<br>";
 		for (int i=0; i<SENSOR_COUNT; i++) {
 			if (sensors[i]) {
 				for (int j=0; j<getSensorValueCount(); j++) {
@@ -147,7 +148,9 @@ void WebInit(void) {
 	server.on("/status", []() {
 		sendHTML_Header(true);
 		String response("<h2>Show Status</h2><div style=\"width:99%\">");
-		response += dinfo.databaseToString("<br>") +"</div>" + getWebFooter(false);
+		response += getsDeviceInfo("<br>");
+		response += getsThingspeakInfo("<br>");
+		response += "== Database ==<br>"+dinfo.databaseToString("<br>") +"</div>" + getWebFooter(false);
 		server.sendContent(response);
 	});
 	kickAllWatchdogs();
@@ -192,6 +195,7 @@ void WebInit(void) {
 }
 
 void WebWorker(void) {
+	kickExternalWatchdog();
 	server.handleClient();
 }
 

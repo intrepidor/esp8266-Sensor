@@ -41,6 +41,7 @@ long count = 0;
 // PIR Sensor
 int PIRcount = 0;     // current PIR count
 int PIRcountLast = 0; // last PIR count
+int startup_millis = millis();
 
 //----------------------------------------------------
 // D0..D16, SDA, SCL defined by arduino.h
@@ -138,7 +139,7 @@ void setup(void) {
 	myQueue.scheduleFunction(task_updatethingspeak, "thingspeak", 2000, 20000);
 	myQueue.scheduleFunction(task_flashled, "led", 250, 100);
 	myQueue.scheduleFunction(task_serialport_menu, "menu", 2000, 500);
-	myQueue.scheduleFunction(task_webServer, "webserver", 3000, 1);
+	myQueue.scheduleFunction(task_webServer, "webserver", 3000, 10);
 	kickAllWatchdogs();
 
 // Print boot up information and menu
@@ -299,14 +300,37 @@ void CopyCalibrationDataToSensors(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
+String getUptime(void) {
+	const unsigned long MS_PER_SECOND = (1000);
+	const unsigned long MS_PER_MINUTE = (MS_PER_SECOND * 60);
+	const unsigned long MS_PER_HOUR = (MS_PER_MINUTE * 60);
+	const unsigned long MS_PER_DAY = (MS_PER_HOUR * 24);
+	unsigned long uptime = millis() - startup_millis;
+	String s(String(uptime) + " ms, ");
+	s += String(uptime / MS_PER_DAY) + "d, ";
+	s += String(uptime / MS_PER_HOUR) + "h, ";
+	s += String(uptime / MS_PER_MINUTE) + "m, ";
+	s += String(uptime / MS_PER_SECOND) + "s";
+	// Example: 897234 ms, 10d, 3h, 33m, 3s
+	return s;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+String getsDeviceInfo(String eol) {
+	String s(ProgramInfo + eol);
+	s += "Device IP: " + localIPstr() + eol;
+	s += "SSID: " + WiFi.SSID() + eol;
+	s += "ESP8266_Device_ID=" + String(dinfo.getDeviceID()) + eol;
+	s += "Friendly Name: " + String(dinfo.getDeviceName()) + eol;
+	s += "Uptime: " + getUptime() + eol;
+	return s;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 void printInfo(void) {
 // Print useful Information
-	debug.println(DebugLevel::ALWAYS, nl + ProgramInfo);
-	debug.println(DebugLevel::ALWAYS, "Device IP: " + localIPstr());
-	debug.println(DebugLevel::ALWAYS, "SSID: " + WiFi.SSID());
-	debug.println(DebugLevel::ALWAYS, "ESP8266_Device_ID=" + String(dinfo.getDeviceID()));
-	debug.println(DebugLevel::ALWAYS, "Friendly Name: " + String(dinfo.getDeviceName()));
-	printThingspeakInfo();
+	debug.println(DebugLevel::ALWAYS, getsDeviceInfo(nl));
+	debug.println(DebugLevel::ALWAYS, getsThingspeakInfo(nl));
 	debug.println(DebugLevel::ALWAYS, "== Port Information ==");
 	dinfo.printInfo();
 }
