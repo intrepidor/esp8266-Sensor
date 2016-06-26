@@ -33,7 +33,7 @@ extern void ConfigurePorts(void);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.03 : Allan Inda 2016-June-20");
+String ProgramInfo("Environment Sensor v0.04 : Allan Inda 2016-June-26");
 
 // Other
 long count = 0;

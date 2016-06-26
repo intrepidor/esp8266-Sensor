@@ -52,7 +52,7 @@ private:
 	uint32_t _lastreadtime, _maxcycles;
 	bool _lastresult;
 
-	uint32_t expectPulse(bool level);
+	uint32_t expectPulse(int level);
 
 };
 

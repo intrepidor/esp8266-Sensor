@@ -9,6 +9,7 @@
 const uint32_t MIN_INTERVAL = 2000;
 
 DHT::DHT(uint8_t pin, uint8_t type, uint8_t count) {
+//lint --e{715} ignore warnings about unreferenced arguments, i.e. count
 	_pin = pin;
 	_type = type;
 #ifdef __AVR
@@ -20,8 +21,9 @@ DHT::DHT(uint8_t pin, uint8_t type, uint8_t count) {
 	// Note that count is now ignored as the DHT reading algorithm adjusts itself
 	// based on the speed of the processor.
 	data[0] = data[1] = data[2] = data[3] = data[4] = 0;
-	_lastreadtime = -MIN_INTERVAL;
+	_lastreadtime = -MIN_INTERVAL; //lint !e501
 	_lastresult = false;
+
 }
 
 void DHT::begin(void) {
@@ -30,13 +32,14 @@ void DHT::begin(void) {
 	// Using this value makes sure that millis() - lastreadtime will be
 	// >= MIN_INTERVAL right away. Note that this assignment wraps around,
 	// but so will the subtraction.
-	_lastreadtime = -MIN_INTERVAL;
+	_lastreadtime = -MIN_INTERVAL; //lint !e501
 	DEBUG_PRINT("Max clock cycles: ");
 	DEBUG_PRINTLN(_maxcycles, DEC);
 }
 
 //boolean S == Scale.  True == Fahrenheit; False == Celcius
 float DHT::readTemperature(bool S, bool force) {
+	//lint --e{715} ignore warnings about unreferenced arguments, i.e. force
 	float f = NAN;
 
 	if (read(force)) {
@@ -50,11 +53,11 @@ float DHT::readTemperature(bool S, bool force) {
 			case DHT22:
 			case DHT21:
 				f = data[2] & 0x7F;
-				f *= 256;
+				f *= 256.0F;
 				f += data[3];
-				f *= 0.1;
+				f *= 0.1F;
 				if (data[2] & 0x80) {
-					f *= -1;
+					f *= -1.0F;
 				}
 				if (S) {
 					f = convertCtoF(f);
@@ -68,14 +71,15 @@ float DHT::readTemperature(bool S, bool force) {
 }
 
 float DHT::convertCtoF(float c) {
-	return c * 1.8 + 32;
+	return c * 1.8F + 32.0F;
 }
 
 float DHT::convertFtoC(float f) {
-	return (f - 32) * 0.55555;
+	return (f - 32.0F) * 0.55555F;
 }
 
 float DHT::readHumidity(bool force) {
+	//lint --e{715} ignore warnings about unreferenced arguments, i.e. force
 	float f = NAN;
 	if (read()) {
 		switch (_type) {
@@ -85,9 +89,9 @@ float DHT::readHumidity(bool force) {
 			case DHT22:
 			case DHT21:
 				f = data[0];
-				f *= 256;
+				f *= 256.0F;
 				f += data[1];
-				f *= 0.1;
+				f *= 0.1F;
 				break;
 			default:
 				break;
@@ -101,14 +105,14 @@ float DHT::readHumidity(bool force) {
 float DHT::computeHeatIndex(float temperature, float percentHumidity, bool isFahrenheit) {
 	// Using both Rothfusz and Steadman's equations
 	// http://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
-	float hi;
+	double hi;
 
 	if (!isFahrenheit) temperature = convertCtoF(temperature);
 
 	hi = 0.5 * (temperature + 61.0 + ((temperature - 68.0) * 1.2) + (percentHumidity * 0.094));
 
-	if (hi > 79) {
-		hi = -42.379 + 2.04901523 * temperature + 10.14333127 * percentHumidity
+	if (hi > 79.0) {
+		hi = -42.379F + 2.04901523 * temperature + 10.14333127 * percentHumidity
 				+ -0.22475541 * temperature * percentHumidity + -0.00683783 * pow(temperature, 2)
 				+ -0.05481717 * pow(percentHumidity, 2) + 0.00122874 * pow(temperature, 2) * percentHumidity
 				+ 0.00085282 * temperature * pow(percentHumidity, 2)
@@ -121,7 +125,7 @@ float DHT::computeHeatIndex(float temperature, float percentHumidity, bool isFah
 				((percentHumidity - 85.0) * 0.1) * ((87.0 - temperature) * 0.2);
 	}
 
-	return isFahrenheit ? hi : convertFtoC(hi);
+	return isFahrenheit ? static_cast<float>(hi) : convertFtoC(static_cast<float>(hi));
 }
 
 void DHT::read_setup(void) {
@@ -177,8 +181,10 @@ boolean DHT::read(bool force) {
 		yield();
 	}
 
-	uint32_t cycles[80];
+	uint32_t cycles[82]; // sized to 82, which is 2 extra to avoid lint errors
 	{
+		//lint --e{1788} ignore error about variable lock referenced only by x-structors
+
 		// Turn off interrupts temporarily because the next sections are timing critical
 		// and we don't want any interruptions.
 		InterruptLock lock;
@@ -273,7 +279,7 @@ boolean DHT::read(bool force) {
 // This is adapted from Arduino's pulseInLong function (which is only available
 // in the very latest IDE versions):
 //   https://github.com/arduino/Arduino/blob/master/hardware/arduino/avr/cores/arduino/wiring_pulse.c
-uint32_t DHT::expectPulse(bool level) {
+uint32_t DHT::expectPulse(int level) {
 	uint32_t count = 0;
 	// On AVR platforms use direct GPIO port access as it's much faster and better
 	// for catching pulses that are 10's of microseconds in length:
