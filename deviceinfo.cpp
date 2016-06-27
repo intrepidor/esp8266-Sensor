@@ -49,7 +49,7 @@ void Device::validateDatabase(void) {
 
 void Device::writeDefaultsToDatabase(void) {
 	eraseDatabase();
-	db.config_version = 0;
+	db.end_of_eeprom_signature = EEPROM_SIGNATURE; // special code used to detect if configuration structure exists
 	setDeviceName("");
 	setDeviceID(999);
 	setThingspeakEnable(false);
@@ -70,7 +70,7 @@ void Device::writeDefaultsToDatabase(void) {
 
 String Device::databaseToString(String eol) {
 	String s;
-	s = "config_version=" + String(db.config_version) + eol;
+	s = "config_version=" + String(db.end_of_eeprom_signature) + eol;
 	s += "debugLevel=" + DebugPrint::convertDebugLevelToString(static_cast<DebugLevel>(getDebugLevel()))
 			+ eol;
 	s += "device.name=" + String(getDeviceName()) + eol;

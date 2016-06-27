@@ -12,6 +12,8 @@
 #include <Arduino.h>
 #include "sensor.h"
 
+const uint32_t EEPROM_SIGNATURE = 0xA357; // This is a pattern used to detect if the EEPROM data is present
+
 const int CURRENT_CONFIG_VERSION = 123;
 const int DECIMAL_PRECISION = 5;
 
@@ -35,9 +37,6 @@ struct cport {
 class Device {
 private:
 	struct {
-		// EEPROM
-		int config_version; // version of the configuration data format in the EEPROM
-
 		// Device
 		struct {
 			char name[STRING_LENGTH + 1];
@@ -63,6 +62,11 @@ private:
 
 		// Logging level
 		int debuglevel;
+
+		// EEPROM
+		uint32_t end_of_eeprom_signature; // version of the configuration data format in the EEPROM
+		// put at the bottom so it moves around
+
 	} db;
 
 public:

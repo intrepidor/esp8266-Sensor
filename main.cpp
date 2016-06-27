@@ -13,8 +13,15 @@
 #include "debugprint.h"
 #include "thingspeak.h"
 #include "wdog.h"
-#ifdef GDBSTUB
-//#include <GDBStub.h>
+//#include <src/internal/gdbstub.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+	void gdbstub_init();
+
+#ifdef __cplusplus
+}
 #endif
 
 // Forward declarations
@@ -100,9 +107,7 @@ void setup(void) {
 	Serial.println(millis());
 
 // Start the Debugger
-#ifdef GDBSTUB
-	//	gdbstub_init();
-#endif
+//	gdbstub_init();
 
 // Finish any object initializations -- stuff that could not go into the constructors
 	dinfo.init(); // this must be done before calling any other member functions
@@ -568,12 +573,12 @@ int task_serialport_menu(unsigned long now) {
 				break;
 			case 'S':
 				debug.println(DebugLevel::ALWAYS, "Calling EspClass::reset() in 2 seconds ...");
-				delay(2000); // CONSIDER using an optimistic_yield(200000) instead so background tasks can still run
+				delay(2000);
 				ESP.reset();
 				break;
 			case 'A':
 				debug.println(DebugLevel::ALWAYS, "Calling EspClass::restart() in 2 seconds ...");
-				delay(2000); // CONSIDER using an optimistic_yield(200000) instead so background tasks can still run
+				delay(2000);
 				ESP.restart();
 				break;
 			case 'W':
