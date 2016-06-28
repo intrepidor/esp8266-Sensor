@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include "network.h"
+#include "util.h"
 
 String localIPstr(void) {
 	IPAddress ip = WiFi.localIP();

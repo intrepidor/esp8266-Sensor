@@ -68,6 +68,8 @@ bool TemperatureSensor::acquire1(void) {
 			yield();
 
 			if (isnan(t)) {
+				setTemperature (FP_NAN);
+				setRawTemperature(FP_NAN);
 				return false;   // error: read failed
 			}
 
@@ -96,6 +98,8 @@ bool TemperatureSensor::acquire2(void) {
 			yield();
 
 			if (isnan(h)) {
+				setRawHumidity (FP_NAN);
+				setHumidity(FP_NAN);
 				return false;   // error: read failed
 			}
 
