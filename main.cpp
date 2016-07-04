@@ -40,7 +40,7 @@ extern void ConfigurePorts(void);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.04 : Allan Inda 2016-June-26");
+String ProgramInfo("Environment Sensor v0.05 : Allan Inda 2016July03");
 
 // Other
 long count = 0;
@@ -179,7 +179,6 @@ void ConfigurePorts(void) {
 				p.analog = ANALOG_PIN;
 				p.sda = I2C_SDA_PIN;
 				p.scl = I2C_SCL_PIN;
-				;
 				break;
 			case 1: // port#1
 				p.digital = DIGITAL_PIN_2;
@@ -234,41 +233,41 @@ void ConfigurePorts(void) {
 							sensors[portNumber]->init(sensorModule::dht22, p);
 							sensors[portNumber]->setName("DHT22");
 							break;
-//						case static_cast<int>(sensorModule::ds18b20):
-//							sensors[portNumber] = new TemperatureSensor;
-//							sensors[portNumber]->init(sensorModule::ds18b20, p);
-//							sensors[portNumber]->setName("DS18b20");
-//							break;
-//						case static_cast<int>(sensorModule::sonar):
-//							break;
-//						case static_cast<int>(sensorModule::sound):
-//							break;
-//						case static_cast<int>(sensorModule::reed):
-//							break;
-//						case static_cast<int>(sensorModule::hcs501):
-//							break;
-//						case static_cast<int>(sensorModule::hcsr505):
-//							break;
-//						case static_cast<int>(sensorModule::dust):
-//							break;
-//						case static_cast<int>(sensorModule::rain):
-//							break;
-//						case static_cast<int>(sensorModule::soil):
-//							break;
-//						case static_cast<int>(sensorModule::soundh):
-//							break;
-//						case static_cast<int>(sensorModule::methane):
-//							break;
-//						case static_cast<int>(sensorModule::gy68):
-//							break;
-//						case static_cast<int>(sensorModule::gy30):
-//							break;
-//						case static_cast<int>(sensorModule::lcd1602):
-//							break;
-//						case static_cast<int>(sensorModule::rfid):
-//							break;
-//						case static_cast<int>(sensorModule::marquee):
-//							break;
+						case static_cast<int>(sensorModule::ds18b20):
+							sensors[portNumber] = new TemperatureSensor;
+							sensors[portNumber]->init(sensorModule::ds18b20, p);
+							sensors[portNumber]->setName("DS18b20");
+							break;
+						case static_cast<int>(sensorModule::sonar):
+							break;
+						case static_cast<int>(sensorModule::sound):
+							break;
+						case static_cast<int>(sensorModule::reed):
+							break;
+						case static_cast<int>(sensorModule::hcs501):
+							break;
+						case static_cast<int>(sensorModule::hcsr505):
+							break;
+						case static_cast<int>(sensorModule::dust):
+							break;
+						case static_cast<int>(sensorModule::rain):
+							break;
+						case static_cast<int>(sensorModule::soil):
+							break;
+						case static_cast<int>(sensorModule::soundh):
+							break;
+						case static_cast<int>(sensorModule::methane):
+							break;
+						case static_cast<int>(sensorModule::gy68):
+							break;
+						case static_cast<int>(sensorModule::gy30):
+							break;
+						case static_cast<int>(sensorModule::lcd1602):
+							break;
+						case static_cast<int>(sensorModule::rfid):
+							break;
+						case static_cast<int>(sensorModule::marquee):
+							break;
 						default:
 							sensors[portNumber] = new TemperatureSensor();
 							sensors[portNumber]->init(sensorModule::dht11, p);
@@ -305,17 +304,25 @@ void CopyCalibrationDataToSensors(void) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 String getUptime(void) {
-	const unsigned long MS_PER_SECOND = (1000);
-	const unsigned long MS_PER_MINUTE = (MS_PER_SECOND * 60);
-	const unsigned long MS_PER_HOUR = (MS_PER_MINUTE * 60);
-	const unsigned long MS_PER_DAY = (MS_PER_HOUR * 24);
+	static const unsigned long MS_PER_SECOND = (1000);
+	static const unsigned long MS_PER_MINUTE = (MS_PER_SECOND * 60 /*times 60 seconds*/);
+	static const unsigned long MS_PER_HOUR = (MS_PER_MINUTE * 60 /*times 60 minutes*/);
+	static const unsigned long MS_PER_DAY = (MS_PER_HOUR * 24 /*times 24 hours*/);
 	unsigned long uptime = millis() - startup_millis;
-	String s(String(uptime) + " ms, ");
-	s += String(uptime / MS_PER_DAY) + "d, ";
-	s += String(uptime / MS_PER_HOUR) + "h, ";
-	s += String(uptime / MS_PER_MINUTE) + "m, ";
-	s += String(uptime / MS_PER_SECOND) + "s";
-	// Example: 897234 ms, 10d, 3h, 33m, 3s
+	unsigned long up_day = uptime / MS_PER_DAY;
+	unsigned long up_hrs = (uptime - (up_day * MS_PER_DAY)) / MS_PER_HOUR;
+	unsigned long up_min = (uptime - ((up_day * MS_PER_DAY) + (up_hrs * MS_PER_HOUR))) / MS_PER_MINUTE;
+	unsigned long up_sec = (uptime
+			- ((up_day * MS_PER_DAY) + (up_hrs * MS_PER_HOUR) + (up_min * MS_PER_MINUTE))) / MS_PER_SECOND;
+	String s(String(uptime) + " ms, or ");
+	s += String(up_day) + "d ";
+	if (up_hrs < 10) s += "0";
+	s += String(up_hrs) + ":";
+	if (up_min < 10) s += "0";
+	s += String(up_min) + ":";
+	if (up_sec < 10) s += "0";
+	s += String(up_sec);
+	// Example: 897234 ms, 10d 01:23:04
 	return s;
 }
 

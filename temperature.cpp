@@ -1,4 +1,7 @@
 #include <Arduino.h>
+//#include <Base64.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include "main.h"
 #include "temperature.h"
 
@@ -23,18 +26,21 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	setValueName(TEMP_VALUE_INDEX_HUMIDITY, "rH%");
 
 	//lint -e{788} Many modules are intentionally omitted from the switch. Don't complain about it.
+	digital_pin = static_cast<uint8_t>(p.digital);
 	switch (m) {
 		case sensorModule::dht11:
-			dht = new DHT(static_cast<uint8_t>(p.digital), DHT11);
+			dht = new DHT(digital_pin, DHT11);
 			delay(2000); // CONSIDER using an optimistic_yield(2000000) instead so background tasks can still run
 			dht->begin();
 			break;
 		case sensorModule::dht22:
-			dht = new DHT(static_cast<uint8_t>(p.digital), DHT22);
+			dht = new DHT(digital_pin, DHT22);
 			delay(2000); // CONSIDER using an optimistic_yield(2000000) instead so background tasks can still run
 			dht->begin();
 			break;
 		case sensorModule::ds18b20:
+			ow = new OneWire(digital_pin);	// specify pin on creation
+			dallas = new DallasTemperature(ow);
 			break;
 		default:
 			break;  // none of these sensors are supported by this module
@@ -43,7 +49,16 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 
 bool TemperatureSensor::acquire_setup(void) {
 	if (getModule() == sensorModule::ds18b20) {
-		return false; // FIXME not yet implemented
+		pinMode(digital_pin, INPUT_PULLUP); // set pullup for onewire bus port
+		if (dallas) {
+			if (!started) {
+				dallas->begin();
+				started = true;
+				return true;
+			}
+			return acquire1();
+		}
+		return false;
 	}
 	else {
 		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
@@ -58,7 +73,29 @@ bool TemperatureSensor::acquire_setup(void) {
 
 bool TemperatureSensor::acquire1(void) {
 	if (getModule() == sensorModule::ds18b20) {
-		return false; // FIXME not yet implemented
+		if (dallas && started) {
+			// call sensors.requestTemperatures() to issue a global temperature
+			// request to all devices on the bus
+			dallas->requestTemperatures();			// Send the command to get temperatures
+			float t = dallas->getTempCByIndex(0);
+			if (isnan(t)) {
+				setTemperature (FP_NAN);
+				setRawTemperature(FP_NAN);
+				return false;   // error: read failed
+			}
+
+			// raw, non-corrected, values
+			setRawTemperature(t);
+
+			t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
+
+			// Calibration corrected values
+			setTemperature(t);
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 	else {
 		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
@@ -88,7 +125,7 @@ bool TemperatureSensor::acquire1(void) {
 
 bool TemperatureSensor::acquire2(void) {
 	if (getModule() == sensorModule::ds18b20) {
-		return false; // ds18b20 only has one sensor
+		return acquire1();
 	}
 	else {
 		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().

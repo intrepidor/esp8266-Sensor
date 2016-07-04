@@ -8,6 +8,8 @@
 #ifndef TEMPERATURE_H_
 #define TEMPERATURE_H_
 
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include "DHTa.h"
 #include "sensor.h"
 
@@ -22,13 +24,25 @@ const int TEMP_CAL_INDEX_HUMIDITY_OFFSET = 3;
 class TemperatureSensor: public Sensor {
 private:
 	DHT* dht;
+	OneWire* ow;
+	DallasTemperature* dallas;
+	uint8_t digital_pin;
+	bool started;
 public:
 	~TemperatureSensor() {
 		dht = nullptr;
+		ow = nullptr;
+		dallas = nullptr;
+		digital_pin = 255;
+		started = false;
 	}
 
 	TemperatureSensor() {
 		dht = nullptr;
+		ow = nullptr;
+		dallas = nullptr;
+		digital_pin = 255;
+		started = false;
 	}
 
 	// Interface Functions (virtual in Sensor class)
