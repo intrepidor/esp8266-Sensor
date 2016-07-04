@@ -427,10 +427,11 @@ void printExtendedMenu(void) {
 	debug.println(DebugLevel::ALWAYS, "MENU EXTENDED -------------");
 	debug.println(DebugLevel::ALWAYS, "E  show data structure in EEPROM");
 	debug.println(DebugLevel::ALWAYS, "M  show data structure in RAM");
+	debug.println(DebugLevel::ALWAYS, "S  show Sensor debug info");
 	debug.println(DebugLevel::ALWAYS, "R  show reason for last reset");
 	debug.println(DebugLevel::ALWAYS, "I  show ESP information");
-	debug.println(DebugLevel::ALWAYS, "S  EspClass::reset()");
-	debug.println(DebugLevel::ALWAYS, "A  EspClass::restart()");
+	debug.println(DebugLevel::ALWAYS, "X  EspClass::reset()");
+	debug.println(DebugLevel::ALWAYS, "Y  EspClass::restart()");
 	debug.println(DebugLevel::ALWAYS, "W  Test Watchdog (block here forever)");
 	debug.println(DebugLevel::ALWAYS,
 			"D  [" + debug.getDebugLevelString() + "] Debug level for logging to serial port");
@@ -579,11 +580,17 @@ int task_serialport_menu(unsigned long now) {
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'S':
+				for (int sensor_number = 0; sensor_number < SENSOR_COUNT; sensor_number++) {
+					debug.println(DebugLevel::ALWAYS, String(nl + "Sensor #" + String(sensor_number)));
+					sensors[sensor_number]->printInfo();
+				}
+				break;
+			case 'X':
 				debug.println(DebugLevel::ALWAYS, "Calling EspClass::reset() in 2 seconds ...");
 				delay(2000);
 				ESP.reset();
 				break;
-			case 'A':
+			case 'Y':
 				debug.println(DebugLevel::ALWAYS, "Calling EspClass::restart() in 2 seconds ...");
 				delay(2000);
 				ESP.restart();

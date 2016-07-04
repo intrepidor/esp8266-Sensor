@@ -18,6 +18,10 @@ enum class DebugLevel
 		ALWAYS = 0, NONE, INFO, ERROR, DEBUG, DEBUGMORE, END
 };
 
+enum class HexDirection
+	: bool {REVERSE = false, FORWARD = true
+};
+
 class DebugPrint {
 private:
 	DebugLevel debuglevel;
@@ -41,7 +45,7 @@ public:
 	String getDebugLevelString(void) {
 		return convertDebugLevelToString(debuglevel);
 	}
-	void println(DebugLevel dlevel, const __FlashStringHelper *);
+	void println(DebugLevel dlevel, const __FlashStringHelper *); // printing strings in Flash
 	void println(DebugLevel dlevel, const String &s);
 	void println(DebugLevel dlevel, const char[]);
 	void println(DebugLevel dlevel, char);
@@ -51,6 +55,7 @@ public:
 	void println(DebugLevel dlevel, long, int = DEC);
 	void println(DebugLevel dlevel, unsigned long, int = DEC);
 	void println(DebugLevel dlevel, double, int = 2);
+	void println(DebugLevel dlevel, bool);
 	void println(DebugLevel dlevel, const Printable&);
 	void println(DebugLevel dlevel);
 
@@ -64,7 +69,11 @@ public:
 	void print(DebugLevel dlevel, long, int = DEC);
 	void print(DebugLevel dlevel, unsigned long, int = DEC);
 	void print(DebugLevel dlevel, double, int = 2);
+	void print(DebugLevel dlevel, bool);
 	void print(DebugLevel dlevel, const Printable&);
+
+	void printhexln(DebugLevel dlevel, const char*, int len, HexDirection dir = HexDirection::FORWARD);
+	void printhex(DebugLevel dlevel, const char*, int len, HexDirection dir = HexDirection::FORWARD);
 };
 
 #endif /* DEBUGPRINT_H_ */

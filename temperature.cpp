@@ -3,6 +3,8 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include "main.h"
+#include "util.h"
+#include "ow_util.h"
 #include "temperature.h"
 
 void TemperatureSensor::init(sensorModule m, SensorPins& p) {
@@ -25,8 +27,9 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, true);
 	setValueName(TEMP_VALUE_INDEX_HUMIDITY, "rH%");
 
-	//lint -e{788} Many modules are intentionally omitted from the switch. Don't complain about it.
 	digital_pin = static_cast<uint8_t>(p.digital);
+
+	//lint -e{788} Many modules are intentionally omitted from the switch. Don't complain about it.
 	switch (m) {
 		case sensorModule::dht11:
 			dht = new DHT(digital_pin, DHT11);
@@ -47,9 +50,44 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	}
 }
 
+bool TemperatureSensor::printInfo(void) {
+	OneWireAddress addr;
+
+	debug.println(DebugLevel::ALWAYS, ".dht=" + String((unsigned long) dht));
+	debug.println(DebugLevel::ALWAYS, ".ow=" + String((unsigned long) ow));
+	debug.println(DebugLevel::ALWAYS, ".dallas=" + String((unsigned long) dallas));
+	debug.println(DebugLevel::ALWAYS,
+			".digital_pin=" + String(digital_pin) + " " + GPIO2Arduino(digital_pin));
+	debug.print(DebugLevel::ALWAYS, ".started=");
+	debug.println(DebugLevel::ALWAYS, started);
+	if (started && dallas && ow) {
+		debug.println(DebugLevel::ALWAYS, ".dallas->getDeviceCount=" + String(dallas->getDeviceCount()));
+		debug.println(DebugLevel::ALWAYS, ".dallas->getResolution=" + String(dallas->getResolution()));
+		debug.print(DebugLevel::ALWAYS, ".dallas->isParasitePowerMode=");
+		debug.println(DebugLevel::ALWAYS, dallas->isParasitePowerMode());
+		uint8_t search_result = 1;
+		debug.println(DebugLevel::ALWAYS, "Searching for devices ...");
+		ow->reset_search();
+		while (search_result) {
+			memset(addr.all, 0, sizeof(addr.all));
+			ow->reset();
+			search_result = ow->search(addr.all);
+			if (search_result > 0) {
+				debug.print(DebugLevel::ALWAYS, "  Found device reg= ");
+				debug.printhex(DebugLevel::ALWAYS, (char*) addr.all, sizeof(addr.all), HexDirection::REVERSE);
+				debug.println(DebugLevel::ALWAYS,
+						" " + OWFamilyCode2PartName(addr.p.family_code) + " "
+								+ OWFamilyCode2Description(addr.p.family_code));
+			}
+		}
+		debug.println(DebugLevel::ALWAYS, "Search complete");
+	}
+	return true;
+}
+
 bool TemperatureSensor::acquire_setup(void) {
 	if (getModule() == sensorModule::ds18b20) {
-		pinMode(digital_pin, INPUT_PULLUP); // set pullup for onewire bus port
+		pinMode(digital_pin, INPUT); // FIXME -- is this correct? set INPUT_PULLUP for onewire bus port
 		if (dallas) {
 			if (!started) {
 				dallas->begin();

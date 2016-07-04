@@ -13,6 +13,10 @@
 #include "deviceinfo.h"
 #include "debugprint.h"
 
+#ifndef ARDUINO_ARCH_ESP8266
+#define ARDUINO_ARCH_ESP8266
+#endif
+
 extern long count;
 extern int PIRcount;
 extern int PIRcountLast;

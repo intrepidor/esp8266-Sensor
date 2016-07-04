@@ -118,9 +118,27 @@ void DebugPrint::println(DebugLevel dlevel, unsigned long n, int m) {
 	}
 }
 
+void DebugPrint::printhexln(DebugLevel dlevel, const char* n, int _len, HexDirection dir) {
+	if (isDebugLevel(dlevel)) {
+		printhex(dlevel, n, _len, dir);
+	}
+	Serial.println();
+}
+
 void DebugPrint::println(DebugLevel dlevel, double n, int m) {
 	if (isDebugLevel(dlevel)) {
 		Serial.println(n, m);
+	}
+}
+
+void DebugPrint::println(DebugLevel dlevel, bool b) {
+	if (isDebugLevel(dlevel)) {
+		if (b) {
+			Serial.println("true");
+		}
+		else {
+			Serial.println("false");
+		}
 	}
 }
 
@@ -190,9 +208,44 @@ void DebugPrint::print(DebugLevel dlevel, unsigned long n, int m) {
 	}
 }
 
+void DebugPrint::printhex(DebugLevel dlevel, const char* n, int _len, HexDirection dir) {
+	if (isDebugLevel(dlevel) && _len > 0 && _len <= 256) {
+		int i = 0;
+		char c = 0;
+		if (n) {
+			if (dir == HexDirection::FORWARD) {
+				while (i < _len) {
+					c = *(n + i);
+					Serial.print(c, HEX);
+					i++;
+				}
+			}
+			else {
+				i = _len - 1;
+				while (i >= 0) {
+					c = *(n + i);
+					Serial.print(c, HEX);
+					i--;
+				}
+			}
+		}
+	}
+}
+
 void DebugPrint::print(DebugLevel dlevel, double n, int m) {
 	if (isDebugLevel(dlevel)) {
 		Serial.print(n, m);
+	}
+}
+
+void DebugPrint::print(DebugLevel dlevel, bool b) {
+	if (isDebugLevel(dlevel)) {
+		if (b) {
+			Serial.print("true");
+		}
+		else {
+			Serial.print("false");
+		}
 	}
 }
 

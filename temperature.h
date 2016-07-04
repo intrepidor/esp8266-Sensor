@@ -28,11 +28,13 @@ private:
 	DallasTemperature* dallas;
 	uint8_t digital_pin;
 	bool started;
+	int sensorPortNumber;
 public:
 	~TemperatureSensor() {
 		dht = nullptr;
 		ow = nullptr;
 		dallas = nullptr;
+		sensorPortNumber = 255;
 		digital_pin = 255;
 		started = false;
 	}
@@ -41,6 +43,7 @@ public:
 		dht = nullptr;
 		ow = nullptr;
 		dallas = nullptr;
+		sensorPortNumber = 255;
 		digital_pin = 255;
 		started = false;
 	}
@@ -50,6 +53,7 @@ public:
 	bool acquire_setup(void);
 	bool acquire1(void);
 	bool acquire2(void);
+	bool printInfo(void);
 
 	// getters and setters
 	float getHumidity() {
