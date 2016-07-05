@@ -139,7 +139,7 @@ void setup(void) {
 	Queue myQueue;
 // scheduleFunction (function pointer, task name, start delay in ms, repeat interval in ms)
 	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
-	myQueue.scheduleFunction(task_acquire, "acquire", 1000, 499);
+	myQueue.scheduleFunction(task_acquire, "acquire", 1000, 500);
 	myQueue.scheduleFunction(task_updatethingspeak, "thingspeak", 2000, 20000);
 	myQueue.scheduleFunction(task_flashled, "led", 250, 100);
 	myQueue.scheduleFunction(task_serialport_menu, "menu", 2000, 500);
@@ -365,21 +365,37 @@ int task_acquire(unsigned long now) {
 	if (next_acquire_number < 0 || next_acquire_number > (MAX_ACQUIRES - 1)) {
 		next_acquire_number = 0;
 	}
-	int sensor_number = next_acquire_number / ACQUIRES_PER_SENSOR;
-	int subacquire_number = next_acquire_number - int((sensor_number * ACQUIRES_PER_SENSOR));
 
-	switch (subacquire_number) {
-		case 0:
-			sensors[sensor_number]->acquire_setup();
-			break;
-		case 1:
-			sensors[sensor_number]->acquire1();
-			break;
-		case 2:
-			sensors[sensor_number]->acquire2();
-			break;
-		default:
-			break;
+	// Interleave the sensors, so setup is run for each sensor in order, then
+	//    acquire1 is run for each sensor, then acquire2 and then back to setup.
+	int subtask_number = next_acquire_number / SENSOR_COUNT;
+	int sensor_number = next_acquire_number - int(subtask_number * SENSOR_COUNT);
+
+	// Just in case, double check so a out of bounds error does not occur.
+	if (subtask_number >= ACQUIRES_PER_SENSOR) {
+		debug.println(DebugLevel::ALWAYS, "ERROR in task_acquire(): subacquire_number>=ACQUIRES_PER_SENSOR");
+		next_acquire_number = -1;
+	}
+	if (sensor_number >= SENSOR_COUNT) {
+		debug.println(DebugLevel::ALWAYS, "ERROR in task_acquire(): sensor_number>=SENSOR_COUNT");
+		next_acquire_number = -1;
+	}
+
+	// run the next sub-task
+	if (next_acquire_number >= 0) {
+		switch (subtask_number) {
+			case 0:
+				sensors[sensor_number]->acquire_setup(); //lint !e661
+				break;
+			case 1:
+				sensors[sensor_number]->acquire1(); //lint !e661
+				break;
+			case 2:
+				sensors[sensor_number]->acquire2(); //lint !e661
+				break;
+			default:
+				break;
+		}
 	}
 	next_acquire_number++;
 	return next_acquire_number;

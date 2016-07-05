@@ -53,17 +53,17 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 bool TemperatureSensor::printInfo(void) {
 	OneWireAddress addr;
 
-	debug.println(DebugLevel::ALWAYS, ".dht=" + String((unsigned long) dht));
-	debug.println(DebugLevel::ALWAYS, ".ow=" + String((unsigned long) ow));
-	debug.println(DebugLevel::ALWAYS, ".dallas=" + String((unsigned long) dallas));
+	debug.println(DebugLevel::ALWAYS, ".dht: " + String((unsigned long) dht));
+	debug.println(DebugLevel::ALWAYS, ".ow: " + String((unsigned long) ow));
+	debug.println(DebugLevel::ALWAYS, ".dallas: " + String((unsigned long) dallas));
 	debug.println(DebugLevel::ALWAYS,
-			".digital_pin=" + String(digital_pin) + " " + GPIO2Arduino(digital_pin));
-	debug.print(DebugLevel::ALWAYS, ".started=");
+			".digital_pin: " + String(digital_pin) + " " + GPIO2Arduino(digital_pin));
+	debug.print(DebugLevel::ALWAYS, ".started: ");
 	debug.println(DebugLevel::ALWAYS, started);
 	if (started && dallas && ow) {
-		debug.println(DebugLevel::ALWAYS, ".dallas->getDeviceCount=" + String(dallas->getDeviceCount()));
-		debug.println(DebugLevel::ALWAYS, ".dallas->getResolution=" + String(dallas->getResolution()));
-		debug.print(DebugLevel::ALWAYS, ".dallas->isParasitePowerMode=");
+		debug.println(DebugLevel::ALWAYS, ".dallas->getDeviceCount: " + String(dallas->getDeviceCount()));
+		debug.println(DebugLevel::ALWAYS, ".dallas->getResolution: " + String(dallas->getResolution()));
+		debug.print(DebugLevel::ALWAYS, ".dallas->isParasitePowerMode: ");
 		debug.println(DebugLevel::ALWAYS, dallas->isParasitePowerMode());
 		uint8_t search_result = 1;
 		debug.println(DebugLevel::ALWAYS, "Searching for devices ...");
@@ -73,24 +73,30 @@ bool TemperatureSensor::printInfo(void) {
 			ow->reset();
 			search_result = ow->search(addr.all);
 			if (search_result > 0) {
-				debug.print(DebugLevel::ALWAYS, "  Found device reg= ");
+				debug.print(DebugLevel::ALWAYS, "  Found device: ");
 				debug.printhex(DebugLevel::ALWAYS, (char*) addr.all, sizeof(addr.all), HexDirection::REVERSE);
 				debug.println(DebugLevel::ALWAYS,
 						" " + OWFamilyCode2PartName(addr.p.family_code) + " "
 								+ OWFamilyCode2Description(addr.p.family_code));
 			}
 		}
-		debug.println(DebugLevel::ALWAYS, "Search complete");
 	}
 	return true;
 }
 
 bool TemperatureSensor::acquire_setup(void) {
 	if (getModule() == sensorModule::ds18b20) {
-		pinMode(digital_pin, INPUT); // FIXME -- is this correct? set INPUT_PULLUP for onewire bus port
+		debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", setup() " + String(digital_pin));
+		pinMode(digital_pin, INPUT);
 		if (dallas) {
 			if (!started) {
 				dallas->begin();
+				// do not while-loop waiting for the conversion to finish. Tell the sensor to acquire
+				//    the temperature in acquire1, then when acquire2 runs, read that temperature. The
+				//    only requirement is that the time between acquire1 and acquire2 must be long enough,
+				//    which is 94/188/375/750ms for 9/10/11/12-bit resolution. Make sure the task
+				//    scheduler interleaves the sensors so there is enough delay.
+				dallas->setWaitForConversion(false);
 				started = true;
 				return true;
 			}
@@ -112,23 +118,10 @@ bool TemperatureSensor::acquire_setup(void) {
 bool TemperatureSensor::acquire1(void) {
 	if (getModule() == sensorModule::ds18b20) {
 		if (dallas && started) {
+			debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", acquire1() " + String(digital_pin));
 			// call sensors.requestTemperatures() to issue a global temperature
 			// request to all devices on the bus
 			dallas->requestTemperatures();			// Send the command to get temperatures
-			float t = dallas->getTempCByIndex(0);
-			if (isnan(t)) {
-				setTemperature (FP_NAN);
-				setRawTemperature(FP_NAN);
-				return false;   // error: read failed
-			}
-
-			// raw, non-corrected, values
-			setRawTemperature(t);
-
-			t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
-
-			// Calibration corrected values
-			setTemperature(t);
 			return true;
 		}
 		else {
@@ -163,7 +156,27 @@ bool TemperatureSensor::acquire1(void) {
 
 bool TemperatureSensor::acquire2(void) {
 	if (getModule() == sensorModule::ds18b20) {
-		return acquire1();
+		if (dallas && started) {
+			debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", acquire2() " + String(digital_pin));
+			float t = dallas->getTempCByIndex(0);
+			if (t == DEVICE_DISCONNECTED_C || t < -55 || t > 125) { // device limits are -55C to +125C
+				setTemperature (FP_NAN);
+				setRawTemperature(FP_NAN);
+				return false;   // error: read failed
+			}
+
+			// raw, non-corrected, values
+			setRawTemperature(t);
+
+			t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
+
+			// Calibration corrected values
+			setTemperature(t);
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 	else {
 		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
