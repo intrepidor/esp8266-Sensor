@@ -154,6 +154,15 @@ void WebInit(void) {
 	});
 	kickAllWatchdogs();
 
+	server.on("/sensordebug", []() {
+		sendHTML_Header(true);
+		String response("<h2>Sensor Debug</h2><div style=\"width:99%\">");
+		response += getsSensorInfo("<br>");
+		response += "</div>" + getWebFooter(false);
+		server.sendContent(response);
+	});
+	kickAllWatchdogs();
+
 	server.on("/csv", []() {
 		String response("");
 		response = ",pir=" + String(PIRcount) + ",pirlast=" + String(PIRcountLast) + ",";

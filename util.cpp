@@ -9,6 +9,33 @@
 #include "network.h"
 #include "util.h"
 
+String memoryToHex(const char* addr, int _len, HexDirection dir) {
+	String s("");
+	if (_len > 0 && _len <= 256) {
+		int i = 0;
+		char c = 0;
+		if (addr) {
+			if (dir == HexDirection::FORWARD) {
+				i = 0; // redundant, but kept for symmetry
+				while (i < _len) {
+					c = *(addr + i);
+					s += String(c, HEX);
+					i++;
+				}
+			}
+			else {
+				i = _len - 1;
+				while (i >= 0) {
+					c = *(addr + i);
+					s += String(c, HEX);
+					i--;
+				}
+			}
+		}
+	}
+	return s;
+}
+
 String localIPstr(void) {
 	IPAddress ip = WiFi.localIP();
 	String s = String(ip[0]) + ".";

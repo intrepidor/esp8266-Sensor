@@ -50,38 +50,46 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	}
 }
 
-bool TemperatureSensor::printInfo(void) {
+String TemperatureSensor::getsInfo(String eol) {
 	OneWireAddress addr;
+	String s("Class: TemperatureSensor" + eol);
 
-	debug.println(DebugLevel::ALWAYS, ".dht: " + String((unsigned long) dht));
-	debug.println(DebugLevel::ALWAYS, ".ow: " + String((unsigned long) ow));
-	debug.println(DebugLevel::ALWAYS, ".dallas: " + String((unsigned long) dallas));
-	debug.println(DebugLevel::ALWAYS,
-			".digital_pin: " + String(digital_pin) + " " + GPIO2Arduino(digital_pin));
-	debug.print(DebugLevel::ALWAYS, ".started: ");
-	debug.println(DebugLevel::ALWAYS, started);
+	s += ".dht: " + String((unsigned long) dht) + eol;
+	s += ".ow: " + String((unsigned long) ow) + eol;
+	s += ".dallas: " + String((unsigned long) dallas) + eol;
+	s += ".digital_pin: " + String(digital_pin) + " " + GPIO2Arduino(digital_pin) + eol;
+	s += ".started: ";
+	if (started) {
+		s += "true";
+	}
+	else {
+		s += "false";
+	}
+	s += eol;
 	if (started && dallas && ow) {
-		debug.println(DebugLevel::ALWAYS, ".dallas->getDeviceCount: " + String(dallas->getDeviceCount()));
-		debug.println(DebugLevel::ALWAYS, ".dallas->getResolution: " + String(dallas->getResolution()));
-		debug.print(DebugLevel::ALWAYS, ".dallas->isParasitePowerMode: ");
-		debug.println(DebugLevel::ALWAYS, dallas->isParasitePowerMode());
-		uint8_t search_result = 1;
-		debug.println(DebugLevel::ALWAYS, "Searching for devices ...");
-		ow->reset_search();
-		while (search_result) {
-			memset(addr.all, 0, sizeof(addr.all));
-			ow->reset();
-			search_result = ow->search(addr.all);
-			if (search_result > 0) {
-				debug.print(DebugLevel::ALWAYS, "  Found device: ");
-				debug.printhex(DebugLevel::ALWAYS, (char*) addr.all, sizeof(addr.all), HexDirection::REVERSE);
-				debug.println(DebugLevel::ALWAYS,
-						" " + OWFamilyCode2PartName(addr.p.family_code) + " "
-								+ OWFamilyCode2Description(addr.p.family_code));
+		uint8_t devicecount = dallas->getDeviceCount();
+		s += ".dallas.getDeviceCount: " + String(devicecount) + eol;
+		if (devicecount > 0) {
+			s += ".dallas.getResolution: " + String(dallas->getResolution()) + eol;
+			s += ".dallas.isParasitePowerMode: ";
+			s += dallas->isParasitePowerMode() + eol;
+			uint8_t search_result = 1;
+			s += "Searching for devices ..." + eol;
+			ow->reset_search();
+			while (search_result) {
+				memset(addr.all, 0, sizeof(addr.all));
+				ow->reset();
+				search_result = ow->search(addr.all);
+				if (search_result > 0) {
+					s += "  Found device: ";
+					s += memoryToHex((char*) addr.all, sizeof(addr.all), HexDirection::REVERSE);
+					s += ", " + OWFamilyCode2PartName(addr.p.family_code) + ", "
+							+ OWFamilyCode2Description(addr.p.family_code) + eol;
+				}
 			}
 		}
 	}
-	return true;
+	return s;
 }
 
 bool TemperatureSensor::acquire_setup(void) {

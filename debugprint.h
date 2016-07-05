@@ -9,6 +9,7 @@
 #define DEBUGPRINT_H_
 
 #include <Arduino.h>
+#include "util.h"
 #include "deviceinfo.h"
 
 extern String nl;
@@ -16,10 +17,6 @@ extern String nl;
 enum class DebugLevel
 	: int {
 		ALWAYS = 0, NONE, INFO, ERROR, DEBUG, DEBUGMORE, END
-};
-
-enum class HexDirection
-	: bool {REVERSE = false, FORWARD = true
 };
 
 class DebugPrint {

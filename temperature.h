@@ -53,7 +53,7 @@ public:
 	bool acquire_setup(void);
 	bool acquire1(void);
 	bool acquire2(void);
-	bool printInfo(void);
+	String getsInfo(String eol);
 
 	// getters and setters
 	float getHumidity() {

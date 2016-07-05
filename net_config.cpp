@@ -239,6 +239,7 @@ String getWebFooter(bool all) {
 	wf += a + hre + lin + "/csv\">Show CSV" + sHTTP_AHREF_END;
 	wf += a + hre + lin + "/config\">Configure" + sHTTP_AHREF_END;
 	wf += a + hre + lin + "/status\">Status" + sHTTP_AHREF_END;
+	wf += a + hre + lin + "/sensordebug\">Sensor Debug" + sHTTP_AHREF_END;
 	if (all) {
 		wf += a + def + lin + "/default_configuration\">Factory Defaults" + sHTTP_AHREF_END;
 		wf += a + reb + lin + "/reboot\">Reboot" + sHTTP_AHREF_END;

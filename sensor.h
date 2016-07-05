@@ -67,7 +67,7 @@ public:
 	virtual bool acquire_setup(void) = 0;
 	virtual bool acquire1(void) = 0;
 	virtual bool acquire2(void) = 0;
-	virtual bool printInfo(void) = 0;
+	virtual String getsInfo(String eol) = 0;
 
 	// General
 	String getName(void) {

@@ -5,6 +5,7 @@
  *      Author: allan
  */
 
+#include "util.h"
 #include "debugprint.h"
 
 String nl("\r\n");
@@ -209,26 +210,8 @@ void DebugPrint::print(DebugLevel dlevel, unsigned long n, int m) {
 }
 
 void DebugPrint::printhex(DebugLevel dlevel, const char* n, int _len, HexDirection dir) {
-	if (isDebugLevel(dlevel) && _len > 0 && _len <= 256) {
-		int i = 0;
-		char c = 0;
-		if (n) {
-			if (dir == HexDirection::FORWARD) {
-				while (i < _len) {
-					c = *(n + i);
-					Serial.print(c, HEX);
-					i++;
-				}
-			}
-			else {
-				i = _len - 1;
-				while (i >= 0) {
-					c = *(n + i);
-					Serial.print(c, HEX);
-					i--;
-				}
-			}
-		}
+	if (isDebugLevel(dlevel)) {
+		Serial.print(memoryToHex(n, _len, dir));
 	}
 }
 

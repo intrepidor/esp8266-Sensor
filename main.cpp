@@ -40,7 +40,7 @@ extern void ConfigurePorts(void);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.05 : Allan Inda 2016July03");
+String ProgramInfo("Environment Sensor v0.06 : Allan Inda 2016July06");
 
 // Other
 long count = 0;
@@ -329,11 +329,25 @@ String getUptime(void) {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 String getsDeviceInfo(String eol) {
 	String s(ProgramInfo + eol);
+	s += "Hostname: " + WiFi.hostname() + eol;
+	s += "Device MAC: " + WiFi.macAddress() + eol;
 	s += "Device IP: " + localIPstr() + eol;
+	s += "AP MAC: " + WiFi.BSSIDstr() + eol;
 	s += "SSID: " + WiFi.SSID() + eol;
+//	s += "psd: " + WiFi.psk() + eol; // wifi password
+	s += "RSSI: " + String(WiFi.RSSI()) + " dBm" + eol;
 	s += "ESP8266_Device_ID=" + String(dinfo.getDeviceID()) + eol;
 	s += "Friendly Name: " + String(dinfo.getDeviceName()) + eol;
 	s += "Uptime: " + getUptime() + eol;
+	return s;
+}
+
+String getsSensorInfo(String eol) {
+	String s("");
+	for (int sensor_number = 0; sensor_number < SENSOR_COUNT; sensor_number++) {
+		s += eol + "Sensor #" + String(sensor_number) + eol;
+		s += sensors[sensor_number]->getsInfo(eol);
+	}
 	return s;
 }
 
@@ -596,10 +610,8 @@ int task_serialport_menu(unsigned long now) {
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'S':
-				for (int sensor_number = 0; sensor_number < SENSOR_COUNT; sensor_number++) {
-					debug.println(DebugLevel::ALWAYS, String(nl + "Sensor #" + String(sensor_number)));
-					sensors[sensor_number]->printInfo();
-				}
+				debug.println(DebugLevel::ALWAYS, nl + "Sensor Debug Information");
+				debug.println(DebugLevel::ALWAYS, getsSensorInfo(nl));
 				break;
 			case 'X':
 				debug.println(DebugLevel::ALWAYS, "Calling EspClass::reset() in 2 seconds ...");
