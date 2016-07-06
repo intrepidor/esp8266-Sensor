@@ -16,6 +16,19 @@ int getSensorCalCount(void) {
 	return CALIB_COUNT;
 }
 
+String getSensorName(sensorModule mode) {
+	String s("unknown");
+
+	//lint -e{26} suppress error false error about the sensorModule
+	for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
+		if (mode == static_cast<sensorModule>(j)) {
+			s = sensorList[static_cast<int>(j)].name;
+			break;
+		}
+	}
+	return s;
+}
+
 //lint -e{26,785} suppress since lint doesn't understand C++11
 t_sensor const sensorList[static_cast<int>(sensorModule::END)] = {
 //

@@ -47,5 +47,6 @@ extern t_sensor const sensorList[];
 extern String getModuleNameString(sensorModule sm);
 extern int getSensorValueCount(void);
 extern int getSensorCalCount(void);
+extern String getSensorName(sensorModule mode);
 
 #endif /* SENSOR_SUPPORT_H_ */

@@ -344,9 +344,11 @@ String getsDeviceInfo(String eol) {
 
 String getsSensorInfo(String eol) {
 	String s("");
-	for (int sensor_number = 0; sensor_number < SENSOR_COUNT; sensor_number++) {
-		s += eol + "Sensor #" + String(sensor_number) + eol;
-		s += sensors[sensor_number]->getsInfo(eol);
+	for (int sensor_number = 0; sensor_number < dinfo.getPortMax() && sensor_number < SENSOR_COUNT;
+			sensor_number++) {
+		s += eol + "Port #" + String(sensor_number);
+		s += eol + "Type: " + getSensorName(dinfo.getPortMode(sensor_number));
+		s += eol + sensors[sensor_number]->getsInfo(eol);
 	}
 	return s;
 }
@@ -498,13 +500,15 @@ int task_serialport_menu(unsigned long now) {
 				// Display the heading
 				if (raw_need_new_heading) {
 					raw_need_new_heading = false;
-					debug.print(DebugLevel::ALWAYS, "CNT\t| PIR ");
+					debug.print(DebugLevel::ALWAYS, "COUNT   | PIR ");
 					for (int s = 0; s < SENSOR_COUNT; s++) {
 						if (sensors[s]) {
 							for (int v = 0; v < getSensorValueCount(); v++) {
 								if (sensors[s]->getValueEnable(v)) {
 									debug.print(DebugLevel::ALWAYS,
-											"| Raw/" + sensors[s]->getValueName(v) + "\t");
+											"| "
+													+ padEndOfString("Raw/" + sensors[s]->getValueName(v), 12,
+															' ', true));
 								}
 							}
 						}
@@ -512,21 +516,19 @@ int task_serialport_menu(unsigned long now) {
 					debug.println(DebugLevel::ALWAYS, "");
 				}
 				// Display the Data
-				debug.print(DebugLevel::ALWAYS, "#" + String(count) + "\t");
-				debug.print(DebugLevel::ALWAYS, "| " + String(PIRcount) + " ");
-				if (PIRcount < 10) {
-					debug.print(DebugLevel::ALWAYS, " ");
-				}
-				if (PIRcount < 100) {
-					debug.print(DebugLevel::ALWAYS, " ");
-				}
+				debug.print(DebugLevel::ALWAYS, "#" + padEndOfString(String(count), 6, ' ') + " | ");
+				debug.print(DebugLevel::ALWAYS, padEndOfString(String(PIRcount), 4, ' '));
 				for (int s = 0; s < SENSOR_COUNT; s++) {
 					if (sensors[s]) {
 						for (int v = 0; v < getSensorValueCount(); v++) {
 							if (sensors[s]->getValueEnable(v)) {
 								debug.print(DebugLevel::ALWAYS,
-										"| " + String(sensors[s]->getRawValue(v)) + String("/")
-												+ String(sensors[s]->getValue(v)) + String("\t"));
+										"| "
+												+ padEndOfString(
+														String(
+																String(sensors[s]->getRawValue(v)) + "/"
+																		+ String(sensors[s]->getValue(v))),
+														12, ' ', true));
 							}
 						}
 					}
@@ -537,13 +539,14 @@ int task_serialport_menu(unsigned long now) {
 				// Display the heading
 				if (need_new_heading) {
 					need_new_heading = false;
-					debug.print(DebugLevel::ALWAYS, "CNT\t| PIR ");
+					debug.print(DebugLevel::ALWAYS, "COUNT   | PIR ");
 					for (int s = 0; s < SENSOR_COUNT; s++) {
 						if (sensors[s]) {
+							debug.print(DebugLevel::ALWAYS, "| ");
 							for (int v = 0; v < getSensorValueCount(); v++) {
 								if (sensors[s]->getValueEnable(v)) {
 									debug.print(DebugLevel::ALWAYS,
-											"| " + sensors[s]->getValueName(v) + "\t");
+											padEndOfString(sensors[s]->getValueName(v), 6, ' ', true));
 								}
 							}
 						}
@@ -551,20 +554,15 @@ int task_serialport_menu(unsigned long now) {
 					debug.println(DebugLevel::ALWAYS, "");
 				}
 				// Display the Data
-				debug.print(DebugLevel::ALWAYS, "#" + String(count) + "\t| ");
-				debug.print(DebugLevel::ALWAYS, String(PIRcount) + " ");
-				if (PIRcount < 10) {
-					debug.print(DebugLevel::ALWAYS, " ");
-				}
-				if (PIRcount < 100) {
-					debug.print(DebugLevel::ALWAYS, " ");
-				}
+				debug.print(DebugLevel::ALWAYS, "#" + padEndOfString(String(count), 6, ' ') + " | ");
+				debug.print(DebugLevel::ALWAYS, padEndOfString(String(PIRcount), 4, ' '));
 				for (int s = 0; s < SENSOR_COUNT; s++) {
 					if (sensors[s]) {
+						debug.print(DebugLevel::ALWAYS, "| ");
 						for (int v = 0; v < getSensorValueCount(); v++) {
 							if (sensors[s]->getValueEnable(v)) {
 								debug.print(DebugLevel::ALWAYS,
-										"| " + String(sensors[s]->getValue(v)) + String("\t"));
+										padEndOfString(String(sensors[s]->getValue(v)), 6, ' ', true));
 							}
 						}
 					}

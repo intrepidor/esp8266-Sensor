@@ -94,13 +94,7 @@ String Device::databaseToString(String eol) {
 
 void Device::printInfo(void) {
 	for (int i = 0; i < getPortMax(); i++) {
-		//lint -e{26} suppress error false error about the sensorModule
-		for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
-			if (getPortMode(i) == static_cast<sensorModule>(j)) {
-				debug.println(DebugLevel::ALWAYS,
-						"Port#" + String(i) + ": " + sensorList[static_cast<int>(j)].name);
-			}
-		}
+		debug.println(DebugLevel::ALWAYS, "Port#" + String(i) + ": " + getSensorName(getPortMode(i)));
 	}
 	debug.println(DebugLevel::ALWAYS, "");
 }

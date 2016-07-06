@@ -9,6 +9,21 @@
 #include "network.h"
 #include "util.h"
 
+String padEndOfString(String str, unsigned int desired_length, char pad_character, bool trim) {
+	String s("");
+	if (str && desired_length <= 256 && desired_length > 0) {
+		s = str;
+		while (s.length() < desired_length) {
+			s += pad_character;
+		}
+		if (trim && s.length() > desired_length) {
+			s = s.substring(0, desired_length);
+			s.setCharAt(desired_length - 1, '#');
+		}
+	}
+	return s;
+}
+
 String memoryToHex(const char* addr, int _len, HexDirection dir) {
 	String s("");
 	if (_len > 0 && _len <= 256) {
