@@ -447,7 +447,8 @@ void printMenu(void) {
 	debug.println(DebugLevel::ALWAYS, "i  show High-level configuration");
 	debug.println(DebugLevel::ALWAYS, "c  show calibration values");
 	debug.println(DebugLevel::ALWAYS, "m  show measured values");
-	debug.println(DebugLevel::ALWAYS, "s  show status");
+	debug.println(DebugLevel::ALWAYS, "r  show chart of values (raw)");
+	debug.println(DebugLevel::ALWAYS, "s  show chart of values");
 	debug.println(DebugLevel::ALWAYS, "w  show web URLs");
 	debug.println(DebugLevel::ALWAYS, "z  Extended menu");
 	debug.println(DebugLevel::ALWAYS, "");
@@ -473,11 +474,15 @@ int task_serialport_menu(unsigned long now) {
 	wdog_timer[static_cast<int>(taskname_menu)] = millis();
 	count++;
 	static bool need_new_heading = true;
+	static bool raw_need_new_heading = true;
 
 	if (Serial.available() > 0) {
 		char ch = static_cast<char>(Serial.read());
 		if (ch != 's') {
 			need_new_heading = true;
+		}
+		if (ch != 'r') {
+			raw_need_new_heading = true;
 		}
 		switch (ch) {
 			case '?':
@@ -489,17 +494,17 @@ int task_serialport_menu(unsigned long now) {
 			case 'i':
 				printInfo();
 				break;
-			case 's':
+			case 'r':
 				// Display the heading
-				if (need_new_heading) {
-					need_new_heading = false;
-					debug.print(DebugLevel::ALWAYS, "CNT\tPIR/Last\t");
+				if (raw_need_new_heading) {
+					raw_need_new_heading = false;
+					debug.print(DebugLevel::ALWAYS, "CNT\t| PIR ");
 					for (int s = 0; s < SENSOR_COUNT; s++) {
 						if (sensors[s]) {
 							for (int v = 0; v < getSensorValueCount(); v++) {
 								if (sensors[s]->getValueEnable(v)) {
 									debug.print(DebugLevel::ALWAYS,
-											"Raw/" + sensors[s]->getValueName(v) + "\t");
+											"| Raw/" + sensors[s]->getValueName(v) + "\t");
 								}
 							}
 						}
@@ -508,16 +513,58 @@ int task_serialport_menu(unsigned long now) {
 				}
 				// Display the Data
 				debug.print(DebugLevel::ALWAYS, "#" + String(count) + "\t");
-				debug.print(DebugLevel::ALWAYS, String(PIRcount) + "/");
-				debug.print(DebugLevel::ALWAYS, String(PIRcountLast) + "\t\t");
+				debug.print(DebugLevel::ALWAYS, "| " + String(PIRcount) + " ");
+				if (PIRcount < 10) {
+					debug.print(DebugLevel::ALWAYS, " ");
+				}
+				if (PIRcount < 100) {
+					debug.print(DebugLevel::ALWAYS, " ");
+				}
 				for (int s = 0; s < SENSOR_COUNT; s++) {
 					if (sensors[s]) {
 						for (int v = 0; v < getSensorValueCount(); v++) {
 							if (sensors[s]->getValueEnable(v)) {
 								debug.print(DebugLevel::ALWAYS,
-										String(sensors[s]->getRawValue(v)) + String("/"));
+										"| " + String(sensors[s]->getRawValue(v)) + String("/")
+												+ String(sensors[s]->getValue(v)) + String("\t"));
+							}
+						}
+					}
+				}
+				debug.println(DebugLevel::ALWAYS, "");
+				break;
+			case 's':
+				// Display the heading
+				if (need_new_heading) {
+					need_new_heading = false;
+					debug.print(DebugLevel::ALWAYS, "CNT\t| PIR ");
+					for (int s = 0; s < SENSOR_COUNT; s++) {
+						if (sensors[s]) {
+							for (int v = 0; v < getSensorValueCount(); v++) {
+								if (sensors[s]->getValueEnable(v)) {
+									debug.print(DebugLevel::ALWAYS,
+											"| " + sensors[s]->getValueName(v) + "\t");
+								}
+							}
+						}
+					}
+					debug.println(DebugLevel::ALWAYS, "");
+				}
+				// Display the Data
+				debug.print(DebugLevel::ALWAYS, "#" + String(count) + "\t| ");
+				debug.print(DebugLevel::ALWAYS, String(PIRcount) + " ");
+				if (PIRcount < 10) {
+					debug.print(DebugLevel::ALWAYS, " ");
+				}
+				if (PIRcount < 100) {
+					debug.print(DebugLevel::ALWAYS, " ");
+				}
+				for (int s = 0; s < SENSOR_COUNT; s++) {
+					if (sensors[s]) {
+						for (int v = 0; v < getSensorValueCount(); v++) {
+							if (sensors[s]->getValueEnable(v)) {
 								debug.print(DebugLevel::ALWAYS,
-										String(sensors[s]->getValue(v)) + String("\t"));
+										"| " + String(sensors[s]->getValue(v)) + String("\t"));
 							}
 						}
 					}

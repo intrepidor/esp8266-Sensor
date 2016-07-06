@@ -8,27 +8,47 @@
 #include "temperature.h"
 
 void TemperatureSensor::init(sensorModule m, SensorPins& p) {
+	/* Each temperature sensor has a maximum of two channels. The first channel
+	 * is always Temperature. The second channel may or may not be used. For
+	 * DHT11/22 devices, the second channel is humidity.
+	 */
 	setModule(m);
 	setPins(p);
+
+	//  Configure Channel 1 -- this is always temperature
 	setCalEnable(TEMP_CAL_INDEX_TEMP_SLOPE, true);
 	setCalName(TEMP_CAL_INDEX_TEMP_SLOPE, "temp_slope");
-
 	setCalEnable(TEMP_CAL_INDEX_TEMP_OFFSET, true);
 	setCalName(TEMP_CAL_INDEX_TEMP_OFFSET, "temp_offset");
-
-	setCalEnable(TEMP_CAL_INDEX_HUMIDITY_SLOPE, true);
-	setCalName(TEMP_CAL_INDEX_HUMIDITY_SLOPE, "humidity_slope");
-
-	setCalEnable(TEMP_CAL_INDEX_HUMIDITY_OFFSET, true);
-	setCalName(TEMP_CAL_INDEX_HUMIDITY_OFFSET, "humidity_offset");
-
 	setValueEnable(TEMP_VALUE_INDEX_TEMPERATURE, true);
 	setValueName(TEMP_VALUE_INDEX_TEMPERATURE, "tempC");
-	setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, true);
-	setValueName(TEMP_VALUE_INDEX_HUMIDITY, "rH%");
 
+	// Configure Channel 2 -- this may or may not be used for all sensors
+	//lint -e{788} Many modules are intentionally omitted from the switch. Don't complain about it.
+	switch (m) {
+		case sensorModule::dht11:
+		case sensorModule::dht22:
+			setCalEnable(TEMP_CAL_INDEX_HUMIDITY_SLOPE, true);
+			setCalName(TEMP_CAL_INDEX_HUMIDITY_SLOPE, "humidity_slope");
+			setCalEnable(TEMP_CAL_INDEX_HUMIDITY_OFFSET, true);
+			setCalName(TEMP_CAL_INDEX_HUMIDITY_OFFSET, "humidity_offset");
+			setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, true);
+			setValueName(TEMP_VALUE_INDEX_HUMIDITY, "rH%");
+			break;
+		default:
+			setCalEnable(TEMP_CAL_INDEX_HUMIDITY_SLOPE, false);
+			setCalName(TEMP_CAL_INDEX_HUMIDITY_SLOPE, "not used");
+			setCalEnable(TEMP_CAL_INDEX_HUMIDITY_OFFSET, false);
+			setCalName(TEMP_CAL_INDEX_HUMIDITY_OFFSET, "not used");
+			setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, false);
+			setValueName(TEMP_VALUE_INDEX_HUMIDITY, "not used");
+			break;
+	}
+
+	// Th pins used to interact with the sensor
 	digital_pin = static_cast<uint8_t>(p.digital);
 
+	// Create and initialize the sensor objects
 	//lint -e{788} Many modules are intentionally omitted from the switch. Don't complain about it.
 	switch (m) {
 		case sensorModule::dht11:
@@ -72,7 +92,8 @@ String TemperatureSensor::getsInfo(String eol) {
 		if (devicecount > 0) {
 			s += ".dallas.getResolution: " + String(dallas->getResolution()) + eol;
 			s += ".dallas.isParasitePowerMode: ";
-			s += dallas->isParasitePowerMode() + eol;
+			s += dallas->isParasitePowerMode();
+			s += eol;
 			uint8_t search_result = 1;
 			s += "Searching for devices ..." + eol;
 			ow->reset_search();
@@ -117,6 +138,7 @@ bool TemperatureSensor::acquire_setup(void) {
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht) {
 			dht->read_setup();
+			started = true;
 			return true;
 		}
 		return false;       // error: DHT object not created
@@ -139,7 +161,7 @@ bool TemperatureSensor::acquire1(void) {
 	else {
 		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
 		// Reading temperature or humidity takes about 250 milliseconds!
-		if (dht) {
+		if (dht && started) {
 			float t = dht->readTemperature(true);
 			yield();
 
@@ -189,7 +211,7 @@ bool TemperatureSensor::acquire2(void) {
 	else {
 		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
 		// Reading temperature or humidity takes about 250 milliseconds!
-		if (dht) {
+		if (dht && started) {
 			float h = dht->readHumidity();
 			yield();
 
