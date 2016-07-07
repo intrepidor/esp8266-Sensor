@@ -204,49 +204,53 @@ void Device::setPortAdj(int portnum, int adjnum, double v) {
 }
 
 String Device::getPortAdjName(int portnum, int adjnum) {
-	String n("Err");
+	if (portnum >= 0 && portnum < SENSOR_COUNT && adjnum >= 0 && adjnum < MAX_ADJ) {
+		return sensors[portnum]->getCalName(adjnum);
+	}
+	return "Err";
+#if 0
 	// Get the Sensor type
 	sensorModule sm = getPortMode(portnum);
 	//lint -e{744} suppress informationals about missing default statements
 	switch (sm) {
 		case sensorModule::END:
-			break;	// keep "Err"
+		break;	// keep "Err"
 		case sensorModule::off:
-			n = "";
-			break;
+		n = "";
+		break;
 		case sensorModule::dht11:
 		case sensorModule::dht22:
-			switch (adjnum) {
-				case TEMP_CAL_INDEX_TEMP_SLOPE:
-					n = "Temp gain";
-					break;
-				case TEMP_CAL_INDEX_TEMP_OFFSET:
-					n = "Temp offset";
-					break;
-				case TEMP_CAL_INDEX_HUMIDITY_SLOPE:
-					n = "rH gain";
-					break;
-				case TEMP_CAL_INDEX_HUMIDITY_OFFSET:
-					n = "rh offset";
-					break;
-			}
+		switch (adjnum) {
+			case TEMP_CAL_INDEX_TEMP_SLOPE:
+			n = "Temp gain";
 			break;
+			case TEMP_CAL_INDEX_TEMP_OFFSET:
+			n = "Temp offset";
+			break;
+			case TEMP_CAL_INDEX_HUMIDITY_SLOPE:
+			n = "rH gain";
+			break;
+			case TEMP_CAL_INDEX_HUMIDITY_OFFSET:
+			n = "rh offset";
+			break;
+		}
+		break;
 		case sensorModule::ds18b20:
-			switch (adjnum) {
-				case TEMP_CAL_INDEX_TEMP_SLOPE:
-					n = "Temp gain";
-					break;
-				case TEMP_CAL_INDEX_TEMP_OFFSET:
-					n = "Temp offset";
-					break;
-				case TEMP_CAL_INDEX_HUMIDITY_SLOPE:
-					n = "not used";
-					break;
-				case TEMP_CAL_INDEX_HUMIDITY_OFFSET:
-					n = "not used";
-					break;
-			}
+		switch (adjnum) {
+			case TEMP_CAL_INDEX_TEMP_SLOPE:
+			n = "Temp gain";
 			break;
+			case TEMP_CAL_INDEX_TEMP_OFFSET:
+			n = "Temp offset";
+			break;
+			case TEMP_CAL_INDEX_HUMIDITY_SLOPE:
+			n = "not used";
+			break;
+			case TEMP_CAL_INDEX_HUMIDITY_OFFSET:
+			n = "not used";
+			break;
+		}
+		break;
 		case sensorModule::sonar:
 		case sensorModule::sound:
 		case sensorModule::reed:
@@ -262,8 +266,9 @@ String Device::getPortAdjName(int portnum, int adjnum) {
 		case sensorModule::lcd1602:
 		case sensorModule::rfid:
 		case sensorModule::marquee:
-			n = "FIXME";
-			break;
+		n = "FIXME";
+		break;
 	}
 	return n;
+#endif
 }

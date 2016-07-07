@@ -4,6 +4,7 @@
 #include <Ticker.h>
 #include "main.h"
 #include "temperature.h"
+#include "generic.h"
 #include "network.h"
 #include "net_value.h"
 #include "Queue.h"
@@ -237,6 +238,21 @@ void ConfigurePorts(void) {
 							sensors[portNumber] = new TemperatureSensor;
 							sensors[portNumber]->init(sensorModule::ds18b20, p);
 							sensors[portNumber]->setName("DS18b20");
+							break;
+						case static_cast<int>(sensorModule::analog):
+							sensors[portNumber] = new GenericSensor();
+							sensors[portNumber]->init(sensorModule::analog, p);
+							sensors[portNumber]->setName("Analog");
+							break;
+						case static_cast<int>(sensorModule::digital):
+							sensors[portNumber] = new GenericSensor();
+							sensors[portNumber]->init(sensorModule::digital, p);
+							sensors[portNumber]->setName("Digital");
+							break;
+						case static_cast<int>(sensorModule::analog_digital):
+							sensors[portNumber] = new GenericSensor();
+							sensors[portNumber]->init(sensorModule::analog_digital, p);
+							sensors[portNumber]->setName("Analog+Digital");
 							break;
 						case static_cast<int>(sensorModule::sonar):
 							break;

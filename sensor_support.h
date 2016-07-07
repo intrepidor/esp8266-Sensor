@@ -15,6 +15,7 @@ const int CALIB_COUNT = 4;	// should be the same as MAX_ADJ
 enum class sensorModule {
 	off = 0,
 // 1 digital
+	digital,
 	dht11,
 	dht22,
 	ds18b20,
@@ -23,7 +24,10 @@ enum class sensorModule {
 	reed,
 	hcs501,
 	hcsr505,
+// 1 analog
+	analog,
 // 1 digital + 1 analog
+	analog_digital,
 	dust,
 	rain,
 	soil,

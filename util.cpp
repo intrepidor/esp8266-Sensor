@@ -96,6 +96,8 @@ String GPIO2Arduino(uint8_t gpio_pin_number) {
 			return F("GPIO15/D8/BootMode");
 		case 16:
 			return F("GPIO16/D0/Wakeup");
+		case 17:
+			return F("A0");
 		default:
 			return String(gpio_pin_number) + "unknown";
 	}

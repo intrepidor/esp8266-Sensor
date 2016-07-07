@@ -34,6 +34,7 @@ t_sensor const sensorList[static_cast<int>(sensorModule::END)] = {
 //
 		{ "off", sensorModule::off },
 		// One Digital IO
+		{ "Digital", sensorModule::digital },
 		// ... Temperature
 		{ "DHT11", sensorModule::dht11 },
 		{ "DHT22", sensorModule::dht22 },
@@ -45,7 +46,10 @@ t_sensor const sensorList[static_cast<int>(sensorModule::END)] = {
 		// ... PIR
 		{ "HCS501", sensorModule::hcs501 },
 		{ "HCSR505", sensorModule::hcsr505 },
+		// ... ANALOG
+		{ "analog", sensorModule::analog },
 		// One Digital IO and/or one ADC
+		{ "Analog+Digital", sensorModule::analog_digital },
 		{ "Dust", sensorModule::dust },
 		{ "Rain", sensorModule::rain },
 		{ "Soil", sensorModule::soil },
@@ -63,6 +67,9 @@ String getModuleNameString(sensorModule sm) {
 // FIXME -- this should be a lookup into the sensor[] array, not a repeat of the module names
 	switch (sm) {
 		// 1 digital
+		case sensorModule::digital:
+			return String("Digital");
+			break;
 		case sensorModule::dht11:
 			return String("DHT11");
 			break;
@@ -87,7 +94,14 @@ String getModuleNameString(sensorModule sm) {
 		case sensorModule::hcsr505:
 			return String("HCSR505");
 			break;
+			// analog
+		case sensorModule::analog:
+			return String("Analog");
+			break;
 			// 1 digital + 1 analog
+		case sensorModule::analog_digital:
+			return String("Analog+Digital");
+			break;
 		case sensorModule::dust:
 			return String("Dust");
 			break;
