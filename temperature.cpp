@@ -15,7 +15,10 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	setModule(m);
 	setPins(p);
 
-	//  Configure Channel 1 -- this is always temperature
+	// Configure Sensor Parameters
+	setStaleAge_ms(10000);	// timeout of the value if not update for 10 seconds.
+
+	// Configure Channel 1 -- this is always temperature
 	setCalEnable(TEMP_CAL_INDEX_TEMP_SLOPE, true);
 	setCalName(TEMP_CAL_INDEX_TEMP_SLOPE, "temp_slope");
 	setCalEnable(TEMP_CAL_INDEX_TEMP_OFFSET, true);

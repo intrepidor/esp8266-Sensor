@@ -56,7 +56,8 @@ private:
 public:
 	~Sensor() { /* nothing to destroy */
 	}
-	// CONSIDER creating a constructor that includes the init parameters, then call init via the constructor
+	// CONSIDER creating a constructor that includes the init parameters, then call
+	// init via the constructor
 	Sensor(void) {
 		sensorName = "";
 		memset(value, 0, sizeof(value));
