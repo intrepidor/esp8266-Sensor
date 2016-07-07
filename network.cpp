@@ -164,8 +164,8 @@ void WebInit(void) {
 	kickAllWatchdogs();
 
 	server.on("/csv", []() {
-		String response("");
-		response = ",pir=" + String(PIRcount) + ",pirlast=" + String(PIRcountLast) + ",";
+		String response("count=");
+		response = String(count) + ",pir=" + String(PIRcount) + ",pirlast=" + String(PIRcountLast) + ",";
 		for (int i = 0; i < SENSOR_COUNT; i++) {
 			if (sensors[i]) {
 

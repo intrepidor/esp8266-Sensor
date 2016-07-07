@@ -34,10 +34,11 @@ public:
 	float v;
 	bool enabled;
 	String name;
+	unsigned long last_sample_time_ms;
 	~SensorValue() { /* nothing to destroy */
 	}
 	SensorValue()
-			: v(0), enabled(false), name("") {
+			: v(0), enabled(false), name(""), last_sample_time_ms(0) {
 	}
 };
 
@@ -50,6 +51,7 @@ private:
 	SensorValue cal[CALIB_COUNT];
 	sensorModule module;
 	SensorPins pins;
+	unsigned int time_till_stale_ms;
 
 public:
 	~Sensor() { /* nothing to destroy */
@@ -60,6 +62,7 @@ public:
 		memset(value, 0, sizeof(value));
 		memset(cal, 0, sizeof(cal));
 		this->module = sensorModule::off;
+		this->time_till_stale_ms = 10000; // default to 10 seconds
 		// SensorValue's have their own constructor
 		// SensorPins has its own constructor
 	}
@@ -75,6 +78,14 @@ public:
 	}
 	void setName(String _name) {
 		sensorName = _name;
+	}
+
+	// Timeout until the values become stale
+	void setStaleAge_ms(unsigned int _time_till_stale) {
+		time_till_stale_ms = _time_till_stale;
+	}
+	unsigned int getStaleAge_ms(void) {
+		return time_till_stale_ms;
 	}
 
 	// pins
@@ -98,27 +109,35 @@ public:
 	String getModuleName(void);
 
 	// raw values
-	float getRawValue(int index);
-	bool setRawValue(int index, float v);
+	float getRawValue(int _channel);
+	bool setRawValue(int _channel, float v);
+	bool isRawValueStale(int _channel);
+	unsigned int getRawAge(int channel) {
+		return millis() - rawval[channel].last_sample_time_ms;
+	}
 
 	// values
-	bool isValueIndexValid(int index);
-	bool setValueName(int index, String name);
-	String getValueName(int index);
-	bool getValueEnable(int index);
-	bool setValueEnable(int index, bool b);
-	float getValue(int index);
-	bool setValue(int index, float v);
+	bool isValueChannelValid(int channel);
+	bool setValueName(int channel, String name);
+	String getValueName(int channel);
+	bool getValueEnable(int channel);
+	bool setValueEnable(int channel, bool b);
+	float getValue(int channel);
+	bool setValue(int channel, float v);
+	bool isValueStale(int _channel);
+	unsigned int getAge(int channel) {
+		return millis() - value[channel].last_sample_time_ms;
+	}
 	void printValues(void);
 
 	// cals
-	bool isCalIndexValid(int index);
-	bool setCalName(int index, String name);
-	String getCalName(int index);
-	bool getCalEnable(int index);
-	bool setCalEnable(int index, bool b);
-	float getCal(int index);
-	bool setCal(int index, float v);
+	bool isCalChannelValid(int channel);
+	bool setCalName(int channel, String name);
+	String getCalName(int channel);
+	bool getCalEnable(int channel);
+	bool setCalEnable(int channel, bool b);
+	float getCal(int channel);
+	bool setCal(int channel, float v);
 	void printCals(void);
 };
 

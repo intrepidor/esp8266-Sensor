@@ -23,68 +23,90 @@ String Sensor::getModuleName(void) {
 //--------------------------------
 // Values
 //--------------------------------
-bool Sensor::isValueIndexValid(int _index) {
+bool Sensor::isValueChannelValid(int _index) {
 	if (_index >= 0 && _index < VALUE_COUNT) { // FIXME getSensorValueCount()) {
 		return true;
 	}
-	debug.println(DebugLevel::ERROR, nl + "ERROR: isValueIndexValid() index out of bounds");
+	debug.println(DebugLevel::ERROR, nl + "ERROR: isValueChannelValid() channel out of bounds");
 	return false;
 }
 
-bool Sensor::setValueName(int _index, String name) {
-	if (isValueIndexValid(_index)) {
-		value[_index].name = name;
+bool Sensor::isValueStale(int _channel) {
+	if (isValueChannelValid(_channel)) {
+		if ((value[_channel].last_sample_time_ms + time_till_stale_ms) > millis()) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Sensor::setValueName(int _channel, String name) {
+	if (isValueChannelValid(_channel)) {
+		value[_channel].name = name;
 		return true;
 	}
 	return false;
 }
 
-String Sensor::getValueName(int _index) {
-	if (isValueIndexValid(_index)) {
-		return value[_index].name;
+String Sensor::getValueName(int _channel) {
+	if (isValueChannelValid(_channel)) {
+		return value[_channel].name;
 	}
 	return String("");
 }
 
-bool Sensor::getValueEnable(int _index) {
-	if (isValueIndexValid(_index)) {
-		return value[_index].enabled;
+bool Sensor::getValueEnable(int _channel) {
+	if (isValueChannelValid(_channel)) {
+		return value[_channel].enabled;
 	}
 	return false;
 }
 
-bool Sensor::setValueEnable(int _index, bool _b) {
-	if (isValueIndexValid(_index)) {
-		value[_index].enabled = _b;
+bool Sensor::setValueEnable(int _channel, bool _b) {
+	if (isValueChannelValid(_channel)) {
+		value[_channel].enabled = _b;
 	}
 	return false;
 }
 
-float Sensor::getValue(int _index) {
-	if (isValueIndexValid(_index)) {
-		return value[_index].v;
+float Sensor::getValue(int _channel) {
+	if (isValueChannelValid(_channel) && !isValueStale(_channel)) {
+		return value[_channel].v;
 	}
 	return NAN;
 }
 
-bool Sensor::setValue(int _index, float v) {
-	if (isValueIndexValid(_index)) {
-		value[_index].v = v;
+bool Sensor::setValue(int _channel, float v) {
+	if (isValueChannelValid(_channel)) {
+		value[_channel].v = v;
+		value[_channel].last_sample_time_ms = millis();
 		return true;
 	}
 	return false;
 }
 
-float Sensor::getRawValue(int _index) {
-	if (isValueIndexValid(_index)) {
-		return rawval[_index].v;
+///////////////////////////////////////////////////////////////////////////
+
+float Sensor::getRawValue(int _channel) {
+	if (isValueChannelValid(_channel) && !isRawValueStale(_channel)) {
+		return rawval[_channel].v;
 	}
 	return NAN;
 }
 
-bool Sensor::setRawValue(int _index, float v) {
-	if (isValueIndexValid(_index)) {
-		rawval[_index].v = v;
+bool Sensor::isRawValueStale(int _channel) {
+	if (isValueChannelValid(_channel)) {
+		if ((rawval[_channel].last_sample_time_ms + time_till_stale_ms) > millis()) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Sensor::setRawValue(int _channel, float v) {
+	if (isValueChannelValid(_channel)) {
+		rawval[_channel].v = v;
+		rawval[_channel].last_sample_time_ms = millis();
 		return true;
 	}
 	return false;
@@ -103,13 +125,20 @@ void Sensor::printValues(void) {
 			debug.print(DebugLevel::ALWAYS, ",");
 			debug.print(DebugLevel::ALWAYS, value[i].name);
 			debug.print(DebugLevel::ALWAYS, "]=");
-			debug.println(DebugLevel::ALWAYS, getValue(i));
+			debug.print(DebugLevel::ALWAYS, getValue(i));
+
+			debug.print(DebugLevel::ALWAYS, ", Age=");
+			debug.println(DebugLevel::ALWAYS, getAge(i));
+
 			debug.print(DebugLevel::ALWAYS, "   Raw[");
 			debug.print(DebugLevel::ALWAYS, i);
 			debug.print(DebugLevel::ALWAYS, ",");
 			debug.print(DebugLevel::ALWAYS, value[i].name);
 			debug.print(DebugLevel::ALWAYS, "]=");
-			debug.println(DebugLevel::ALWAYS, getRawValue(i));
+			debug.print(DebugLevel::ALWAYS, getRawValue(i));
+			debug.print(DebugLevel::ALWAYS, ", Age=");
+			debug.println(DebugLevel::ALWAYS, getRawAge(i));
+
 		}
 	}
 	debug.println(DebugLevel::ALWAYS, "");
@@ -118,53 +147,53 @@ void Sensor::printValues(void) {
 //--------------------------------
 // Cals
 //--------------------------------
-bool Sensor::isCalIndexValid(int _index) {
-	if (_index >= 0 && _index < getSensorCalCount()) {
+bool Sensor::isCalChannelValid(int _channel) {
+	if (_channel >= 0 && _channel < getSensorCalCount()) {
 		return true;
 	}
-	debug.println(DebugLevel::ERROR, nl + "ERROR: isCalIndexValid() index out of bounds");
+	debug.println(DebugLevel::ERROR, nl + "ERROR: isCalChannelValid() channel out of bounds");
 	return false;
 }
 
-bool Sensor::setCalName(int _index, String name) {
-	if (isCalIndexValid(_index)) {
-		cal[_index].name = name;
+bool Sensor::setCalName(int _channel, String name) {
+	if (isCalChannelValid(_channel)) {
+		cal[_channel].name = name;
 		return true;
 	}
 	return false;
 }
 
-String Sensor::getCalName(int _index) {
-	if (isCalIndexValid(_index)) {
-		return cal[_index].name;
+String Sensor::getCalName(int _channel) {
+	if (isCalChannelValid(_channel)) {
+		return cal[_channel].name;
 	}
 	return String("");
 }
 
-bool Sensor::getCalEnable(int _index) {
-	if (isCalIndexValid(_index)) {
-		return cal[_index].enabled;
+bool Sensor::getCalEnable(int _channel) {
+	if (isCalChannelValid(_channel)) {
+		return cal[_channel].enabled;
 	}
 	return false;
 }
 
-bool Sensor::setCalEnable(int _index, bool _b) {
-	if (isCalIndexValid(_index)) {
-		cal[_index].enabled = _b;
+bool Sensor::setCalEnable(int _channel, bool _b) {
+	if (isCalChannelValid(_channel)) {
+		cal[_channel].enabled = _b;
 	}
 	return false;
 }
 
-float Sensor::getCal(int _index) {
-	if (isCalIndexValid(_index)) {
-		return cal[_index].v;
+float Sensor::getCal(int _channel) {
+	if (isCalChannelValid(_channel)) {
+		return cal[_channel].v;
 	}
 	return NAN;
 }
 
-bool Sensor::setCal(int _index, float v) {
-	if (isCalIndexValid(_index)) {
-		cal[_index].v = v;
+bool Sensor::setCal(int _channel, float v) {
+	if (isCalChannelValid(_channel)) {
+		cal[_channel].v = v;
 		return true;
 	}
 	return false;
