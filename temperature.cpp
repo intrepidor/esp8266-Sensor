@@ -18,7 +18,7 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	// Configure Sensor Parameters
 	setStaleAge_ms(10000);	// timeout of the value if not update for 10 seconds.
 
-	// Configure Channel 1 -- this is always temperature
+	// Channel 1 is always defined like this
 	setCalEnable(TEMP_CAL_INDEX_TEMP_SLOPE, true);
 	setCalName(TEMP_CAL_INDEX_TEMP_SLOPE, "temp_slope");
 	setCalEnable(TEMP_CAL_INDEX_TEMP_OFFSET, true);
@@ -26,30 +26,27 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	setValueEnable(TEMP_VALUE_INDEX_TEMPERATURE, true);
 	setValueName(TEMP_VALUE_INDEX_TEMPERATURE, "tempC");
 
-	// Configure Channel 2 -- this may or may not be used for all sensors
-	//lint -e{788} Many modules are intentionally omitted from the switch. Don't complain about it.
-	switch (m) {
-		case sensorModule::dht11:
-		case sensorModule::dht22:
-			setCalEnable(TEMP_CAL_INDEX_HUMIDITY_SLOPE, true);
-			setCalName(TEMP_CAL_INDEX_HUMIDITY_SLOPE, "humidity_slope");
-			setCalEnable(TEMP_CAL_INDEX_HUMIDITY_OFFSET, true);
-			setCalName(TEMP_CAL_INDEX_HUMIDITY_OFFSET, "humidity_offset");
-			setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, true);
-			setValueName(TEMP_VALUE_INDEX_HUMIDITY, "rH%");
-			break;
-		default:
-			setCalEnable(TEMP_CAL_INDEX_HUMIDITY_SLOPE, false);
-			setCalName(TEMP_CAL_INDEX_HUMIDITY_SLOPE, "not used");
-			setCalEnable(TEMP_CAL_INDEX_HUMIDITY_OFFSET, false);
-			setCalName(TEMP_CAL_INDEX_HUMIDITY_OFFSET, "not used");
-			setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, false);
-			setValueName(TEMP_VALUE_INDEX_HUMIDITY, "not used");
-			break;
+	// Channel 2 defaults -- assume not used
+	setCalEnable(TEMP_CAL_INDEX_HUMIDITY_SLOPE, false);
+	setCalName(TEMP_CAL_INDEX_HUMIDITY_SLOPE, "not used");
+	setCalEnable(TEMP_CAL_INDEX_HUMIDITY_OFFSET, false);
+	setCalName(TEMP_CAL_INDEX_HUMIDITY_OFFSET, "not used");
+	setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, false);
+	setValueName(TEMP_VALUE_INDEX_HUMIDITY, "not used");
+
+	if (m == sensorModule::dht11 || m == sensorModule::dht22 || m == sensorModule::htu21d_si7102) {
+		setCalEnable(TEMP_CAL_INDEX_HUMIDITY_SLOPE, true);
+		setCalName(TEMP_CAL_INDEX_HUMIDITY_SLOPE, "humidity_slope");
+		setCalEnable(TEMP_CAL_INDEX_HUMIDITY_OFFSET, true);
+		setCalName(TEMP_CAL_INDEX_HUMIDITY_OFFSET, "humidity_offset");
+		setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, true);
+		setValueName(TEMP_VALUE_INDEX_HUMIDITY, "rH%");
 	}
 
-	// Th pins used to interact with the sensor
+	// The pins used to interact with the sensor
 	digital_pin = static_cast<uint8_t>(p.digital);
+	sda_pin = static_cast<uint8_t>(p.sda);
+	scl_pin = static_cast<uint8_t>(p.scl);
 
 	// Create and initialize the sensor objects
 	//lint -e{788} Many modules are intentionally omitted from the switch. Don't complain about it.
@@ -68,6 +65,9 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 			ow = new OneWire(digital_pin);	// specify pin on creation
 			dallas = new DallasTemperature(ow);
 			break;
+		case sensorModule::htu21d_si7102:
+
+			break;
 		default:
 			break;  // none of these sensors are supported by this module
 	}
@@ -81,6 +81,8 @@ String TemperatureSensor::getsInfo(String eol) {
 	s += ".ow: " + String((unsigned long) ow) + eol;
 	s += ".dallas: " + String((unsigned long) dallas) + eol;
 	s += ".digital_pin: " + String(digital_pin) + " " + GPIO2Arduino(digital_pin) + eol;
+	s += ".sda_pin: " + String(sda_pin) + " " + GPIO2Arduino(sda_pin) + eol;
+	s += ".scl_pin: " + String(scl_pin) + " " + GPIO2Arduino(scl_pin) + eol;
 	s += ".started: ";
 	if (started) {
 		s += "true";

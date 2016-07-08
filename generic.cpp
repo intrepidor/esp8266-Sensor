@@ -80,6 +80,9 @@ bool GenericSensor::acquire_setup(void) {
 			pinMode(digital_pin, INPUT);
 			started = true;
 		}
+		if (getModule() == sensorModule::off) {
+			started = true;
+		}
 	}
 	return true;
 }

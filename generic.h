@@ -54,6 +54,7 @@ public:
 
 	void setDigital(float v) {
 		setValue(TEMP_VALUE_CHANNEL_DIGITAL, v);
+		setRawValue(TEMP_VALUE_CHANNEL_DIGITAL, v);
 	}
 
 	float getAnalog() {

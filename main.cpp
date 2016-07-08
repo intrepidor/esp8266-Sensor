@@ -2,6 +2,7 @@
 #include <EEPROM.h>
 #include <Esp.h>
 #include <Ticker.h>
+#include <gdbstub.h>
 #include "main.h"
 #include "temperature.h"
 #include "generic.h"
@@ -14,16 +15,6 @@
 #include "debugprint.h"
 #include "thingspeak.h"
 #include "wdog.h"
-//#include <src/internal/gdbstub.h>
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-	void gdbstub_init();
-
-#ifdef __cplusplus
-}
-#endif
 
 // Forward declarations
 extern int task_readpir(unsigned long now);
@@ -221,9 +212,10 @@ void ConfigurePorts(void) {
 								+ getModuleNameString(static_cast<sensorModule>(portType)));
 				//lint -e{30, 142} suppress error due to lint not understanding enum classes
 				if (portNumber >= 0 && portNumber < SENSOR_COUNT) {
+//					for (int ii = 0; ii < MAX_ADJ; ii++) {
+//						sensors[portNumber]->setCalEnable(ii, false);
+//					}
 					switch (portType) {
-//						case static_cast<int>(sensorModule::off):
-//							break;
 						case static_cast<int>(sensorModule::dht11):
 							sensors[portNumber] = new TemperatureSensor();
 							sensors[portNumber]->init(sensorModule::dht11, p);
@@ -254,6 +246,11 @@ void ConfigurePorts(void) {
 							sensors[portNumber]->init(sensorModule::analog_digital, p);
 							sensors[portNumber]->setName("Analog+Digital");
 							break;
+						case static_cast<int>(sensorModule::htu21d_si7102):
+							sensors[portNumber] = new TemperatureSensor;
+							sensors[portNumber]->init(sensorModule::htu21d_si7102, p);
+							sensors[portNumber]->setName("HTU21D/Si7102");
+							break;
 						case static_cast<int>(sensorModule::sonar):
 							break;
 						case static_cast<int>(sensorModule::sound):
@@ -274,9 +271,9 @@ void ConfigurePorts(void) {
 							break;
 						case static_cast<int>(sensorModule::methane):
 							break;
-						case static_cast<int>(sensorModule::gy68):
+						case static_cast<int>(sensorModule::gy68_BMP180):
 							break;
-						case static_cast<int>(sensorModule::gy30):
+						case static_cast<int>(sensorModule::gy30_BH1750FVI):
 							break;
 						case static_cast<int>(sensorModule::lcd1602):
 							break;
@@ -284,12 +281,14 @@ void ConfigurePorts(void) {
 							break;
 						case static_cast<int>(sensorModule::marquee):
 							break;
+						case static_cast<int>(sensorModule::off):
 						default:
-							sensors[portNumber] = new TemperatureSensor();
-							sensors[portNumber]->init(sensorModule::dht11, p);
-							sensors[portNumber]->setName("DHT11");
-							debug.println(DebugLevel::ERROR,
-									"ERROR: ConfigurePorts() - sensorModule not found in switch\n ... Created DHT11 instead.");
+							sensors[portNumber] = new GenericSensor();
+							sensors[portNumber]->init(sensorModule::off, p);
+							sensors[portNumber]->setName("off");
+//							sensors[portNumber] = new TemperatureSensor();
+//							sensors[portNumber]->init(sensorModule::dht11, p);
+//							sensors[portNumber]->setName("DHT11");
 							break;
 					} // switch (portType)
 				} // if (portNumber...)
@@ -476,6 +475,7 @@ void printExtendedMenu(void) {
 	debug.println(DebugLevel::ALWAYS, "MENU EXTENDED -------------");
 	debug.println(DebugLevel::ALWAYS, "E  show data structure in EEPROM");
 	debug.println(DebugLevel::ALWAYS, "M  show data structure in RAM");
+	debug.println(DebugLevel::ALWAYS, "C  write defaults to configuration memory");
 	debug.println(DebugLevel::ALWAYS, "S  show Sensor debug info");
 	debug.println(DebugLevel::ALWAYS, "R  show reason for last reset");
 	debug.println(DebugLevel::ALWAYS, "I  show ESP information");
@@ -605,6 +605,14 @@ int task_serialport_menu(unsigned long now) {
 				debug.println(DebugLevel::ALWAYS, WebPrintInfo(nl));
 				break;
 ///// Extended Menu ////
+			case 'C':
+				dinfo.eraseEEPROM();
+				debug.println(DebugLevel::ALWAYS, nl + "EEPROM Erased.");
+				dinfo.writeDefaultsToDatabase();
+				debug.println(DebugLevel::ALWAYS, nl + "Defaults written to Database.");
+				dinfo.saveDatabaseToEEPROM();
+				debug.println(DebugLevel::ALWAYS, nl + "Database written to EEPROM.");
+				break;
 			case 'D':
 				dinfo.setDebugLevel(static_cast<int>(debug.incrementDebugLevel()));
 				debug.println(DebugLevel::ALWAYS, "Debug Level set to: " + debug.getDebugLevelString());

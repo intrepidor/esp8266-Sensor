@@ -23,8 +23,8 @@ String Sensor::getModuleName(void) {
 //--------------------------------
 // Values
 //--------------------------------
-bool Sensor::isValueChannelValid(int _index) {
-	if (_index >= 0 && _index < VALUE_COUNT) { // FIXME getSensorValueCount()) {
+bool Sensor::isValueChannelValid(int _channel) {
+	if (_channel >= 0 && _channel < VALUE_COUNT) { // FIXME getSensorValueCount()) {
 		return true;
 	}
 	debug.println(DebugLevel::ERROR, nl + "ERROR: isValueChannelValid() channel out of bounds");
@@ -164,10 +164,11 @@ bool Sensor::setCalName(int _channel, String name) {
 }
 
 String Sensor::getCalName(int _channel) {
+	String s("");
 	if (isCalChannelValid(_channel)) {
-		return cal[_channel].name;
+		s = cal[_channel].name;
 	}
-	return String("");
+	return s;
 }
 
 bool Sensor::getCalEnable(int _channel) {

@@ -480,6 +480,7 @@ int ConfigurationChange(void) {
 						//lint -e{26,785} suppress since lint doesn't understand C++11
 						for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
 							if (strcmp(varg.c_str(), sensorList[j].name) == 0) {
+// FIXME there is a function that does the same as these next few lines
 								sensorModule current = dinfo.getPortMode(n1);
 								if (current != sensorList[j].id) {
 									dinfo.setPortMode(n1, sensorList[j].id);

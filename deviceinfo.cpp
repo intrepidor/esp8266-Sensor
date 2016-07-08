@@ -205,70 +205,9 @@ void Device::setPortAdj(int portnum, int adjnum, double v) {
 
 String Device::getPortAdjName(int portnum, int adjnum) {
 	if (portnum >= 0 && portnum < SENSOR_COUNT && adjnum >= 0 && adjnum < MAX_ADJ) {
-		return sensors[portnum]->getCalName(adjnum);
-	}
-	return "Err";
-#if 0
-	// Get the Sensor type
-	sensorModule sm = getPortMode(portnum);
-	//lint -e{744} suppress informationals about missing default statements
-	switch (sm) {
-		case sensorModule::END:
-		break;	// keep "Err"
-		case sensorModule::off:
-		n = "";
-		break;
-		case sensorModule::dht11:
-		case sensorModule::dht22:
-		switch (adjnum) {
-			case TEMP_CAL_INDEX_TEMP_SLOPE:
-			n = "Temp gain";
-			break;
-			case TEMP_CAL_INDEX_TEMP_OFFSET:
-			n = "Temp offset";
-			break;
-			case TEMP_CAL_INDEX_HUMIDITY_SLOPE:
-			n = "rH gain";
-			break;
-			case TEMP_CAL_INDEX_HUMIDITY_OFFSET:
-			n = "rh offset";
-			break;
+		if (sensors[portnum]->getCalEnable(adjnum)) {
+			return sensors[portnum]->getCalName(adjnum);
 		}
-		break;
-		case sensorModule::ds18b20:
-		switch (adjnum) {
-			case TEMP_CAL_INDEX_TEMP_SLOPE:
-			n = "Temp gain";
-			break;
-			case TEMP_CAL_INDEX_TEMP_OFFSET:
-			n = "Temp offset";
-			break;
-			case TEMP_CAL_INDEX_HUMIDITY_SLOPE:
-			n = "not used";
-			break;
-			case TEMP_CAL_INDEX_HUMIDITY_OFFSET:
-			n = "not used";
-			break;
-		}
-		break;
-		case sensorModule::sonar:
-		case sensorModule::sound:
-		case sensorModule::reed:
-		case sensorModule::hcs501:
-		case sensorModule::hcsr505:
-		case sensorModule::dust:
-		case sensorModule::rain:
-		case sensorModule::soil:
-		case sensorModule::soundh:
-		case sensorModule::methane:
-		case sensorModule::gy68:
-		case sensorModule::gy30:
-		case sensorModule::lcd1602:
-		case sensorModule::rfid:
-		case sensorModule::marquee:
-		n = "FIXME";
-		break;
 	}
-	return n;
-#endif
+	return "not used";
 }

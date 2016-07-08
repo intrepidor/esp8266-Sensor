@@ -19,7 +19,15 @@ const unsigned long WATCHDOG_TIMEOUT_MS = 30000; // reset after this many millis
 
 bool stillStartingUp = true;	// if starting up is not set to false within set time, the watchdog resets
 unsigned long startedTime = millis();
-const unsigned long STARTUP_ABORT_TIMEOUT_MS = 60000; // allow 60 seconds to startup up, else reboot
+
+/* Set the maximum startup up time before a reboot. This time
+ * includes what the user spends on a fresh unit to scan
+ * for APs, select one, enter SSID, enter PW, and connect
+ * to the AP. It might take a while to enter a long password,
+ * so the time has to be long enough. But not too long that
+ * the unit becomes unresponsive.
+ */
+const unsigned long STARTUP_ABORT_TIMEOUT_MS = 240000; // 4 minutes
 
 void setStartupComplete(void) {
 	stillStartingUp = false;

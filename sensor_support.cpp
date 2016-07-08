@@ -29,12 +29,18 @@ String getSensorName(sensorModule mode) {
 	return s;
 }
 
+// FIXME -- figure out if both of these two are needed or can they be combined?
+
 //lint -e{26,785} suppress since lint doesn't understand C++11
 t_sensor const sensorList[static_cast<int>(sensorModule::END)] = {
 //
+		// These strings are shown on the configuration web page and
+		//    in text output to the serial port.
 		{ "off", sensorModule::off },
-		// One Digital IO
+		// Generic
 		{ "Digital", sensorModule::digital },
+		{ "Analog", sensorModule::analog },
+		{ "AnalogDigital", sensorModule::analog_digital },
 		// ... Temperature
 		{ "DHT11", sensorModule::dht11 },
 		{ "DHT22", sensorModule::dht22 },
@@ -47,17 +53,16 @@ t_sensor const sensorList[static_cast<int>(sensorModule::END)] = {
 		{ "HCS501", sensorModule::hcs501 },
 		{ "HCSR505", sensorModule::hcsr505 },
 		// ... ANALOG
-		{ "analog", sensorModule::analog },
 		// One Digital IO and/or one ADC
-		{ "Analog+Digital", sensorModule::analog_digital },
 		{ "Dust", sensorModule::dust },
 		{ "Rain", sensorModule::rain },
 		{ "Soil", sensorModule::soil },
 		{ "SoundH", sensorModule::soundh },
 		{ "Methane", sensorModule::methane },
 		// IC2 Devices
-		{ "GY68", sensorModule::gy68 },
-		{ "GY30", sensorModule::gy30 },
+		{ "BMP180", sensorModule::gy68_BMP180 },
+		{ "BH1750FVI", sensorModule::gy30_BH1750FVI },
+		{ "HTU21D_Si7021", sensorModule::htu21d_si7102 },
 		{ "LCD1602", sensorModule::lcd1602 },
 		// Serial
 		{ "RFID", sensorModule::rfid },
@@ -66,15 +71,25 @@ t_sensor const sensorList[static_cast<int>(sensorModule::END)] = {
 String getModuleNameString(sensorModule sm) {
 // FIXME -- this should be a lookup into the sensor[] array, not a repeat of the module names
 	switch (sm) {
-		// 1 digital
+		// Generic
+		case sensorModule::analog:
+			return String("Analog");
+			break;
+		case sensorModule::analog_digital:
+			return String("AnalogDigital");
+			break;
 		case sensorModule::digital:
 			return String("Digital");
 			break;
+			// 1 digital
 		case sensorModule::dht11:
 			return String("DHT11");
 			break;
 		case sensorModule::dht22:
 			return String("DHT22");
+			break;
+		case sensorModule::htu21d_si7102:
+			return String("HTU21D_Si7021");
 			break;
 		case sensorModule::ds18b20:
 			return String("DS18b20");
@@ -94,16 +109,9 @@ String getModuleNameString(sensorModule sm) {
 		case sensorModule::hcsr505:
 			return String("HCSR505");
 			break;
-			// analog
-		case sensorModule::analog:
-			return String("Analog");
-			break;
 			// 1 digital + 1 analog
-		case sensorModule::analog_digital:
-			return String("Analog+Digital");
-			break;
 		case sensorModule::dust:
-			return String("Dust");
+			return String("GP2Y1010");
 			break;
 		case sensorModule::rain:
 			return String("Rain");
@@ -115,14 +123,14 @@ String getModuleNameString(sensorModule sm) {
 			return String("SoundH");
 			break;
 		case sensorModule::methane:
-			return String("Methane");
+			return String("MQ-4");
 			break;
 			// I2C
-		case sensorModule::gy68:
-			return String("GY68");
+		case sensorModule::gy68_BMP180:
+			return String("BMP180");
 			break;
-		case sensorModule::gy30:
-			return String("GY30");
+		case sensorModule::gy30_BH1750FVI:
+			return String("BH1750FVI");
 			break;
 		case sensorModule::lcd1602:
 			return String("LCD1602");

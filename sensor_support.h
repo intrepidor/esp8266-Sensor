@@ -14,28 +14,29 @@ const int CALIB_COUNT = 4;	// should be the same as MAX_ADJ
 //-------------------------------------------------------------------
 enum class sensorModule {
 	off = 0,
-// 1 digital
+// Generic
+	analog_digital,
 	digital,
+	analog,
+	// 1 digital
 	dht11,
 	dht22,
+	htu21d_si7102,
 	ds18b20,
 	sonar,
 	sound,
 	reed,
 	hcs501,
 	hcsr505,
-// 1 analog
-	analog,
 // 1 digital + 1 analog
-	analog_digital,
 	dust,
 	rain,
 	soil,
 	soundh,
 	methane,
 // I2C
-	gy68,
-	gy30,
+	gy68_BMP180, // Barometric pressure sensor
+	gy30_BH1750FVI, // light sensor
 	lcd1602,
 // serial
 	rfid,

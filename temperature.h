@@ -27,6 +27,8 @@ private:
 	OneWire* ow;
 	DallasTemperature* dallas;
 	uint8_t digital_pin;
+	uint8_t sda_pin;
+	uint8_t scl_pin;
 	bool started;
 	int sensorPortNumber;
 public:
@@ -36,6 +38,8 @@ public:
 		dallas = nullptr;
 		sensorPortNumber = 255;
 		digital_pin = 255;
+		sda_pin = 255;
+		scl_pin = 255;
 		started = false;
 	}
 
@@ -45,6 +49,8 @@ public:
 		dallas = nullptr;
 		sensorPortNumber = 255;
 		digital_pin = 255;
+		sda_pin = 255;
+		scl_pin = 255;
 		started = false;
 	}
 
