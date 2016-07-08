@@ -63,41 +63,41 @@ String localIPstr(void) {
 String GPIO2Arduino(uint8_t gpio_pin_number) {
 	switch (gpio_pin_number) {
 		case 0:
-			return F("GPIO0/D3/BootMode");
+			return F("GPIO0/D3/SPI_CS2/FLASH");
 		case 1:
-			return F("GPIO1/D10/TX0");
+			return F("GPIO1/D10/SPI_CS1/TX0");
 		case 2:
-			return F("GPIO2/D4/TX1");
+			return F("GPIO2/D4/SDA/TX1");
 		case 3:
 			return F("GPIO3/D9/RX0");
 		case 4:
-			return F("GPIO4/D2/SDA");
+			return F("GPIO4/D2/PWM3");
 		case 5:
-			return F("GPIO5/D1/SCL");
+			return F("GPIO5/D1");
 		case 6:
-			return F("GPIO6/SDCLK");
+			return F("GPIO6/SDCLK/SCLK");
 		case 7:
-			return F("GPIO7/SDD0");
+			return F("GPIO7/SDD0/MI");
 		case 8:
-			return F("GPIO8/SDD1");
+			return F("GPIO8/SDD1/INT/RX1");
 		case 9:
-			return F("GPIO9/SDD2");
+			return F("GPIO9/D11/SDD2");
 		case 10:
-			return F("GPIO10/SDD3");
+			return F("GPIO10/D12/SDD3");
 		case 11:
-			return F("GPIO11/SDCMD");
+			return F("GPIO11/SDCMD/M0");
 		case 12:
-			return F("GPIO12/D6/MISO");
+			return F("GPIO12/D6/MISO/PWM0");
 		case 13:
-			return F("GPIO13/D7/MOSI");
+			return F("GPIO13/D7/MOSI/CTS0");
 		case 14:
-			return F("GPIO14/D5/SPICLK");
+			return F("GPIO14/D5/SCL/SPICLK/PWM2");
 		case 15:
-			return F("GPIO15/D8/BootMode");
+			return F("GPIO15/D8/SPI_CS/RTS0/PWM1/Boot");
 		case 16:
-			return F("GPIO16/D0/Wakeup");
+			return F("GPIO16/D0/WAKE");
 		case 17:
-			return F("A0");
+			return F("A0(ADC0)");
 		default:
 			return String(gpio_pin_number) + "unknown";
 	}

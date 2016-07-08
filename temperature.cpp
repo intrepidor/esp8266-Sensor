@@ -80,9 +80,20 @@ String TemperatureSensor::getsInfo(String eol) {
 	s += ".dht: " + String((unsigned long) dht) + eol;
 	s += ".ow: " + String((unsigned long) ow) + eol;
 	s += ".dallas: " + String((unsigned long) dallas) + eol;
-	s += ".digital_pin: " + String(digital_pin) + " " + GPIO2Arduino(digital_pin) + eol;
-	s += ".sda_pin: " + String(sda_pin) + " " + GPIO2Arduino(sda_pin) + eol;
-	s += ".scl_pin: " + String(scl_pin) + " " + GPIO2Arduino(scl_pin) + eol;
+	s += ".digital_pin: ";
+	if (dallas || ow) {
+		s += "(" + String(digital_pin) + ") " + GPIO2Arduino(digital_pin) + eol;
+	}
+	else {
+		s += "not used" + eol;
+	}
+	if (true && (!dallas || !ow)) {
+		s += ".sda_pin: (" + String(sda_pin) + ") " + GPIO2Arduino(sda_pin) + eol;
+		s += ".scl_pin: (" + String(scl_pin) + ") " + GPIO2Arduino(scl_pin) + eol;
+	}
+	else {
+		s += ".sda_pin: not used" + eol + ".scl_pin: not used" + eol;
+	}
 	s += ".started: ";
 	if (started) {
 		s += "true";

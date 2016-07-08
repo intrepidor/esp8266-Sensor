@@ -8,6 +8,7 @@
 #ifndef SENSOR_SUPPORT_H_
 #define SENSOR_SUPPORT_H_
 
+// FIXME move these to the .cpp file and replace occurrences with the getter function call.
 const int VALUE_COUNT = 2;
 const int CALIB_COUNT = 4;	// should be the same as MAX_ADJ
 
@@ -49,9 +50,8 @@ struct t_sensor {
 };
 extern t_sensor const sensorList[];
 
-extern String getModuleNameString(sensorModule sm);
 extern int getSensorValueCount(void);
 extern int getSensorCalCount(void);
-extern String getSensorName(sensorModule mode);
+extern String getSensorModuleName(sensorModule mode);
 
 #endif /* SENSOR_SUPPORT_H_ */

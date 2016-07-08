@@ -94,7 +94,7 @@ String Device::databaseToString(String eol) {
 
 void Device::printInfo(void) {
 	for (int i = 0; i < getPortMax(); i++) {
-		debug.println(DebugLevel::ALWAYS, "Port#" + String(i) + ": " + getSensorName(getPortMode(i)));
+		debug.println(DebugLevel::ALWAYS, "Port#" + String(i) + ": " + getSensorModuleName(getPortMode(i)));
 	}
 	debug.println(DebugLevel::ALWAYS, "");
 }

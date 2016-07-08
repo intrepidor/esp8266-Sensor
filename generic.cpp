@@ -50,8 +50,8 @@ void GenericSensor::init(sensorModule m, SensorPins& p) {
 String GenericSensor::getsInfo(String eol) {
 	String s("Class: GenericSensor" + eol);
 
-	s += ".digital_pin: " + String(digital_pin) + " " + GPIO2Arduino(digital_pin) + eol;
-	s += ".analog_pin: " + String(analog_pin) + " " + GPIO2Arduino(analog_pin) + eol;
+	s += ".digital_pin: (" + String(digital_pin) + ") " + GPIO2Arduino(digital_pin) + eol;
+	s += ".analog_pin: (" + String(analog_pin) + ") " + GPIO2Arduino(analog_pin) + eol;
 	s += ".started: ";
 	if (started) {
 		s += "true";

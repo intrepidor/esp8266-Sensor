@@ -58,8 +58,8 @@ const uint8_t DIGITAL_PIN_4 = D7;
 const uint8_t WATCHDOG_WOUT_PIN = D7; // toggle this pin for the external watchdog
 
 const uint8_t ANALOG_PIN = A0;
-const uint8_t I2C_SDA_PIN = SDA;
-const uint8_t I2C_SCL_PIN = SCL;
+const uint8_t I2C_SDA_PIN = 2;// Use number directly since arduino_pins.h for nodemcu has the SDA mapping wrong
+const uint8_t I2C_SCL_PIN = 14; // Use number directly since arduino_pins.h for nodemcu has the SCL mapping wrong
 //--------------------------------------------------
 
 // LED on the ESP board
@@ -209,7 +209,7 @@ void ConfigurePorts(void) {
 				// found the setting
 				debug.println(DebugLevel::INFO,
 						"Configuring Port#" + String(portNumber) + ", name= " + String(name) + ", type="
-								+ getModuleNameString(static_cast<sensorModule>(portType)));
+								+ getSensorModuleName(static_cast<sensorModule>(portType)));
 				//lint -e{30, 142} suppress error due to lint not understanding enum classes
 				if (portNumber >= 0 && portNumber < SENSOR_COUNT) {
 //					for (int ii = 0; ii < MAX_ADJ; ii++) {
@@ -362,7 +362,7 @@ String getsSensorInfo(String eol) {
 	for (int sensor_number = 0; sensor_number < dinfo.getPortMax() && sensor_number < SENSOR_COUNT;
 			sensor_number++) {
 		s += eol + "Port #" + String(sensor_number);
-		s += eol + "Type: " + getSensorName(dinfo.getPortMode(sensor_number));
+		s += eol + "Type: " + getSensorModuleName(dinfo.getPortMode(sensor_number));
 		s += eol + sensors[sensor_number]->getsInfo(eol);
 	}
 	return s;
