@@ -9,6 +9,8 @@
 #define TEMPERATURE_H_
 
 #include <OneWire.h>
+#include <Wire.h>
+#include <SparkFunHTU21D.h>
 #include <DallasTemperature.h>
 #include "DHTa.h"
 #include "sensor.h"
@@ -26,6 +28,7 @@ private:
 	DHT* dht;
 	OneWire* ow;
 	DallasTemperature* dallas;
+	HTU21D* htu21d;
 	uint8_t digital_pin;
 	uint8_t sda_pin;
 	uint8_t scl_pin;
@@ -36,6 +39,7 @@ public:
 		dht = nullptr;
 		ow = nullptr;
 		dallas = nullptr;
+		htu21d = nullptr;
 		sensorPortNumber = 255;
 		digital_pin = 255;
 		sda_pin = 255;
@@ -47,6 +51,7 @@ public:
 		dht = nullptr;
 		ow = nullptr;
 		dallas = nullptr;
+		htu21d = nullptr;
 		sensorPortNumber = 255;
 		digital_pin = 255;
 		sda_pin = 255;

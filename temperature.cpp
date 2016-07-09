@@ -2,6 +2,8 @@
 //#include <Base64.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <Wire.h> // not used, yet, but needed for SparkFunHTU21D.h
+#include <SparkFunHTU21D.h>
 #include "main.h"
 #include "util.h"
 #include "ow_util.h"
@@ -64,9 +66,11 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 		case sensorModule::ds18b20:
 			ow = new OneWire(digital_pin);	// specify pin on creation
 			dallas = new DallasTemperature(ow);
+			// do the begin later since it takes a while
 			break;
 		case sensorModule::htu21d_si7102:
-
+			htu21d = new HTU21D();
+			htu21d->begin();
 			break;
 		default:
 			break;  // none of these sensors are supported by this module
@@ -80,20 +84,10 @@ String TemperatureSensor::getsInfo(String eol) {
 	s += ".dht: " + String((unsigned long) dht) + eol;
 	s += ".ow: " + String((unsigned long) ow) + eol;
 	s += ".dallas: " + String((unsigned long) dallas) + eol;
-	s += ".digital_pin: ";
-	if (dallas || ow) {
-		s += "(" + String(digital_pin) + ") " + GPIO2Arduino(digital_pin) + eol;
-	}
-	else {
-		s += "not used" + eol;
-	}
-	if (true && (!dallas || !ow)) {
-		s += ".sda_pin: (" + String(sda_pin) + ") " + GPIO2Arduino(sda_pin) + eol;
-		s += ".scl_pin: (" + String(scl_pin) + ") " + GPIO2Arduino(scl_pin) + eol;
-	}
-	else {
-		s += ".sda_pin: not used" + eol + ".scl_pin: not used" + eol;
-	}
+	s += ".htu21d: " + String((unsigned long) htu21d) + eol;
+	s += ".digital_pin: (" + String(digital_pin) + ") " + GPIO2Arduino(digital_pin) + eol;
+	s += ".sda_pin: (" + String(sda_pin) + ") " + GPIO2Arduino(sda_pin) + eol;
+	s += ".scl_pin: (" + String(scl_pin) + ") " + GPIO2Arduino(scl_pin) + eol;
 	s += ".started: ";
 	if (started) {
 		s += "true";
@@ -130,51 +124,59 @@ String TemperatureSensor::getsInfo(String eol) {
 }
 
 bool TemperatureSensor::acquire_setup(void) {
-	if (getModule() == sensorModule::ds18b20) {
-		debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", setup() " + String(digital_pin));
-		pinMode(digital_pin, INPUT);
+	debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", setup() " + String(digital_pin));
+	pinMode(digital_pin, INPUT);
+	sensorModule m = getModule();
+	if (m == sensorModule::ds18b20) {
 		if (dallas) {
 			if (!started) {
 				dallas->begin();
-				// do not while-loop waiting for the conversion to finish. Tell the sensor to acquire
-				//    the temperature in acquire1, then when acquire2 runs, read that temperature. The
-				//    only requirement is that the time between acquire1 and acquire2 must be long enough,
-				//    which is 94/188/375/750ms for 9/10/11/12-bit resolution. Make sure the task
-				//    scheduler interleaves the sensors so there is enough delay.
+				// setWaitForConversion=false means the driver will not while-loop waiting for the
+				//    conversion to finish. Tell the sensor to acquire the temperature in acquire1,
+				//    then when acquire2 runs, read that temperature. The only requirement is that
+				//    the time between acquire1 and acquire2 must be long enough, which is
+				//    94/188/375/750ms for 9/10/11/12-bit resolution. Make sure the task scheduler
+				//    interleaves the sensors so there is enough delay.
 				dallas->setWaitForConversion(false);
 				started = true;
 				return true;
 			}
 			return acquire1();
 		}
-		return false;
 	}
-	else {
-		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
+	else if (m == sensorModule::dht11 || m == sensorModule::dht22) {
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht) {
 			dht->read_setup();
 			started = true;
 			return true;
 		}
-		return false;       // error: DHT object not created
 	}
+	else if (m == sensorModule::htu21d_si7102) {
+		if (htu21d) {
+			if (!started) {
+				htu21d->setResolution(USER_REGISTER_RESOLUTION_RH12_TEMP14);
+				started = true;
+			}
+			return acquire1();	// there is no setup for this sensor
+		}
+	}
+	return false;
 }
 
 bool TemperatureSensor::acquire1(void) {
-	if (getModule() == sensorModule::ds18b20) {
+	debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", acquire1() " + String(digital_pin));
+	sensorModule m = getModule();
+	if (m == sensorModule::ds18b20) {
 		if (dallas && started) {
-			debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", acquire1() " + String(digital_pin));
 			// call sensors.requestTemperatures() to issue a global temperature
-			// request to all devices on the bus
-			dallas->requestTemperatures();			// Send the command to get temperatures
+			// request to all devices on the bus. It takes a while, up to 750ms,
+			// so acquire2 will read the value.
+			dallas->requestTemperatures();	// tell all devices on the bus to measure the temperature
 			return true;
 		}
-		else {
-			return false;
-		}
 	}
-	else {
+	else if (m == sensorModule::dht11 || m == sensorModule::dht22) {
 		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht && started) {
@@ -190,20 +192,47 @@ bool TemperatureSensor::acquire1(void) {
 			// raw, non-corrected, values
 			setRawTemperature(t);
 
+			// correct based on calibration values
 			t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
 
-			// Calibration corrected values
+			// store the corrected temperature value
 			setTemperature(t);
 			return true;
 		}
-		return false;       // error: DHT object not created
 	}
+	else if (m == sensorModule::htu21d_si7102) {
+		if (htu21d && started) {
+			float t = htu21d->readTemperature();	// takes up to 100ms
+			yield();
+			debug.println(DebugLevel::DEBUG, "HTU21D Temperature t=" + String(t));
+
+			if (t == 999 || t == 998) {
+				debug.println(DebugLevel::DEBUG, "DEBUG reading HTU21D Temperature - t=" + String(t));
+				// error reading value
+				setTemperature (FP_NAN);
+				setRawTemperature(FP_NAN);
+				return false;
+			}
+			else {
+				// raw, non-corrected, values
+				setRawTemperature(t);
+				// correct based on calibration values
+				t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
+
+				// store the corrected temperature value
+				setTemperature(t);
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 bool TemperatureSensor::acquire2(void) {
-	if (getModule() == sensorModule::ds18b20) {
+	debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", acquire2() " + String(digital_pin));
+	sensorModule m = getModule();
+	if (m == sensorModule::ds18b20) {
 		if (dallas && started) {
-			debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", acquire2() " + String(digital_pin));
 			float t = dallas->getTempCByIndex(0);
 			if (t == DEVICE_DISCONNECTED_C || t < -55 || t > 125) { // device limits are -55C to +125C
 				setTemperature (FP_NAN);
@@ -214,17 +243,15 @@ bool TemperatureSensor::acquire2(void) {
 			// raw, non-corrected, values
 			setRawTemperature(t);
 
+			// correct the measured value based on calibration values
 			t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
 
-			// Calibration corrected values
+			// store the calibration corrected value
 			setTemperature(t);
 			return true;
 		}
-		else {
-			return false;
-		}
 	}
-	else {
+	else if (m == sensorModule::dht11 || m == sensorModule::dht22) {
 		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht && started) {
@@ -240,12 +267,37 @@ bool TemperatureSensor::acquire2(void) {
 			// raw, non-corrected, values
 			setRawHumidity(h);
 
+			// correct the measured value based on the calibration values
 			h = h * getCal(TEMP_CAL_INDEX_HUMIDITY_SLOPE) + getCal(TEMP_CAL_INDEX_HUMIDITY_OFFSET);
 
-			// Calibration corrected values
+			// stored the calibration corrected value
 			setHumidity(h);
 			return true;
 		}
-		return false;       // error: DHT object not created
 	}
+	else if (m == sensorModule::htu21d_si7102) {
+		if (htu21d && started) {
+			float h = htu21d->readHumidity();	// takes up to 100ms
+			debug.println(DebugLevel::DEBUG, "HTU21D Humidity h=" + String(h));
+			yield();
+
+			if (h == 999 || h == 998) {
+				debug.println(DebugLevel::DEBUG, "Error reading HTU21D humidity - h=" + String(h));
+				setRawHumidity (FP_NAN);
+				setHumidity(FP_NAN);
+				return false;   // error: read failed
+			}
+
+			// raw, non-corrected, values
+			setRawHumidity(h);
+
+			// correct the measured value based on the calibration values
+			h = h * getCal(TEMP_CAL_INDEX_HUMIDITY_SLOPE) + getCal(TEMP_CAL_INDEX_HUMIDITY_OFFSET);
+
+			// stored the calibration corrected value
+			setHumidity(h);
+			return true;
+		}
+	}
+	return false;
 }
