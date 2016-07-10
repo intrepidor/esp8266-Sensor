@@ -76,7 +76,7 @@ void WebInit(void) {
 
 	debug.println(DebugLevel::ALWAYS, "");
 	debug.println(DebugLevel::ALWAYS, "Connected to " + WiFi.SSID());
-	debug.print(DebugLevel::ALWAYS, "IP address: ");
+	debug.print(DebugLevel::ALWAYS, F("IP address: "));
 	debug.println(DebugLevel::ALWAYS, WiFi.localIP());
 	kickAllWatchdogs();
 
@@ -90,7 +90,7 @@ void WebInit(void) {
 	kickAllWatchdogs();
 
 	if (MDNS.begin("esp8266")) {
-		debug.println(DebugLevel::ALWAYS, "mDNS started");
+		debug.println(DebugLevel::ALWAYS, F("mDNS started"));
 	}
 	kickAllWatchdogs();
 
@@ -199,7 +199,7 @@ void WebInit(void) {
 
 	kickAllWatchdogs();
 	server.begin();
-	debug.println(DebugLevel::ALWAYS, "Web server started");
+	debug.println(DebugLevel::ALWAYS, F("Web server started"));
 }
 
 void WebWorker(void) {

@@ -243,7 +243,6 @@ bool TemperatureSensor::acquire2(void) {
 }
 
 bool TemperatureSensor::StoreTemperature(float t) {
-	yield();
 	if (t == NAN) {
 		// error reading value
 		setTemperature (NAN);
@@ -264,7 +263,6 @@ bool TemperatureSensor::StoreTemperature(float t) {
 }
 
 bool TemperatureSensor::StoreHumidity(float h) {
-	yield();
 	if (h == NAN) {
 		setRawHumidity (NAN);
 		setHumidity(NAN);

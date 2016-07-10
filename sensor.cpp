@@ -27,7 +27,7 @@ bool Sensor::isValueChannelValid(int _channel) {
 	if (_channel >= 0 && _channel < VALUE_COUNT) { // FIXME getSensorValueCount()) {
 		return true;
 	}
-	debug.println(DebugLevel::ERROR, nl + "ERROR: isValueChannelValid() channel out of bounds");
+	debug.println(DebugLevel::ERROR, F("ERROR: isValueChannelValid() channel out of bounds"));
 	return false;
 }
 
@@ -113,30 +113,30 @@ bool Sensor::setRawValue(int _channel, float v) {
 }
 
 void Sensor::printValues(void) {
-	debug.print(DebugLevel::ALWAYS, "Sensor: ");
+	debug.print(DebugLevel::ALWAYS, F("Sensor: "));
 	if (getName().length() > 0) {
 		debug.print(DebugLevel::ALWAYS, getName());
 	}
 	debug.println(DebugLevel::ALWAYS, "");
 	for (int i = 0; i < getSensorValueCount(); i++) {
 		if (value[i].enabled) {
-			debug.print(DebugLevel::ALWAYS, "   Val[");
+			debug.print(DebugLevel::ALWAYS, F("   Val["));
 			debug.print(DebugLevel::ALWAYS, i);
-			debug.print(DebugLevel::ALWAYS, ",");
+			debug.print(DebugLevel::ALWAYS, F(","));
 			debug.print(DebugLevel::ALWAYS, value[i].name);
-			debug.print(DebugLevel::ALWAYS, "]=");
+			debug.print(DebugLevel::ALWAYS, F("]="));
 			debug.print(DebugLevel::ALWAYS, getValue(i));
 
-			debug.print(DebugLevel::ALWAYS, ", Age=");
+			debug.print(DebugLevel::ALWAYS, F(", Age="));
 			debug.println(DebugLevel::ALWAYS, getAge(i));
 
-			debug.print(DebugLevel::ALWAYS, "   Raw[");
+			debug.print(DebugLevel::ALWAYS, F("   Raw["));
 			debug.print(DebugLevel::ALWAYS, i);
-			debug.print(DebugLevel::ALWAYS, ",");
+			debug.print(DebugLevel::ALWAYS, F(","));
 			debug.print(DebugLevel::ALWAYS, value[i].name);
-			debug.print(DebugLevel::ALWAYS, "]=");
+			debug.print(DebugLevel::ALWAYS, F("]="));
 			debug.print(DebugLevel::ALWAYS, getRawValue(i));
-			debug.print(DebugLevel::ALWAYS, ", Age=");
+			debug.print(DebugLevel::ALWAYS, F(", Age="));
 			debug.println(DebugLevel::ALWAYS, getRawAge(i));
 
 		}
@@ -151,7 +151,7 @@ bool Sensor::isCalChannelValid(int _channel) {
 	if (_channel >= 0 && _channel < getSensorCalCount()) {
 		return true;
 	}
-	debug.println(DebugLevel::ERROR, nl + "ERROR: isCalChannelValid() channel out of bounds");
+	debug.println(DebugLevel::ERROR, F("ERROR: isCalChannelValid() channel out of bounds"));
 	return false;
 }
 
@@ -201,18 +201,18 @@ bool Sensor::setCal(int _channel, float v) {
 }
 
 void Sensor::printCals(void) {
-	debug.print(DebugLevel::ALWAYS, "Sensor: ");
+	debug.print(DebugLevel::ALWAYS, F("Sensor: "));
 	if (getName().length() > 0) {
 		debug.print(DebugLevel::ALWAYS, getName());
 	}
 	debug.println(DebugLevel::ALWAYS, "");
 	for (int i = 0; i < getSensorCalCount(); i++) {
 		if (cal[i].enabled) {
-			debug.print(DebugLevel::ALWAYS, "   Cal[");
+			debug.print(DebugLevel::ALWAYS, F("   Cal["));
 			debug.print(DebugLevel::ALWAYS, i);
-			debug.print(DebugLevel::ALWAYS, ",");
+			debug.print(DebugLevel::ALWAYS, F(","));
 			debug.print(DebugLevel::ALWAYS, cal[i].name);
-			debug.print(DebugLevel::ALWAYS, "]=");
+			debug.print(DebugLevel::ALWAYS, F("]="));
 			debug.println(DebugLevel::ALWAYS, getCal(i));
 		}
 	}

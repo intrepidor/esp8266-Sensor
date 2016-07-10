@@ -19,11 +19,13 @@ void Device::restoreDatabaseFromEEPROM(void) {
 		*(pp + addr) = EEPROM.read(static_cast<int>(addr));
 	}
 	eeprom_is_dirty = false;
-	debug.println(DebugLevel::DEBUGMORE, nl + "Data copied from EEPROM into RAM data structure");
+	debug.println(DebugLevel::DEBUGMORE, nl);
+	debug.println(DebugLevel::DEBUGMORE, F("Data copied from EEPROM into RAM data structure"));
 	// Look for the EEPROM signature. Failure to find this means the EEPROM data was
 	//    never stored, such as the case with a freshly programmed micro.
 	if (dinfo.db.end_of_eeprom_signature != EEPROM_SIGNATURE) {
-		debug.println(DebugLevel::ALWAYS, nl + "EEPROM data was not valid - setting to defaults");
+		debug.println(DebugLevel::ALWAYS, nl);
+		debug.println(DebugLevel::ALWAYS, F("EEPROM data was not valid - setting to defaults"));
 		dinfo.writeDefaultsToDatabase();
 	}
 }
@@ -37,13 +39,15 @@ bool Device::saveDatabaseToEEPROM(void) {
 	}
 
 	if (EEPROM.commit()) {
-		debug.println(DebugLevel::DEBUGMORE, nl + "Write from RAM data structure to EEPROM ok.");
+		debug.println(DebugLevel::DEBUGMORE, nl);
+		debug.println(DebugLevel::DEBUGMORE, F("Write from RAM data structure to EEPROM ok."));
 		restoreDatabaseFromEEPROM();
 		eeprom_is_dirty = false;
 		return true;
 	}
 	else {
-		debug.println(DebugLevel::ERROR, nl + "ERROR: Write to EEPROM failed!");
+		debug.println(DebugLevel::ERROR, nl);
+		debug.println(DebugLevel::ERROR, F("ERROR: Write to EEPROM failed!"));
 		return false; // signal error
 	}
 }
@@ -54,13 +58,15 @@ bool Device::eraseEEPROM(void) {
 	}
 
 	if (EEPROM.commit()) {
-		debug.println(DebugLevel::DEBUG, nl + "EEPROM Cleared.");
+		debug.println(DebugLevel::DEBUG, nl);
+		debug.println(DebugLevel::DEBUG, F("EEPROM Cleared."));
 		restoreDatabaseFromEEPROM();
 		eeprom_is_dirty = true;
 		return true;
 	}
 	else {
-		debug.println(DebugLevel::ERROR, nl + "ERROR: EEPROM Clear failed.");
+		debug.println(DebugLevel::ERROR, nl);
+		debug.println(DebugLevel::ERROR, F("ERROR: EEPROM Clear failed."));
 		return false; // signal error
 	}
 	return false;

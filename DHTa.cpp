@@ -243,7 +243,6 @@ boolean DHT::read(bool force) {
 //	Serial.println(
 //			String(millis()) + " DHT::read() PHASE3\t\tsince start: " + (millis() - currenttime) + " ms");
 
-	yield(); // give something else a chance to run
 //	Serial.println(
 //			String(millis()) + " DHT::read() PHASE4\t\tsince start: " + (millis() - currenttime) + " ms");
 
@@ -269,12 +268,11 @@ boolean DHT::read(bool force) {
 		// Else high cycles are less than (or equal to, a weird case) the 50us low
 		// cycle count so this must be a zero.  Nothing needs to be changed in the
 		// stored data.
-		yield(); // don't hog the CPU
 	}
 //	Serial.println(
 //			String(millis()) + " DHT::read() PHASE5\t\tsince start: " + (millis() - currenttime) + " ms");
 
-//	DEBUG_PRINTLN(F("Received:"));
+//  DEBUG_PRINTLN(F("Received:"));
 //	DEBUG_PRINT(data[0], HEX);
 //	DEBUG_PRINT(F(", "));
 //	DEBUG_PRINT(data[1], HEX);

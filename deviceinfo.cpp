@@ -17,7 +17,7 @@ unsigned int validate_string(char* str, const char* const def, unsigned int size
 	if (str && def) {
 		if (size < strlen(str)) {
 			debug.println(DebugLevel::DEBUG,
-					"ERROR: validate_string() string passed by pointer is shorter than the passed size value");
+					("ERROR: validate_string() string passed by pointer is shorter than the passed size value"));
 		}
 
 		str[size - 1] = 0;
@@ -36,7 +36,7 @@ unsigned int validate_string(char* str, const char* const def, unsigned int size
 	}
 	else {
 		debug.println(DebugLevel::DEBUG,
-				"ERROR: validate_string() value for either/both def* or str* is null");
+				("ERROR: validate_string() value for either/both def* or str* is null"));
 	}
 	return 0;
 }
@@ -109,7 +109,8 @@ void Device::setcDeviceName(const char* newname) {
 		strncpy(db.device.name, newname, sizeof(db.device.name) - 1);
 	}
 	else {
-		debug.println(DebugLevel::ERROR, nl + "ERROR: setcDeviceName() - null value");
+		debug.print(DebugLevel::ERROR, nl);
+		debug.println(DebugLevel::ERROR, ("ERROR: setcDeviceName() - null value"));
 	}
 }
 
@@ -136,7 +137,7 @@ void Device::setPortMode(int portnum, sensorModule _mode) {
 		db.port[portnum].mode = _mode;
 	}
 	else {
-		debug.println(DebugLevel::ERROR, nl + "ERROR: Device::setPortMode() - invalid port");
+		debug.println(DebugLevel::ERROR, ("ERROR: Device::setPortMode() - invalid port"));
 	}
 }
 
@@ -149,11 +150,11 @@ String Device::getModeStr(int portnum) {
 			s = String(String(m) + ":" + String(sensorList[m].name));
 		}
 		else {
-			debug.print(DebugLevel::ERROR, nl + "ERROR: Device::getModeStr() - invalid mode");
+			debug.print(DebugLevel::ERROR, ("ERROR: Device::getModeStr() - invalid mode"));
 		}
 	}
 	else {
-		debug.println(DebugLevel::ERROR, nl + "ERROR: Device::getModeStr() - invalid port");
+		debug.println(DebugLevel::ERROR, ("ERROR: Device::getModeStr() - invalid port"));
 	}
 	return s;
 }
@@ -163,7 +164,7 @@ void Device::setPortName(int portnum, String _n) {
 		strncpy(db.port[portnum].name, _n.c_str(), sizeof(db.port[portnum].name) - 1);
 	}
 	else {
-		debug.println(DebugLevel::ERROR, nl + "ERROR: Device::setPortName() - invalid port");
+		debug.println(DebugLevel::ERROR, ("ERROR: Device::setPortName() - invalid port"));
 	}
 }
 
@@ -172,7 +173,7 @@ String Device::getPortName(int portnum) {
 		return this->db.port[portnum].name;
 	}
 	else {
-		debug.println(DebugLevel::ERROR, nl + "ERROR: Device::getPortName() - invalid port");
+		debug.println(DebugLevel::ERROR, ("ERROR: Device::getPortName() - invalid port"));
 	}
 	return String("undefined");
 }
@@ -184,11 +185,11 @@ double Device::getPortAdj(int portnum, int adjnum) {
 			return this->db.port[portnum].adj[adjnum];
 		}
 		else {
-			debug.println(DebugLevel::ERROR, nl + "ERROR: Device::getPortAdj() - invalid adj index");
+			debug.println(DebugLevel::ERROR, ("ERROR: Device::getPortAdj() - invalid adj index"));
 		}
 	}
 	else {
-		debug.println(DebugLevel::ERROR, nl + "ERROR: Device::getPortAdj() - invalid port");
+		debug.println(DebugLevel::ERROR, ("ERROR: Device::getPortAdj() - invalid port"));
 	}
 	return 0.0;
 }
@@ -199,11 +200,11 @@ void Device::setPortAdj(int portnum, int adjnum, double v) {
 			db.port[portnum].adj[adjnum] = v;
 		}
 		else {
-			debug.println(DebugLevel::ERROR, nl + "ERROR: Device::setPortAdj() - invalid adj index");
+			debug.println(DebugLevel::ERROR, ("ERROR: Device::setPortAdj() - invalid adj index"));
 		}
 	}
 	else {
-		debug.println(DebugLevel::ERROR, nl + "ERROR: Device::setPortAdj() - invalid port");
+		debug.println(DebugLevel::ERROR, ("ERROR: Device::setPortAdj() - invalid port"));
 	}
 }
 

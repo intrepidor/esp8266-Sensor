@@ -102,7 +102,7 @@ void setup(void) {
 //	pp_soft_wdt_stop();
 //	reset_config();
 	kickExternalWatchdog(); // The first kick calls setup and starts the external and software watchdogs.
-	Serial.print("Starting ... ");
+	Serial.print(F("Starting ... "));
 	Serial.println(millis());
 
 // Start the Debugger
@@ -119,7 +119,7 @@ void setup(void) {
 	 */
 	pinMode(I2C_SDA_PIN, INPUT);
 	if (digitalRead(I2C_SDA_PIN) == 0) {
-		Serial.println("SDA held low -- erasing the EEPROM");
+		Serial.println(F("SDA held low -- erasing the EEPROM"));
 		dinfo.eraseEEPROM();
 	}
 	kickAllWatchdogs();
@@ -208,9 +208,8 @@ void ConfigurePorts(void) {
 				p.scl = I2C_SCL_PIN;
 				break;
 			default:
-				debug.println(DebugLevel::ERROR,
-						"ERROR: ConfigurePorts() - port number out of range in switch -"
-								+ String(portNumber));
+				debug.print(DebugLevel::ERROR, F("ERROR: ConfigurePorts() - port number out of range -"));
+				debug.println(DebugLevel::ERROR, portNumber);
 				break;
 		}
 
@@ -303,15 +302,12 @@ void ConfigurePorts(void) {
 							sensors[portNumber] = new GenericSensor();
 							sensors[portNumber]->init(sensorModule::off, p);
 							sensors[portNumber]->setName("off");
-//							sensors[portNumber] = new TemperatureSensor();
-//							sensors[portNumber]->init(sensorModule::dht11, p);
-//							sensors[portNumber]->setName("DHT11");
 							break;
 					} // switch (portType)
 				} // if (portNumber...)
 				else {
-					debug.println(DebugLevel::ERROR,
-							"ERROR: ConfigurePort() - portNumber out of range - " + String(portNumber));
+					debug.print(DebugLevel::ERROR, F("ERROR: ConfigurePort() - portNumber out of range - "));
+					debug.println(DebugLevel::ERROR, portNumber);
 				}
 			} // if (portMode ...)
 		} // for (portType ...)
@@ -322,7 +318,7 @@ void ConfigurePorts(void) {
 	CopyCalibrationDataToSensors();
 }
 
-void CopyCalibrationDataToSensors(void) {
+void ICACHE_FLASH_ATTR CopyCalibrationDataToSensors(void) {
 // Note: This routine assumes the SENSOR_COUNT and getPortMax() are identical values
 	for (int idx = 0; idx < SENSOR_COUNT && idx < dinfo.getPortMax(); idx++) {
 		if (sensors[idx] /* make sure it exists*/) {
@@ -335,7 +331,7 @@ void CopyCalibrationDataToSensors(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-String getUptime(void) {
+String ICACHE_FLASH_ATTR getUptime(void) {
 	static const unsigned long MS_PER_SECOND = (1000);
 	static const unsigned long MS_PER_MINUTE = (MS_PER_SECOND * 60 /*times 60 seconds*/);
 	static const unsigned long MS_PER_HOUR = (MS_PER_MINUTE * 60 /*times 60 minutes*/);
@@ -359,7 +355,7 @@ String getUptime(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-String getsDeviceInfo(String eol) {
+String ICACHE_FLASH_ATTR getsDeviceInfo(String eol) {
 	String s(ProgramInfo + eol);
 	s += "Hostname: " + WiFi.hostname() + eol;
 	s += "Device MAC: " + WiFi.macAddress() + eol;
@@ -374,7 +370,7 @@ String getsDeviceInfo(String eol) {
 	return s;
 }
 
-String getsSensorInfo(String eol) {
+String ICACHE_FLASH_ATTR getsSensorInfo(String eol) {
 	String s("");
 	for (int sensor_number = 0; sensor_number < dinfo.getPortMax() && sensor_number < SENSOR_COUNT;
 			sensor_number++) {
@@ -390,7 +386,7 @@ void printInfo(void) {
 // Print useful Information
 	debug.println(DebugLevel::ALWAYS, getsDeviceInfo(nl));
 	debug.println(DebugLevel::ALWAYS, getsThingspeakInfo(nl));
-	debug.println(DebugLevel::ALWAYS, "== Port Information ==");
+	debug.println(DebugLevel::ALWAYS, F("== Port Information =="));
 	dinfo.printInfo();
 }
 
@@ -421,11 +417,12 @@ int task_acquire(unsigned long now) {
 
 	// Just in case, double check so a out of bounds error does not occur.
 	if (subtask_number >= ACQUIRES_PER_SENSOR) {
-		debug.println(DebugLevel::ALWAYS, "ERROR in task_acquire(): subacquire_number>=ACQUIRES_PER_SENSOR");
+		debug.println(DebugLevel::ALWAYS,
+				F("ERROR in task_acquire(): subacquire_number>=ACQUIRES_PER_SENSOR"));
 		next_acquire_number = -1;
 	}
 	if (sensor_number >= SENSOR_COUNT) {
-		debug.println(DebugLevel::ALWAYS, "ERROR in task_acquire(): sensor_number>=SENSOR_COUNT");
+		debug.println(DebugLevel::ALWAYS, F("ERROR in task_acquire(): sensor_number>=SENSOR_COUNT"));
 		next_acquire_number = -1;
 	}
 
@@ -436,34 +433,34 @@ int task_acquire(unsigned long now) {
 	if (next_acquire_number >= 0) {
 		switch (subtask_number) {
 			case 0:
-				debug.println(DebugLevel::TIMINGS,
-						String(_now) + " sensors[" + String(sensor_number) + "]->acquire_setup START");
+				debug.print(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(sensor_number));
+				debug.println(DebugLevel::TIMINGS, F("]->acquire_setup START"));
 				sensors[sensor_number]->acquire_setup(); //lint !e661
 				_then = millis();
 				_dur = _then - _now;
-				debug.println(DebugLevel::TIMINGS,
-						String(_then) + " sensors[" + String(sensor_number) + "]->acquire_setup DONE"
-								+ "\t\ttime=" + String(_dur));
+				debug.print(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensor_number));
+				debug.print(DebugLevel::TIMINGS, F("]->acquire_setup DONE \t\ttime="));
+				debug.println(DebugLevel::TIMINGS, _dur);
 				break;
 			case 1:
-				debug.println(DebugLevel::TIMINGS,
-						String(_now) + " sensors[" + String(sensor_number) + "]->acquire1 START");
+				debug.print(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(sensor_number));
+				debug.println(DebugLevel::TIMINGS, F("]->acquire1 START"));
 				sensors[sensor_number]->acquire1(); //lint !e661
 				_then = millis();
 				_dur = _then - _now;
-				debug.println(DebugLevel::TIMINGS,
-						String(_then) + " sensors[" + String(sensor_number) + "]->acquire1 DONE" + "\t\ttime="
-								+ String(_dur));
+				debug.print(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensor_number));
+				debug.print(DebugLevel::TIMINGS, F("]->acquire1 DONE \t\ttime="));
+				debug.println(DebugLevel::TIMINGS, _dur);
 				break;
 			case 2:
-				debug.println(DebugLevel::TIMINGS,
-						String(_now) + " sensors[" + String(sensor_number) + "]->acquire2 START");
+				debug.print(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(sensor_number));
+				debug.println(DebugLevel::TIMINGS, F("]->acquire2 START"));
 				sensors[sensor_number]->acquire2(); //lint !e661
 				_then = millis();
 				_dur = _then - _now;
-				debug.println(DebugLevel::TIMINGS,
-						String(_then) + " sensors[" + String(sensor_number) + "]->acquire2 DONE" + "\t\ttime="
-								+ String(_dur));
+				debug.print(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensor_number));
+				debug.print(DebugLevel::TIMINGS, F("]->acquire2 DONE \t\ttime="));
+				debug.println(DebugLevel::TIMINGS, _dur);
 				break;
 			default:
 				break;
@@ -500,31 +497,31 @@ int task_flashled(unsigned long now) {
 }
 
 void printMenu(void) {
-	debug.println(DebugLevel::ALWAYS, "MENU ----------------------");
-	debug.println(DebugLevel::ALWAYS, "?  show this menu");
-	debug.println(DebugLevel::ALWAYS, "i  show High-level configuration");
-	debug.println(DebugLevel::ALWAYS, "c  show calibration values");
-	debug.println(DebugLevel::ALWAYS, "m  show measured values");
-	debug.println(DebugLevel::ALWAYS, "r  show chart of values (raw)");
-	debug.println(DebugLevel::ALWAYS, "s  show chart of values");
-	debug.println(DebugLevel::ALWAYS, "w  show web URLs");
-	debug.println(DebugLevel::ALWAYS, "z  Extended menu");
+	debug.println(DebugLevel::ALWAYS, F("MENU ----------------------"));
+	debug.println(DebugLevel::ALWAYS, F("?  show this menu"));
+	debug.println(DebugLevel::ALWAYS, F("i  show High-level configuration"));
+	debug.println(DebugLevel::ALWAYS, F("c  show calibration values"));
+	debug.println(DebugLevel::ALWAYS, F("m  show measured values"));
+	debug.println(DebugLevel::ALWAYS, F("r  show chart of values (raw)"));
+	debug.println(DebugLevel::ALWAYS, F("s  show chart of values"));
+	debug.println(DebugLevel::ALWAYS, F("w  show web URLs"));
+	debug.println(DebugLevel::ALWAYS, F("z  Extended menu"));
 	debug.println(DebugLevel::ALWAYS, "");
 }
 
 void printExtendedMenu(void) {
-	debug.println(DebugLevel::ALWAYS, "MENU EXTENDED -------------");
-	debug.println(DebugLevel::ALWAYS, "E  show data structure in EEPROM");
-	debug.println(DebugLevel::ALWAYS, "M  show data structure in RAM");
-	debug.println(DebugLevel::ALWAYS, "C  write defaults to configuration memory");
-	debug.println(DebugLevel::ALWAYS, "S  show Sensor debug info");
-	debug.println(DebugLevel::ALWAYS, "R  show reason for last reset");
-	debug.println(DebugLevel::ALWAYS, "I  show ESP information");
-	debug.println(DebugLevel::ALWAYS, "X  EspClass::reset()");
-	debug.println(DebugLevel::ALWAYS, "Y  EspClass::restart()");
-	debug.println(DebugLevel::ALWAYS, "W  Test Watchdog (block here forever)");
-	debug.println(DebugLevel::ALWAYS,
-			"D  [" + debug.getDebugLevelString() + "] Debug level for logging to serial port");
+	debug.println(DebugLevel::ALWAYS, F("MENU EXTENDED -------------"));
+	debug.println(DebugLevel::ALWAYS, F("E  show data structure in EEPROM"));
+	debug.println(DebugLevel::ALWAYS, F("M  show data structure in RAM"));
+	debug.println(DebugLevel::ALWAYS, F("C  write defaults to configuration memory"));
+	debug.println(DebugLevel::ALWAYS, F("S  show Sensor debug info"));
+	debug.println(DebugLevel::ALWAYS, F("R  show reason for last reset"));
+	debug.println(DebugLevel::ALWAYS, F("I  show ESP information"));
+	debug.println(DebugLevel::ALWAYS, F("X  EspClass::reset()"));
+	debug.println(DebugLevel::ALWAYS, F("Y  EspClass::restart()"));
+	debug.println(DebugLevel::ALWAYS, F("W  Test Watchdog (block here forever)"));
+	debug.print(DebugLevel::ALWAYS, "D  [" + debug.getDebugLevelString());
+	debug.println(DebugLevel::ALWAYS, F("] Debug level for logging to serial port"));
 	debug.println(DebugLevel::ALWAYS, "");
 }
 
@@ -557,15 +554,15 @@ int task_serialport_menu(unsigned long now) {
 				// Display the heading
 				if (raw_need_new_heading) {
 					raw_need_new_heading = false;
-					debug.print(DebugLevel::ALWAYS, "COUNT   | PIR ");
+					debug.print(DebugLevel::ALWAYS, F("COUNT   | PIR "));
 					for (int s = 0; s < SENSOR_COUNT; s++) {
 						if (sensors[s]) {
 							for (int v = 0; v < getSensorValueCount(); v++) {
 								if (sensors[s]->getValueEnable(v)) {
+									debug.print(DebugLevel::ALWAYS, F("| "));
 									debug.print(DebugLevel::ALWAYS,
-											"| "
-													+ padEndOfString("Raw/" + sensors[s]->getValueName(v), 12,
-															' ', true));
+											padEndOfString("Raw/" + sensors[s]->getValueName(v), 12, ' ',
+													true));
 								}
 							}
 						}
@@ -579,13 +576,13 @@ int task_serialport_menu(unsigned long now) {
 					if (sensors[s]) {
 						for (int v = 0; v < getSensorValueCount(); v++) {
 							if (sensors[s]->getValueEnable(v)) {
+								debug.print(DebugLevel::ALWAYS, F("| "));
 								debug.print(DebugLevel::ALWAYS,
-										"| "
-												+ padEndOfString(
-														String(
-																String(sensors[s]->getRawValue(v)) + "/"
-																		+ String(sensors[s]->getValue(v))),
-														12, ' ', true));
+										padEndOfString(
+												String(
+														String(sensors[s]->getRawValue(v)) + "/"
+																+ String(sensors[s]->getValue(v))), 12, ' ',
+												true));
 							}
 						}
 					}
@@ -596,7 +593,7 @@ int task_serialport_menu(unsigned long now) {
 				// Display the heading
 				if (need_new_heading) {
 					need_new_heading = false;
-					debug.print(DebugLevel::ALWAYS, "COUNT   | PIR ");
+					debug.print(DebugLevel::ALWAYS, F("COUNT   | PIR "));
 					for (int s = 0; s < SENSOR_COUNT; s++) {
 						if (sensors[s]) {
 							debug.print(DebugLevel::ALWAYS, "| ");
@@ -615,7 +612,7 @@ int task_serialport_menu(unsigned long now) {
 				debug.print(DebugLevel::ALWAYS, padEndOfString(String(PIRcount), 4, ' '));
 				for (int s = 0; s < SENSOR_COUNT; s++) {
 					if (sensors[s]) {
-						debug.print(DebugLevel::ALWAYS, "| ");
+						debug.print(DebugLevel::ALWAYS, F("| "));
 						for (int v = 0; v < getSensorValueCount(); v++) {
 							if (sensors[s]->getValueEnable(v)) {
 								debug.print(DebugLevel::ALWAYS,
@@ -627,7 +624,7 @@ int task_serialport_menu(unsigned long now) {
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'c':
-				debug.println(DebugLevel::ALWAYS, "=== Calibration Data ===");
+				debug.println(DebugLevel::ALWAYS, F("=== Calibration Data ==="));
 				for (int i = 0; i < SENSOR_COUNT; i++) {
 					if (sensors[i]) {
 						sensors[i]->printCals();
@@ -635,7 +632,7 @@ int task_serialport_menu(unsigned long now) {
 				}
 				break;
 			case 'm':
-				debug.println(DebugLevel::ALWAYS, "=== Value Data ===");
+				debug.println(DebugLevel::ALWAYS, F("=== Value Data ==="));
 				for (int i = 0; i < SENSOR_COUNT; i++) {
 					if (sensors[i]) {
 						sensors[i]->printValues();
@@ -648,11 +645,14 @@ int task_serialport_menu(unsigned long now) {
 ///// Extended Menu ////
 			case 'C':
 				dinfo.eraseEEPROM();
-				debug.println(DebugLevel::ALWAYS, nl + "EEPROM Erased.");
+				debug.print(DebugLevel::ALWAYS, nl);
+				debug.println(DebugLevel::ALWAYS, F("EEPROM Erased."));
 				dinfo.writeDefaultsToDatabase();
-				debug.println(DebugLevel::ALWAYS, nl + "Defaults written to Database.");
+				debug.print(DebugLevel::ALWAYS, nl);
+				debug.println(DebugLevel::ALWAYS, F("Defaults written to Database."));
 				dinfo.saveDatabaseToEEPROM();
-				debug.println(DebugLevel::ALWAYS, nl + "Database written to EEPROM.");
+				debug.print(DebugLevel::ALWAYS, nl);
+				debug.println(DebugLevel::ALWAYS, F("Database written to EEPROM."));
 				break;
 			case 'D':
 				dinfo.setDebugLevel(static_cast<int>(debug.incrementDebugLevel()));
@@ -660,82 +660,107 @@ int task_serialport_menu(unsigned long now) {
 				if (eeprom_is_dirty) dinfo.saveDatabaseToEEPROM();
 				break;
 			case 'E': // Read the EEPROM into the RAM data structure, then dump the contents
-				debug.println(DebugLevel::ALWAYS, nl + "=== Data in EEPROM ===");
+				debug.print(DebugLevel::ALWAYS, nl);
+				debug.println(DebugLevel::ALWAYS, F("=== Data in EEPROM ==="));
 				dinfo.restoreDatabaseFromEEPROM();
 				debug.println(DebugLevel::ALWAYS, dinfo.databaseToString(nl.c_str()));
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'M': // Just dump the contents of the RAM data structure
-				debug.println(DebugLevel::ALWAYS, nl + "=== Data in RAM ===");
+				debug.print(DebugLevel::ALWAYS, nl);
+				debug.println(DebugLevel::ALWAYS, F("=== Data in RAM ==="));
 				debug.println(DebugLevel::ALWAYS, dinfo.databaseToString(nl.c_str()));
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'I':
-				debug.println(DebugLevel::ALWAYS, "CycleCount:\t\t" + String(ESP.getCycleCount()));
-				debug.println(DebugLevel::ALWAYS, "Vcc:\t\t\t" + String(ESP.getVcc()));
-				debug.print(DebugLevel::ALWAYS, "FreeHeap:\t\t");
+				debug.print(DebugLevel::ALWAYS, F("CycleCount:\t\t"));
+				debug.println(DebugLevel::ALWAYS, String(ESP.getCycleCount()));
+
+				debug.print(DebugLevel::ALWAYS, F("Vcc:\t\t\t"));
+				debug.println(DebugLevel::ALWAYS, String(ESP.getVcc()));
+
+				debug.print(DebugLevel::ALWAYS, F("FreeHeap:\t\t"));
 				debug.println(DebugLevel::ALWAYS, ESP.getFreeHeap(), HEX);
-				debug.print(DebugLevel::ALWAYS, "ChipId:\t\t\t");
+
+				debug.print(DebugLevel::ALWAYS, F("ChipId:\t\t\t"));
 				debug.println(DebugLevel::ALWAYS, ESP.getChipId(), HEX);
-				debug.println(DebugLevel::ALWAYS, "SdkVersion:\t\t" + String(ESP.getSdkVersion()));
-				debug.println(DebugLevel::ALWAYS, "BootVersion:\t\t" + String(ESP.getBootVersion()));
-				debug.println(DebugLevel::ALWAYS, "BootMode:\t\t" + String(ESP.getBootMode()));
-				debug.println(DebugLevel::ALWAYS, "CpuFreqMHz:\t\t" + String(ESP.getCpuFreqMHz()));
-				debug.print(DebugLevel::ALWAYS, "FlashChipId:\t\t");
+
+				debug.print(DebugLevel::ALWAYS, F("SdkVersion:\t\t"));
+				debug.println(DebugLevel::ALWAYS, String(ESP.getSdkVersion()));
+
+				debug.print(DebugLevel::ALWAYS, F("BootVersion:\t\t"));
+				debug.println(DebugLevel::ALWAYS, String(ESP.getBootVersion()));
+
+				debug.print(DebugLevel::ALWAYS, F("BootMode:\t\t"));
+				debug.println(DebugLevel::ALWAYS, String(ESP.getBootMode()));
+
+				debug.print(DebugLevel::ALWAYS, F("CpuFreqMHz:\t\t"));
+				debug.println(DebugLevel::ALWAYS, String(ESP.getCpuFreqMHz()));
+
+				debug.print(DebugLevel::ALWAYS, F("FlashChipId:\t\t"));
 				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipId(), HEX);
-				debug.print(DebugLevel::ALWAYS, "FlashChipRealSize[Mbit]:");
+
+				debug.print(DebugLevel::ALWAYS, F("FlashChipRealSize[Mbit]:"));
 				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipRealSize(), HEX);
-				debug.print(DebugLevel::ALWAYS, "FlashChipSize [MBit]:\t");
+
+				debug.print(DebugLevel::ALWAYS, F("FlashChipSize [MBit]:\t"));
 				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipSize(), HEX);
-				debug.println(DebugLevel::ALWAYS, "FlashChipSpeed [Hz]:\t" + String(ESP.getFlashChipSpeed()));
-				debug.print(DebugLevel::ALWAYS, "FlashChipMode:\t\t");
+
+				debug.print(DebugLevel::ALWAYS, F("FlashChipSpeed [Hz]:\t"));
+				debug.println(DebugLevel::ALWAYS, String(ESP.getFlashChipSpeed()));
+
+				debug.print(DebugLevel::ALWAYS, F("FlashChipMode:\t\t"));
 				switch (ESP.getFlashChipMode()) {
 					case FM_QIO:
-						debug.println(DebugLevel::ALWAYS, "QIO");
+						debug.println(DebugLevel::ALWAYS, F("QIO"));
 						break;
 					case FM_QOUT:
-						debug.println(DebugLevel::ALWAYS, "QOUT");
+						debug.println(DebugLevel::ALWAYS, F("QOUT"));
 						break;
 					case FM_DIO:
-						debug.println(DebugLevel::ALWAYS, "DIO");
+						debug.println(DebugLevel::ALWAYS, F("DIO"));
 						break;
 					case FM_DOUT:
-						debug.println(DebugLevel::ALWAYS, "DOUT");
+						debug.println(DebugLevel::ALWAYS, F("DOUT"));
 						break;
 					case FM_UNKNOWN:
 					default:
-						debug.println(DebugLevel::ALWAYS, "Unknown");
+						debug.println(DebugLevel::ALWAYS, F("Unknown"));
 						break;
 				}
-				debug.print(DebugLevel::ALWAYS, "FlashChipSizeByChipId:\t");
+				debug.print(DebugLevel::ALWAYS, F("FlashChipSizeByChipId:\t"));
 				debug.println(DebugLevel::ALWAYS, ESP.getFlashChipSizeByChipId(), HEX);
-				debug.print(DebugLevel::ALWAYS, "SketchSize [Bytes]:\t");
+
+				debug.print(DebugLevel::ALWAYS, F("SketchSize [Bytes]:\t"));
 				debug.println(DebugLevel::ALWAYS, ESP.getSketchSize(), HEX);
-				debug.print(DebugLevel::ALWAYS, "FreeSketchSpace [Bytes]:");
+
+				debug.print(DebugLevel::ALWAYS, F("FreeSketchSpace [Bytes]:"));
 				debug.println(DebugLevel::ALWAYS, ESP.getFreeSketchSpace(), HEX);
+
 				debug.println(DebugLevel::ALWAYS, "");
 				break;
 			case 'R':
-				debug.println(DebugLevel::ALWAYS, "Last Reset --> " + ESP.getResetInfo());
-				debug.println(DebugLevel::ALWAYS, "");
+				debug.print(DebugLevel::ALWAYS, F("Last Reset --> "));
+				debug.println(DebugLevel::ALWAYS, ESP.getResetInfo() + nl);
 				break;
 			case 'S':
-				debug.println(DebugLevel::ALWAYS, nl + "Sensor Debug Information");
+				debug.print(DebugLevel::ALWAYS, nl);
+				debug.println(DebugLevel::ALWAYS, F("Sensor Debug Information"));
 				debug.println(DebugLevel::ALWAYS, getsSensorInfo(nl));
 				break;
 			case 'X':
-				debug.println(DebugLevel::ALWAYS, "Calling EspClass::reset() in 2 seconds ...");
+				debug.println(DebugLevel::ALWAYS, F("Calling EspClass::reset() in 2 seconds ..."));
 				delay(2000);
 				ESP.reset();
 				break;
 			case 'Y':
-				debug.println(DebugLevel::ALWAYS, "Calling EspClass::restart() in 2 seconds ...");
+				debug.println(DebugLevel::ALWAYS, F("Calling EspClass::restart() in 2 seconds ..."));
 				delay(2000);
 				ESP.restart();
 				break;
 			case 'W':
 				debug.println(DebugLevel::ALWAYS,
-						"Looping here forever - Software Watchdog for Menu should trip ... ");
+						F("Looping here forever - Software Watchdog for Menu should trip ... "));
 				for (;;) {
 					yield();
 				} // loop forever so the software watchdog for this task trips, but yield to the ESP OS

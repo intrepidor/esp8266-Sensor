@@ -137,10 +137,10 @@ void DebugPrint::println(DebugLevel dlevel, double n, int m) {
 void DebugPrint::println(DebugLevel dlevel, bool b) {
 	if (isDebugLevel(dlevel)) {
 		if (b) {
-			Serial.println("true");
+			Serial.println(F("true"));
 		}
 		else {
-			Serial.println("false");
+			Serial.println(F("false"));
 		}
 	}
 }
@@ -226,10 +226,10 @@ void DebugPrint::print(DebugLevel dlevel, double n, int m) {
 void DebugPrint::print(DebugLevel dlevel, bool b) {
 	if (isDebugLevel(dlevel)) {
 		if (b) {
-			Serial.print("true");
+			Serial.print(F("true"));
 		}
 		else {
-			Serial.print("false");
+			Serial.print(F("false"));
 		}
 	}
 }

@@ -14,23 +14,12 @@
 
 extern int ConfigurationChange(void);
 
-// Generic and reused statements
-//const char sHTTP_ENDLABEL_BR[] = "></label> <br>";
-const char sHTTP_ENDLABELQ_BR[] = "\"></label><br>";
-const char sHTTP_ENDLABELQ[] = "\"></label>";
-//const char sHTTP_ENDBRACEQ[] = "\">";
-const char sHTTP_CLOSE_AND_VALUE[] = "\"  value=\"";
-const char sHTTP_END[] = "</body></html>";
-// ## Header
-const char sHTTP_BR[] = "<br>";
-const char sHTTP_DIVSTART[] = "<div class=\"base ";
-const char sHTTP_DIVSTART_CLOSE[] = "\">";
-const char sHTTP_DIVBASE[] = "<div class=\"sensorblock\">";
-const char sHTTP_DIVEND[] = "</div>";
-const char sHTTP_TOP[] =
+//////////////////////////////////////////////////////////////////////////////
+// ICACHE_FLASH_ATTR strings
+ICACHE_FLASH_ATTR const char sHTTP_TOP[] =
 		"<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">"
 				"<html><head><title>Environment Sensor</title>";
-const char sHTTP_CSS[] = "<STYLE type=\"text/css\">"
+ICACHE_FLASH_ATTR const char sHTTP_CSS[] = "<STYLE type=\"text/css\">"
 		"label{"
 		"  font-weight:bold;"
 		"  height:18px;"
@@ -167,7 +156,23 @@ const char sHTTP_CSS[] = "<STYLE type=\"text/css\">"
 		"  vertical-align:middle;"
 		"}"
 		"</STYLE>";
-const char sHTTP_START_BODY[] = "</head><body>";
+ICACHE_FLASH_ATTR const char sHTTP_START_BODY[] = "</head><body>";
+
+//////////////////////////////////////////////////////////////////////////////
+// Generic and reused statements
+//const char sHTTP_ENDLABEL_BR[] = "></label> <br>";
+const char sHTTP_ENDLABELQ_BR[] = "\"></label><br>";
+const char sHTTP_ENDLABELQ[] = "\"></label>";
+//const char sHTTP_ENDBRACEQ[] = "\">";
+const char sHTTP_CLOSE_AND_VALUE[] = "\"  value=\"";
+const char sHTTP_END[] = "</body></html>";
+// ## Header
+const char sHTTP_BR[] = "<br>";
+const char sHTTP_DIVSTART[] = "<div class=\"base ";
+const char sHTTP_DIVSTART_CLOSE[] = "\">";
+const char sHTTP_DIVBASE[] = "<div class=\"sensorblock\">";
+const char sHTTP_DIVEND[] = "</div>";
+
 //
 // ## Device Name
 const char sHTTP_DEVICE_NAME[] = ""
@@ -256,12 +261,11 @@ void sendHTML_Header(bool sendCSS) {
 //	server.sendHeader("Expires", "-1");
 //	server.send(200, "text/html", ""); 	// Empty content inhibits Content-length header so we have to close the socket ourselves.
 
-	String r = String(sHTTP_TOP);
+	server.sendContent_P(sHTTP_TOP);
 	if (sendCSS) {
-		r += sHTTP_CSS;
+		server.sendContent_P(sHTTP_CSS);
 	}
-	r += sHTTP_START_BODY;
-	server.sendContent(r);
+	server.sendContent_P(sHTTP_START_BODY);
 }
 
 //-----------------------------------------------------------------------------------
@@ -271,9 +275,6 @@ void config(void) {
 
 	// Start of page
 	String r("");
-//	r = +sHTTP_TOP;
-//	r += sHTTP_CSS;
-//	r += sHTTP_START_BODY;
 	sendHTML_Header(true);
 	r += "<form action=\"config\" method=\"get\" name=\"Configuration\">";
 	r += "<h2>Device Configuration :: " + ProgramInfo + "</h2>";
@@ -327,6 +328,8 @@ void config(void) {
 			r += ">" + String(sensorList[static_cast<int>(j)].name);
 		}
 		r += sHTTP_DIVEND;
+
+		// send
 		server.sendContent(r);
 	}
 
@@ -377,7 +380,7 @@ int ConfigurationChange(void) {
 	if (server.args() > 0) {
 		bool found = false;
 		debug.println(DebugLevel::DEBUGMORE, "");
-		debug.println(DebugLevel::DEBUGMORE, "##########################################################");
+		debug.println(DebugLevel::DEBUGMORE, F("##########################################################"));
 		dinfo.setThingspeakEnable(false);
 		for (uint8_t i = 0; i < server.args(); i++) {
 			String sarg = server.argName(i);
@@ -385,44 +388,44 @@ int ConfigurationChange(void) {
 			debug.print(DebugLevel::DEBUGMORE, "NAME=" + sarg + ", VALUE=" + varg);
 			if (sarg == String("name")) {
 				dinfo.setDeviceName(varg);
-				debug.println(DebugLevel::DEBUGMORE, " ok name");
+				debug.println(DebugLevel::DEBUGMORE, F(" ok name"));
 				found = true;
 			}
 			if (sarg == String("deviceid")) {
 				dinfo.setDeviceID(atoi(varg.c_str()));
-				debug.println(DebugLevel::DEBUGMORE, " ok deviceid");
+				debug.println(DebugLevel::DEBUGMORE, F(" ok deviceid"));
 				found = true;
 			}
 			if (sarg == String("ts_enable")) {
 				dinfo.setThingspeakEnable(true);
-				debug.println(DebugLevel::DEBUGMORE, " ok ts_enable");
+				debug.println(DebugLevel::DEBUGMORE, F(" ok ts_enable"));
 				found = true;
 			}
 			if (sarg == "apikey") {
 				dinfo.setThingspeakApikey(varg);
-				debug.println(DebugLevel::DEBUGMORE, " ok apikey");
+				debug.println(DebugLevel::DEBUGMORE, F(" ok apikey"));
 				found = true;
 			}
 			if (sarg == "ipaddr") {
 				dinfo.setThingspeakIpaddr(varg);
-				debug.println(DebugLevel::DEBUGMORE, " ok ipaddr");
+				debug.println(DebugLevel::DEBUGMORE, F(" ok ipaddr"));
 				found = true;
 			}
 			if (sarg == "tsurl") {
 				dinfo.setThingspeakURL(varg);
-				debug.println(DebugLevel::DEBUGMORE, " ok tsurl");
+				debug.println(DebugLevel::DEBUGMORE, F(" ok tsurl"));
 				found = true;
 			}
 			if (sarg == "tschannel") {
 				dinfo.setThingspeakChannel(varg);
-				debug.println(DebugLevel::DEBUGMORE, " ok tschannel");
+				debug.println(DebugLevel::DEBUGMORE, F(" ok tschannel"));
 				found = true;
 			}
 			if (strncmp(sarg.c_str(), "port", 4) == 0) {
 				found = true;
 				char c = sarg.c_str()[4];
 				int n = static_cast<int>(c) - static_cast<int>('0');
-				debug.print(DebugLevel::DEBUGMORE, ", n=");
+				debug.print(DebugLevel::DEBUGMORE, F(", n="));
 				debug.print(DebugLevel::DEBUGMORE, n);
 				if (n >= 0 && n < dinfo.getPortMax()) {
 					if (varg.length() > 0) {
@@ -432,7 +435,7 @@ int ConfigurationChange(void) {
 					}
 					else {
 						dinfo.setPortName(n, "");
-						debug.println(DebugLevel::DEBUGMORE, " ok - cleared");
+						debug.println(DebugLevel::DEBUGMORE, F(" ok - cleared"));
 					}
 				}
 				else {
@@ -453,11 +456,11 @@ int ConfigurationChange(void) {
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					double d = 0;
 					if (varg.length() > 0) {
-						debug.println(DebugLevel::DEBUGMORE, " ok, set");
+						debug.println(DebugLevel::DEBUGMORE, F(" ok, set"));
 						d = ::atof(varg.c_str());
 					}
 					else {
-						debug.println(DebugLevel::DEBUGMORE, " ok, cleared");
+						debug.println(DebugLevel::DEBUGMORE, F(" ok, cleared"));
 					}
 					dinfo.setPortAdj(n1, n2, d);
 				}
@@ -487,9 +490,9 @@ int ConfigurationChange(void) {
 								}
 								debug.print(DebugLevel::DEBUGMORE, nl + "Info: Setting mode to ");
 								debug.print(DebugLevel::DEBUGMORE, static_cast<int>(sensorList[j].id));
-								debug.print(DebugLevel::DEBUGMORE, "(");
+								debug.print(DebugLevel::DEBUGMORE, F("("));
 								debug.print(DebugLevel::DEBUGMORE, sensorList[j].name);
-								debug.print(DebugLevel::DEBUGMORE, "), Reboot needed: ");
+								debug.print(DebugLevel::DEBUGMORE, F("), Reboot needed: "));
 								if (need_reboot) {
 									debug.println(DebugLevel::DEBUGMORE, "yes");
 								}
@@ -519,14 +522,14 @@ int ConfigurationChange(void) {
 			}
 
 			if (sarg == "reboot") {
-				debug.println(DebugLevel::DEBUGMORE, ", reboot button pressed");
+				debug.println(DebugLevel::DEBUGMORE, F(", reboot button pressed"));
 				found = true;
 				// do the action
 				ESP.reset();
 			}
 
 			if (sarg == "status") {
-				debug.println(DebugLevel::DEBUGMORE, ", status button pressed");
+				debug.println(DebugLevel::DEBUGMORE, F(", status button pressed"));
 				found = true;
 				// do the action
 				server.send(200, "text/plain", dinfo.databaseToString(",\n"));

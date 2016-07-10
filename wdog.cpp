@@ -95,7 +95,7 @@ void kickExternalWatchdog(void) {
 		// The external wdog trips after 1.6s, but the timing is sloppy for the ESP8266, need this as 300ms.
 		wdog_configured = true;
 		startedTime = millis();
-		Serial.println("Software watchdog initialized.");
+		Serial.println(F("Software watchdog initialized."));
 	}
 
 	if (!locked) {
