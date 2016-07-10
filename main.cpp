@@ -32,7 +32,7 @@ extern void ConfigurePorts(void);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.06 : Allan Inda 2016July06");
+String ProgramInfo("Environment Sensor v0.07 : Allan Inda 2016July09");
 
 // Other
 long count = 0;
@@ -54,11 +54,11 @@ const uint8_t PIN_BUILTIN_LED = BUILTIN_LED; // D0
 const uint8_t DIGITAL_PIN_1 = D2;
 const uint8_t DIGITAL_PIN_2 = D3;
 const uint8_t DIGITAL_PIN_3 = D6;
-const uint8_t DIGITAL_PIN_4 = D7;
+const uint8_t DIGITAL_PIN_4 = D8;
 const uint8_t WATCHDOG_WOUT_PIN = D7; // toggle this pin for the external watchdog
 
 const uint8_t ANALOG_PIN = A0;
-const uint8_t I2C_SDA_PIN = 2;// Use number directly since arduino_pins.h for nodemcu has the SDA mapping wrong
+const uint8_t I2C_SDA_PIN = 2; // Use number directly since arduino_pins.h for nodemcu has the SDA mapping wrong
 const uint8_t I2C_SCL_PIN = 14; // Use number directly since arduino_pins.h for nodemcu has the SCL mapping wrong
 //--------------------------------------------------
 
@@ -73,6 +73,8 @@ const int SENSOR_COUNT = 4; // should be at least equal to the value of MAX_PORT
 Sensor* sensors[SENSOR_COUNT] = { nullptr, nullptr, nullptr, nullptr };
 
 Device dinfo; // create AFTER Sensor declaration above
+
+//extern void pp_soft_wdt_stop();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //lint -e{1784}   // suppress message about signature conflict between C++ and C
@@ -93,7 +95,12 @@ void setup(void) {
 	Serial.begin(115200);
 
 // Start the external Watchdog. This also configures the Software Watchdog.
-	//reset_config();
+//	// This device uses an external watchdog, so no need for the ESP version, and it will just
+//	//  cause issues.
+//	ESP.wdtDisable();
+//	system_soft_wdt_stop();
+//	pp_soft_wdt_stop();
+//	reset_config();
 	kickExternalWatchdog(); // The first kick calls setup and starts the external and software watchdogs.
 	Serial.print("Starting ... ");
 	Serial.println(millis());
@@ -106,14 +113,25 @@ void setup(void) {
 
 // Start EEPROM and setup the Persisted Database
 	EEPROM.begin(512);
-// Copy persisted data from EEPROM into RAM
+
+	/* The SDA pin is supposed to be high when not used. If during startup the pin is held low,
+	 * then erase the EEPROM.
+	 */
+	pinMode(I2C_SDA_PIN, INPUT);
+	if (digitalRead(I2C_SDA_PIN) == 0) {
+		Serial.println("SDA held low -- erasing the EEPROM");
+		dinfo.eraseEEPROM();
+	}
+
+	/* Copy persisted data from EEPROM into RAM */
 	dinfo.restoreDatabaseFromEEPROM();
-// Get DebugLevel from EEPROM
-// Copy debug level from RAM, which was just copied from the EEPROM
+	/* Get DebugLevel from EEPROM
+	 * Copy debug level from RAM, which was just copied from the EEPROM
+	 */
 	debug.setDebugLevel(static_cast<DebugLevel>(dinfo.getDebugLevel()));
-// write it back to dinfo since debug would have validated it, and potentially changed it to fix errors.
+	/* write it back to dinfo since debug would have validated it, and potentially changed it to fix errors.*/
 	dinfo.setDebugLevel(static_cast<int>(debug.getDebugLevel()));
-// if value is invalid, then fix it and rewrite the EEPROM
+	/* if value is invalid, then fix it and rewrite the EEPROM */
 	if (eeprom_is_dirty) {
 		dinfo.saveDatabaseToEEPROM();
 	}

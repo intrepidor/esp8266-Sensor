@@ -1,5 +1,4 @@
 #include <Arduino.h>
-//#include <Base64.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h> // not used, yet, but needed for SparkFunHTU21D.h
@@ -70,11 +69,22 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 			break;
 		case sensorModule::htu21d_si7102:
 			htu21d = new HTU21D();
+//			htu21d->begin(callbackfunction);
 			htu21d->begin();
 			break;
 		default:
 			break;  // none of these sensors are supported by this module
 	}
+}
+
+void callbackfunction(void) {
+//	static char c = '0';
+//	// The purpose of this function is to kick the watchdog. The I2C read/write
+//	//   can take a long time, so the callback lets the I2C API call back so
+//	//   this function can service the watchdog.
+//	kickExternalWatchdog(); // don't kick the software watchdog, just the external hardware one.
+//	Serial.print(c);
+//	if (++c > '9') c = '0';
 }
 
 String TemperatureSensor::getsInfo(String eol) {
@@ -165,7 +175,6 @@ bool TemperatureSensor::acquire_setup(void) {
 }
 
 bool TemperatureSensor::acquire1(void) {
-	debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", acquire1() " + String(digital_pin));
 	sensorModule m = getModule();
 	if (m == sensorModule::ds18b20) {
 		if (dallas && started) {
@@ -181,47 +190,17 @@ bool TemperatureSensor::acquire1(void) {
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht && started) {
 			float t = dht->readTemperature(true);
-			yield();
-
-			if (isnan(t)) {
-				setTemperature (FP_NAN);
-				setRawTemperature(FP_NAN);
-				return false;   // error: read failed
-			}
-
-			// raw, non-corrected, values
-			setRawTemperature(t);
-
-			// correct based on calibration values
-			t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
-
-			// store the corrected temperature value
-			setTemperature(t);
-			return true;
+			return StoreTemperature(t);
 		}
 	}
 	else if (m == sensorModule::htu21d_si7102) {
 		if (htu21d && started) {
 			float t = htu21d->readTemperature();	// takes up to 100ms
-			yield();
-			debug.println(DebugLevel::DEBUG, "HTU21D Temperature t=" + String(t));
-
 			if (t == 999 || t == 998) {
-				debug.println(DebugLevel::DEBUG, "DEBUG reading HTU21D Temperature - t=" + String(t));
-				// error reading value
-				setTemperature (FP_NAN);
-				setRawTemperature(FP_NAN);
-				return false;
+				return StoreTemperature(FP_NAN);
 			}
 			else {
-				// raw, non-corrected, values
-				setRawTemperature(t);
-				// correct based on calibration values
-				t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
-
-				// store the corrected temperature value
-				setTemperature(t);
-				return true;
+				return StoreTemperature(t);
 			}
 		}
 	}
@@ -229,26 +208,16 @@ bool TemperatureSensor::acquire1(void) {
 }
 
 bool TemperatureSensor::acquire2(void) {
-	debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", acquire2() " + String(digital_pin));
 	sensorModule m = getModule();
 	if (m == sensorModule::ds18b20) {
 		if (dallas && started) {
 			float t = dallas->getTempCByIndex(0);
 			if (t == DEVICE_DISCONNECTED_C || t < -55 || t > 125) { // device limits are -55C to +125C
-				setTemperature (FP_NAN);
-				setRawTemperature(FP_NAN);
-				return false;   // error: read failed
+				return StoreTemperature(FP_NAN);
 			}
-
-			// raw, non-corrected, values
-			setRawTemperature(t);
-
-			// correct the measured value based on calibration values
-			t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
-
-			// store the calibration corrected value
-			setTemperature(t);
-			return true;
+			else {
+				return StoreTemperature(t);
+			}
 		}
 	}
 	else if (m == sensorModule::dht11 || m == sensorModule::dht22) {
@@ -256,48 +225,59 @@ bool TemperatureSensor::acquire2(void) {
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht && started) {
 			float h = dht->readHumidity();
-			yield();
-
-			if (isnan(h)) {
-				setRawHumidity (FP_NAN);
-				setHumidity(FP_NAN);
-				return false;   // error: read failed
-			}
-
-			// raw, non-corrected, values
-			setRawHumidity(h);
-
-			// correct the measured value based on the calibration values
-			h = h * getCal(TEMP_CAL_INDEX_HUMIDITY_SLOPE) + getCal(TEMP_CAL_INDEX_HUMIDITY_OFFSET);
-
-			// stored the calibration corrected value
-			setHumidity(h);
-			return true;
+			return StoreHumidity(h);
 		}
 	}
 	else if (m == sensorModule::htu21d_si7102) {
 		if (htu21d && started) {
 			float h = htu21d->readHumidity();	// takes up to 100ms
-			debug.println(DebugLevel::DEBUG, "HTU21D Humidity h=" + String(h));
-			yield();
-
 			if (h == 999 || h == 998) {
-				debug.println(DebugLevel::DEBUG, "Error reading HTU21D humidity - h=" + String(h));
-				setRawHumidity (FP_NAN);
-				setHumidity(FP_NAN);
-				return false;   // error: read failed
+				return StoreHumidity(FP_NAN);
 			}
-
-			// raw, non-corrected, values
-			setRawHumidity(h);
-
-			// correct the measured value based on the calibration values
-			h = h * getCal(TEMP_CAL_INDEX_HUMIDITY_SLOPE) + getCal(TEMP_CAL_INDEX_HUMIDITY_OFFSET);
-
-			// stored the calibration corrected value
-			setHumidity(h);
-			return true;
+			else {
+				return StoreHumidity(h);
+			}
 		}
 	}
 	return false;
+}
+
+bool TemperatureSensor::StoreTemperature(float t) {
+	yield();
+	if (t == FP_NAN) {
+		// error reading value
+		setTemperature (FP_NAN);
+		setRawTemperature(FP_NAN);
+		return false;
+	}
+	else {
+		// raw, non-corrected, values
+		setRawTemperature(t);
+		// correct based on calibration values
+		t = t * getCal(TEMP_CAL_INDEX_TEMP_SLOPE) + getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
+
+		// store the corrected temperature value
+		setTemperature(t);
+		return true;
+	}
+	return false;
+}
+
+bool TemperatureSensor::StoreHumidity(float h) {
+	yield();
+	if (h == FP_NAN) {
+		setRawHumidity (FP_NAN);
+		setHumidity(FP_NAN);
+		return false;   // error: read failed
+	}
+
+	// raw, non-corrected, values
+	setRawHumidity(h);
+
+	// correct the measured value based on the calibration values
+	h = h * getCal(TEMP_CAL_INDEX_HUMIDITY_SLOPE) + getCal(TEMP_CAL_INDEX_HUMIDITY_OFFSET);
+
+	// stored the calibration corrected value
+	setHumidity(h);
+	return true;
 }

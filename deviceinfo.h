@@ -86,7 +86,7 @@ public:
 	void eraseDatabase(void) {
 		memset(&db, 0, sizeof(db));
 	}
-
+	void corruptConfigurationMemory(void); // this is used for force a return to factory defaults
 //--------------------------------------------------------
 	int getDebugLevel(void) {
 		return db.debuglevel;

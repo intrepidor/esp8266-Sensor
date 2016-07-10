@@ -95,6 +95,9 @@ public:
 
 	}
 
+	bool StoreTemperature(float t);
+	bool StoreHumidity(float h);
+
 	float getCalOffset() {
 		return getCal(TEMP_CAL_INDEX_TEMP_OFFSET);
 	}

@@ -47,6 +47,10 @@ void Device::validateDatabase(void) {
 	validate_string(db.thingspeak.url, "<no url>", sizeof(db.thingspeak.url), 32, 126);
 }
 
+void Device::corruptConfigurationMemory(void) {
+	db.end_of_eeprom_signature = 0;
+}
+
 void Device::writeDefaultsToDatabase(void) {
 	eraseDatabase();
 	db.end_of_eeprom_signature = EEPROM_SIGNATURE; // special code used to detect if configuration structure exists
