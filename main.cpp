@@ -122,6 +122,7 @@ void setup(void) {
 		Serial.println("SDA held low -- erasing the EEPROM");
 		dinfo.eraseEEPROM();
 	}
+	kickAllWatchdogs();
 
 	/* Copy persisted data from EEPROM into RAM */
 	dinfo.restoreDatabaseFromEEPROM();
@@ -135,9 +136,9 @@ void setup(void) {
 	if (eeprom_is_dirty) {
 		dinfo.saveDatabaseToEEPROM();
 	}
+	kickAllWatchdogs();
 
 // Setup the WebServer
-	kickAllWatchdogs();
 	WebInit(); // Calls WiFiManager to make sure connected to access point.
 	kickAllWatchdogs();
 
@@ -154,12 +155,10 @@ void setup(void) {
 	myQueue.scheduleFunction(task_flashled, "led", 250, 100);
 	myQueue.scheduleFunction(task_serialport_menu, "menu", 2000, 500);
 	myQueue.scheduleFunction(task_webServer, "webserver", 3000, 10);
-	kickAllWatchdogs();
 
 // Print boot up information and menu
 	printInfo();
 	printMenu();
-	kickAllWatchdogs();
 
 // Signal that setup is complete
 	digitalWrite(PIN_BUILTIN_LED, BUILTIN_LED_OFF);
@@ -169,7 +168,7 @@ void setup(void) {
 	for (;;) {
 		softwareWatchdog(); // must call minimally every 1.6s to avoid the external watchdog reseting the ESP8266
 		myQueue.Run(millis());
-		yield(); // CONSIDER using an optimistic_yield(xx) instead so background tasks can still run
+		yield();
 	}
 }
 
@@ -398,7 +397,7 @@ void printInfo(void) {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 int task_readpir(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(taskname_pir)] = millis();
+	wdog_timer[static_cast<int>(taskname_pir)] = millis(); // kick the software watchdog
 	if (digitalRead(PIN_PIRSENSOR)) {
 		PIRcount++;
 	}
@@ -408,7 +407,7 @@ int task_readpir(unsigned long now) {
 int task_acquire(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
 	static int next_acquire_number = 0;
-	wdog_timer[static_cast<int>(taskname_acquire)] = millis();
+	wdog_timer[static_cast<int>(taskname_acquire)] = millis(); // kick the software watchdog
 	const int MAX_ACQUIRES = ACQUIRES_PER_SENSOR * SENSOR_COUNT;
 
 	if (next_acquire_number < 0 || next_acquire_number > (MAX_ACQUIRES - 1)) {
@@ -431,16 +430,40 @@ int task_acquire(unsigned long now) {
 	}
 
 	// run the next sub-task
+	unsigned int _now = millis();
+	unsigned int _then = _now;
+	unsigned int _dur = _now;
 	if (next_acquire_number >= 0) {
 		switch (subtask_number) {
 			case 0:
+				debug.println(DebugLevel::TIMINGS,
+						String(_now) + " sensors[" + String(sensor_number) + "]->acquire_setup START");
 				sensors[sensor_number]->acquire_setup(); //lint !e661
+				_then = millis();
+				_dur = _then - _now;
+				debug.println(DebugLevel::TIMINGS,
+						String(_then) + " sensors[" + String(sensor_number) + "]->acquire_setup DONE"
+								+ "\t\ttime=" + String(_dur));
 				break;
 			case 1:
+				debug.println(DebugLevel::TIMINGS,
+						String(_now) + " sensors[" + String(sensor_number) + "]->acquire1 START");
 				sensors[sensor_number]->acquire1(); //lint !e661
+				_then = millis();
+				_dur = _then - _now;
+				debug.println(DebugLevel::TIMINGS,
+						String(_then) + " sensors[" + String(sensor_number) + "]->acquire1 DONE" + "\t\ttime="
+								+ String(_dur));
 				break;
 			case 2:
+				debug.println(DebugLevel::TIMINGS,
+						String(_now) + " sensors[" + String(sensor_number) + "]->acquire2 START");
 				sensors[sensor_number]->acquire2(); //lint !e661
+				_then = millis();
+				_dur = _then - _now;
+				debug.println(DebugLevel::TIMINGS,
+						String(_then) + " sensors[" + String(sensor_number) + "]->acquire2 DONE" + "\t\ttime="
+								+ String(_dur));
 				break;
 			default:
 				break;
@@ -452,7 +475,7 @@ int task_acquire(unsigned long now) {
 
 int task_updatethingspeak(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(taskname_thingspeak)] = millis();
+	wdog_timer[static_cast<int>(taskname_thingspeak)] = millis(); // kick the software watchdog
 	if (dinfo.getThingspeakEnable()) {
 		updateThingspeak();
 	}
@@ -463,7 +486,7 @@ int task_updatethingspeak(unsigned long now) {
 
 int task_flashled(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(taskname_led)] = millis();
+	wdog_timer[static_cast<int>(taskname_led)] = millis(); // kick the software watchdog
 	static uint8_t current_state = 0;
 	if (current_state == 0) {
 		digitalWrite(BUILTIN_LED, BUILTIN_LED_ON);
@@ -507,7 +530,7 @@ void printExtendedMenu(void) {
 
 int task_serialport_menu(unsigned long now) {
 //lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(taskname_menu)] = millis();
+	wdog_timer[static_cast<int>(taskname_menu)] = millis(); // kick the software watchdog
 	count++;
 	static bool need_new_heading = true;
 	static bool raw_need_new_heading = true;

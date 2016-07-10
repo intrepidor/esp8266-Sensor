@@ -23,10 +23,9 @@ bool DebugPrint::validateDebugLevel(void) {
 }
 
 bool DebugPrint::isDebugLevel(DebugLevel dlevel) {
-	if (dlevel == debuglevel || dlevel == DebugLevel::ALWAYS
-			|| static_cast<int>(debuglevel) >= static_cast<int>(dlevel)) {
-		return true;
-	}
+	if (dlevel == debuglevel || dlevel == DebugLevel::ALWAYS) return true;
+	if (dlevel == DebugLevel::TIMINGS) return false;
+	if (static_cast<int>(debuglevel) >= static_cast<int>(dlevel)) return true;
 	return false;
 }
 
@@ -54,6 +53,9 @@ String DebugPrint::convertDebugLevelToString(DebugLevel dl) {
 			break;
 		case DebugLevel::DEBUG:
 			return String("DEBUG");
+			break;
+		case DebugLevel::TIMINGS:
+			return String("TIMINGS");
 			break;
 		case DebugLevel::DEBUGMORE:
 			return String("DEBUGMORE");

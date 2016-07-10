@@ -56,6 +56,7 @@ void softwareWatchdog(void) {
 	noInterrupts();
 	if (locked) {
 		interrupts();
+		// restore interrupts and exit
 	}
 	else {
 		locked = true;
