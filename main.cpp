@@ -430,9 +430,9 @@ int task_acquire(unsigned long now) {
 	}
 
 	// run the next sub-task
-	unsigned int _now = millis();
-	unsigned int _then = _now;
-	unsigned int _dur = _now;
+	unsigned long _now = millis();
+	unsigned long _then = _now;
+	unsigned long _dur = _now;
 	if (next_acquire_number >= 0) {
 		switch (subtask_number) {
 			case 0:

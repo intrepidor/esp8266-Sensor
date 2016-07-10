@@ -54,12 +54,12 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	switch (m) {
 		case sensorModule::dht11:
 			dht = new DHT(digital_pin, DHT11);
-			delay(2000); // CONSIDER using an optimistic_yield(2000000) instead so background tasks can still run
+			delay(2000); // FIXME -- there is no reason for this delay. Neither the constructor or begin do anything other that initialize variables.
 			dht->begin();
 			break;
 		case sensorModule::dht22:
 			dht = new DHT(digital_pin, DHT22);
-			delay(2000); // CONSIDER using an optimistic_yield(2000000) instead so background tasks can still run
+			delay(2000); // FIXME -- there is no reason for this delay. Neither the constructor or begin do anything other that initialize variables.
 			dht->begin();
 			break;
 		case sensorModule::ds18b20:
@@ -189,7 +189,7 @@ bool TemperatureSensor::acquire1(void) {
 		//lint -e506    suppress warning about constant value boolean, i.e. using !0 to mean TRUE. This is coming from isnan().
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht && started) {
-			float t = dht->readTemperature(true);
+			float t = dht->readTemperature(false); // read celcius
 			return StoreTemperature(t);
 		}
 	}

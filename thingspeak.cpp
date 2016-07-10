@@ -133,7 +133,7 @@ void updateThingspeak(void) {
 		debug.println(DebugLevel::DEBUG, "Sending -> " + getStr);
 		yield();
 		kickExternalWatchdog();
-		unsigned int r = client.println(getStr); // this takes about 1 second (no watchdogs during this time)
+		size_t r = client.println(getStr); // this takes about 1 second (no watchdogs during this time)
 		kickExternalWatchdog();
 		yield();
 		r += client.println("Host: " + dinfo.getThingspeakIpaddr());

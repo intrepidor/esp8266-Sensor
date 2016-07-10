@@ -49,7 +49,7 @@ private:
 	// for the digital pin connected to the DHT.  Other platforms will use digitalRead.
 	uint8_t _bit, _port;
 #endif
-	uint32_t _lastreadtime, _maxcycles;
+	unsigned long _lastreadtime, _maxcycles;
 	bool _lastresult;
 
 	uint32_t expectPulse(int level);

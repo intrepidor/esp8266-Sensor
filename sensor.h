@@ -51,7 +51,7 @@ private:
 	SensorValue cal[CALIB_COUNT];
 	sensorModule module;
 	SensorPins pins;
-	unsigned int time_till_stale_ms;
+	unsigned long time_till_stale_ms;
 
 public:
 	~Sensor() { /* nothing to destroy */
@@ -82,10 +82,10 @@ public:
 	}
 
 	// Timeout until the values become stale
-	void setStaleAge_ms(unsigned int _time_till_stale) {
+	void setStaleAge_ms(unsigned long _time_till_stale) {
 		time_till_stale_ms = _time_till_stale;
 	}
-	unsigned int getStaleAge_ms(void) {
+	unsigned long getStaleAge_ms(void) {
 		return time_till_stale_ms;
 	}
 
@@ -113,7 +113,7 @@ public:
 	float getRawValue(int _channel);
 	bool setRawValue(int _channel, float v);
 	bool isRawValueStale(int _channel);
-	unsigned int getRawAge(int channel) {
+	unsigned long getRawAge(int channel) {
 		return millis() - rawval[channel].last_sample_time_ms;
 	}
 
@@ -126,7 +126,7 @@ public:
 	float getValue(int channel);
 	bool setValue(int channel, float v);
 	bool isValueStale(int _channel);
-	unsigned int getAge(int channel) {
+	unsigned long getAge(int channel) {
 		return millis() - value[channel].last_sample_time_ms;
 	}
 	void printValues(void);

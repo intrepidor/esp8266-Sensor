@@ -9,6 +9,38 @@
 #include "network.h"
 #include "util.h"
 
+//////////////////////////////////////////////////////////////////////////////////////
+/* These are replacements for delay() and delayMicroseconds(). While delay() loops
+ * doing nothing and holding the CPU until the time duration passes, these functions
+ * yield() during that time. This is not as accurate as a delay, since the time
+ * taken by yield() is indeterminate. But the yield permits the RTOS to do other
+ * work and avoids blocking the ESP SW and HW watchdogs from being serviced.
+ * Don't use these if timing is critical.
+ * Note also these will perform minimally one yield before returning.
+ */
+void yield_ms(unsigned long time_duration_to_yield_ms) {
+	unsigned long atstart = millis(); // used to protect from roll-overs
+	unsigned long yield_until = millis() + time_duration_to_yield_ms;
+	unsigned long now = 0; // initialize to something easy
+	do {
+		now = millis();
+		yield();
+
+	} while (now < yield_until && now > atstart /* if now<atstart, then millis() rolled over*/);
+}
+void yield_us(unsigned long time_duration_to_yield_us) {
+	unsigned long atstart = micros(); // used to protect from roll-overs
+	unsigned long yield_until = micros() + time_duration_to_yield_us;
+	unsigned long now = 0; // initialize to something easy
+	do {
+		now = micros();
+		yield();
+
+	} while (now < yield_until && now > atstart /* if now<atstart, then micros() rolled over*/);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+
 String padEndOfString(String str, unsigned int desired_length, char pad_character, bool trim) {
 	String s("");
 	if (str && desired_length <= 256 && desired_length > 0) {
