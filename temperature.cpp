@@ -196,8 +196,8 @@ bool TemperatureSensor::acquire1(void) {
 	else if (m == sensorModule::htu21d_si7102) {
 		if (htu21d && started) {
 			float t = htu21d->readTemperature();	// takes up to 100ms
-			if (t == 999 || t == 998) {
-				return StoreTemperature(FP_NAN);
+			if (t >= 998.0F) {
+				return StoreTemperature(NAN);
 			}
 			else {
 				return StoreTemperature(t);
@@ -212,8 +212,8 @@ bool TemperatureSensor::acquire2(void) {
 	if (m == sensorModule::ds18b20) {
 		if (dallas && started) {
 			float t = dallas->getTempCByIndex(0);
-			if (t == DEVICE_DISCONNECTED_C || t < -55 || t > 125) { // device limits are -55C to +125C
-				return StoreTemperature(FP_NAN);
+			if (t == DEVICE_DISCONNECTED_C || t < -55.0F || t > 125.0F) { // device limits are -55C to +125C
+				return StoreTemperature(NAN);
 			}
 			else {
 				return StoreTemperature(t);
@@ -231,8 +231,8 @@ bool TemperatureSensor::acquire2(void) {
 	else if (m == sensorModule::htu21d_si7102) {
 		if (htu21d && started) {
 			float h = htu21d->readHumidity();	// takes up to 100ms
-			if (h == 999 || h == 998) {
-				return StoreHumidity(FP_NAN);
+			if (h >= 998.0F) {
+				return StoreHumidity(NAN);
 			}
 			else {
 				return StoreHumidity(h);
@@ -244,10 +244,10 @@ bool TemperatureSensor::acquire2(void) {
 
 bool TemperatureSensor::StoreTemperature(float t) {
 	yield();
-	if (t == FP_NAN) {
+	if (t == NAN) {
 		// error reading value
-		setTemperature (FP_NAN);
-		setRawTemperature(FP_NAN);
+		setTemperature (NAN);
+		setRawTemperature(NAN);
 		return false;
 	}
 	else {
@@ -265,9 +265,9 @@ bool TemperatureSensor::StoreTemperature(float t) {
 
 bool TemperatureSensor::StoreHumidity(float h) {
 	yield();
-	if (h == FP_NAN) {
-		setRawHumidity (FP_NAN);
-		setHumidity(FP_NAN);
+	if (h == NAN) {
+		setRawHumidity (NAN);
+		setHumidity(NAN);
 		return false;   // error: read failed
 	}
 
