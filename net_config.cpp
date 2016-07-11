@@ -167,10 +167,9 @@ const char sHTTP_ENDLABELQ[] = "\"></label>";
 const char sHTTP_CLOSE_AND_VALUE[] = "\"  value=\"";
 const char sHTTP_END[] = "</body></html>";
 // ## Header
-const char sHTTP_BR[] = "<br>";
 const char sHTTP_DIVSTART[] = "<div class=\"base ";
 const char sHTTP_DIVSTART_CLOSE[] = "\">";
-const char sHTTP_DIVBASE[] = "<div class=\"sensorblock\">";
+//const char sHTTP_DIVBASE[] = "<div class=\"sensorblock\">";
 const char sHTTP_DIVEND[] = "</div>";
 
 //
@@ -213,20 +212,6 @@ const char sHTTP_TS_IPADDR[] =
 // print current ipaddress
 // <ENDLABELQ>
 //
-// ## Port Configuration
-const char sHTTP_PORT_NUMBER[] = "<label>Port#";
-const char sHTTP_PORT_NAME[] = "<input type=\"text\" class=\"field fieldmedium\" name=\"port";
-const char sHTTP_PORTADJ_NUMBER[] = "<label>";
-const char sHTTP_PORTADJ_INPUT[] = " <input type=\"text\" class=\"field fieldshort\" name=\"adjport";
-// -- Radio buttons for each port
-const char sHTTP_PORT_RADIO_START[] = "<input type=\"radio\" class=\"newradio\" name=\"radport";
-// print port number, e.g. 1, 2, 3, 4, ...
-// <sHTTP_CLOSE_AND_VALUE>
-// print sensor name, then print port number --- this creates a handle for the radio button
-// <ENDBRACEQ>
-// Print the sensor name to present to the user, same value as above, but without the port number
-//
-// ## Submit Buttons
 // Misc
 const char sHTTP_AHREF_END[] = "</a>";
 
@@ -300,40 +285,58 @@ void config(void) {
 	for (int i = 0; i < dinfo.getPortMax(); i++) {
 		// Port Name
 		r = sHTTP_DIVSTART + String("port") + sHTTP_DIVSTART_CLOSE;
-		r += sHTTP_PORT_NUMBER + String(i) + sHTTP_PORT_NAME + String(i) + sHTTP_CLOSE_AND_VALUE
-				+ dinfo.getPortName(i) + sHTTP_ENDLABELQ;
+		r += "<label>Port#" + String(i) + "<input type=\"text\" class=\"field fieldmedium\" name=\"port";
+		r += String(i) + sHTTP_CLOSE_AND_VALUE + dinfo.getPortName(i) + sHTTP_ENDLABELQ;
 
-		// Current Values
+		// Port Mode - drop-down menu
+		r += "<br>Port Mode <select name=\"modemenu" + String(i) + "\">";
+		//lint -e{26,785} suppress since lint doesn't understand C++11
+		for (int mode = 0; mode < static_cast<int>(sensorModule::END); mode++) {
+			r += "<option value=\"" + String(sensorList[static_cast<int>(mode)].name) + "\"";
+			if (dinfo.getPortMode(i) == static_cast<sensorModule>(mode)) {
+				r += "selected";
+			}
+			r += ">" + String(sensorList[static_cast<int>(mode)].name) + "</option>";
+		}
+		r += "</select><br>";
+
+		// Port Adj Numeric Values
+		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
+			r += "<label>" + /*String(k)+*/dinfo.getPortAdjName(i, k);
+			r += " <input type=\"text\" class=\"field fieldshort\" name=\"adjport";
+			r += String(i) + String(k) + sHTTP_CLOSE_AND_VALUE
+					+ String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION) + sHTTP_ENDLABELQ + "<br>";
+		}
+
+//		// Port Mode - radio buttons
+//		r += "<br>Port Mode: ";
+//		//lint -e{26,785} suppress since lint doesn't understand C++11
+//		for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
+//			r += "<input type=\"radio\" class=\"newradio\" name=\"radport";
+//			r += String(i) + sHTTP_CLOSE_AND_VALUE;
+//			r += String(sensorList[static_cast<int>(j)].name);
+//			r += "\" ";
+//			if (dinfo.getPortMode(i) == static_cast<sensorModule>(j)) {
+//				r += "checked";
+//			}
+//			r += ">" + String(sensorList[static_cast<int>(j)].name);
+//		}
+
+// Current Values
+		r += "Current Values: ";
 		for (int vindx = 0; vindx < getSensorValueCount(); vindx++) {
 			r += " raw/val" + String(i) + String(vindx) + "= " + sensors[i]->getRawValue(vindx) + "/"
 					+ sensors[i]->getValue(vindx) + String(" : ");
 		}
-		r += "<br>";
-		// Port Adj Numeric Values
-		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
-			r += sHTTP_PORTADJ_NUMBER + /*String(k)+*/dinfo.getPortAdjName(i, k) + sHTTP_PORTADJ_INPUT
-					+ String(i) + String(k) + sHTTP_CLOSE_AND_VALUE
-					+ String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION) + sHTTP_ENDLABELQ;
-		}
-		r += "<br>Port Mode: ";
-		// Port radio buttons
-		//lint -e{26,785} suppress since lint doesn't understand C++11
-		for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
-			r += sHTTP_PORT_RADIO_START + String(i) + sHTTP_CLOSE_AND_VALUE;
-			r += String(sensorList[static_cast<int>(j)].name);
-			r += "\" ";
-			if (dinfo.getPortMode(i) == static_cast<sensorModule>(j)) {
-				r += "checked";
-			}
-			r += ">" + String(sensorList[static_cast<int>(j)].name);
-		}
+
+// Done with Port content
 		r += sHTTP_DIVEND;
 
 		// send
 		server.sendContent(r);
 	}
 
-	// Buttons and links then END of Page
+// Buttons and links then END of Page
 	r = getWebFooter(true) + "</form>" + sHTTP_END;
 	server.sendContent(r);
 }
@@ -445,35 +448,9 @@ int ConfigurationChange(void) {
 				}
 			}
 
-			if (strncmp(sarg.c_str(), "adjport", 7) == 0) {
+			if (strncmp(sarg.c_str(), "modemenu", 8) == 0) {
 				found = true;
-				char c1 = sarg.c_str()[7];
-				char c2 = sarg.c_str()[8];
-				int n1 = static_cast<int>(c1) - static_cast<int>('0');
-				int n2 = static_cast<int>(c2) - static_cast<int>('0');
-				debug.print(DebugLevel::DEBUGMORE, ", n1=" + String(n1));
-				debug.print(DebugLevel::DEBUGMORE, ", n2=" + String(n2));
-				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
-					double d = 0;
-					if (varg.length() > 0) {
-						debug.println(DebugLevel::DEBUGMORE, F(" ok, set"));
-						d = ::atof(varg.c_str());
-					}
-					else {
-						debug.println(DebugLevel::DEBUGMORE, F(" ok, cleared"));
-					}
-					dinfo.setPortAdj(n1, n2, d);
-				}
-				else {
-					debug.println(DebugLevel::DEBUGMORE,
-							nl + "ERROR: Bug - Invalid port #(" + String(n1) + "," + String(c1)
-									+ ") found in ConfigurationChange() - " + sarg);
-				}
-			}
-
-			if (strncmp(sarg.c_str(), "radport", 7) == 0) {
-				found = true;
-				char c1 = sarg.c_str()[7];
+				char c1 = sarg.c_str()[8];
 				int n1 = static_cast<int>(c1) - static_cast<int>('0');
 				debug.print(DebugLevel::DEBUGMORE, ", n1=");
 				debug.print(DebugLevel::DEBUGMORE, n1);
@@ -520,6 +497,82 @@ int ConfigurationChange(void) {
 					debug.println(DebugLevel::DEBUGMORE, ") found in ConfigurationChange() - " + sarg);
 				}
 			}
+
+			if (strncmp(sarg.c_str(), "adjport", 7) == 0) {
+				found = true;
+				char c1 = sarg.c_str()[7];
+				char c2 = sarg.c_str()[8];
+				int n1 = static_cast<int>(c1) - static_cast<int>('0');
+				int n2 = static_cast<int>(c2) - static_cast<int>('0');
+				debug.print(DebugLevel::DEBUGMORE, ", n1=" + String(n1));
+				debug.print(DebugLevel::DEBUGMORE, ", n2=" + String(n2));
+				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
+					double d = 0;
+					if (varg.length() > 0) {
+						debug.println(DebugLevel::DEBUGMORE, F(" ok, set"));
+						d = ::atof(varg.c_str());
+					}
+					else {
+						debug.println(DebugLevel::DEBUGMORE, F(" ok, cleared"));
+					}
+					dinfo.setPortAdj(n1, n2, d);
+				}
+				else {
+					debug.println(DebugLevel::DEBUGMORE,
+							nl + "ERROR: Bug - Invalid port #(" + String(n1) + "," + String(c1)
+									+ ") found in ConfigurationChange() - " + sarg);
+				}
+			}
+
+//			if (strncmp(sarg.c_str(), "radport", 7) == 0) {
+//				found = true;
+//				char c1 = sarg.c_str()[7];
+//				int n1 = static_cast<int>(c1) - static_cast<int>('0');
+//				debug.print(DebugLevel::DEBUGMORE, ", n1=");
+//				debug.print(DebugLevel::DEBUGMORE, n1);
+//				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
+//					bool found1 = false;
+//					if (varg.length() > 0) {
+//						//lint -e{26,785} suppress since lint doesn't understand C++11
+//						for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
+//							if (strcmp(varg.c_str(), sensorList[j].name) == 0) {
+//								sensorModule current = dinfo.getPortMode(n1);
+//								if (current != sensorList[j].id) {
+//									dinfo.setPortMode(n1, sensorList[j].id);
+//									need_reboot = true;
+//								}
+//								debug.print(DebugLevel::DEBUGMORE, nl + "Info: Setting mode to ");
+//								debug.print(DebugLevel::DEBUGMORE, static_cast<int>(sensorList[j].id));
+//								debug.print(DebugLevel::DEBUGMORE, F("("));
+//								debug.print(DebugLevel::DEBUGMORE, sensorList[j].name);
+//								debug.print(DebugLevel::DEBUGMORE, F("), Reboot needed: "));
+//								if (need_reboot) {
+//									debug.println(DebugLevel::DEBUGMORE, "yes");
+//								}
+//								else {
+//									debug.println(DebugLevel::DEBUGMORE, "no");
+//								}
+//								found1 = true;
+//								break;
+//							}
+//						}
+//						if (!found1) {
+//							debug.println(DebugLevel::DEBUGMORE, nl + "ERROR: unable to map mode: " + varg);
+//						}
+//					}
+//					else {
+//						debug.print(DebugLevel::DEBUGMORE, nl + "ERROR: Invalid varg mode: (" + varg);
+//						debug.println(DebugLevel::DEBUGMORE, ") found in ConfigurationChange() - " + sarg);
+//					}
+//				}
+//				else {
+//					debug.print(DebugLevel::DEBUGMORE, nl + "ERROR:Invalid port #(");
+//					debug.print(DebugLevel::DEBUGMORE, n1);
+//					debug.print(DebugLevel::DEBUGMORE, ",");
+//					debug.print(DebugLevel::DEBUGMORE, c1);
+//					debug.println(DebugLevel::DEBUGMORE, ") found in ConfigurationChange() - " + sarg);
+//				}
+//			}
 
 			if (sarg == "reboot") {
 				debug.println(DebugLevel::DEBUGMORE, F(", reboot button pressed"));

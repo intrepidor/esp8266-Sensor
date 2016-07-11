@@ -120,6 +120,7 @@ void WebInit(void) {
 		response += "Count=" + String(count);
 		response += "<br>PIR=" + String(PIRcount);
 		response += "<br>PIRLast=" + String(PIRcountLast);
+		response += "<br>RSSI="+String(WiFi.RSSI());
 		response += "<br>ThingspeakUpdates="+String(thingspeak_update_counter);
 		response += "<br>Thingspeakerrors="+String(thingspeak_error_counter);
 		response += "<br>Thinkspeakentries="+String(thinkspeak_total_entries);
@@ -165,7 +166,9 @@ void WebInit(void) {
 
 	server.on("/csv", []() {
 		String response("count=");
-		response = String(count) + ",pir=" + String(PIRcount) + ",pirlast=" + String(PIRcountLast) + ",";
+		response = String(count) + ",pir=" + String(PIRcount);
+		response += ",pirlast=" + String(PIRcountLast);
+		response += ",rssi=" + String(WiFi.RSSI()) + ",";
 		for (int i = 0; i < SENSOR_COUNT; i++) {
 			if (sensors[i]) {
 

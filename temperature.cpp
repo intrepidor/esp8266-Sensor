@@ -21,9 +21,9 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 
 	// Channel 1 is always defined like this
 	setCalEnable(TEMP_CAL_INDEX_TEMP_SLOPE, true);
-	setCalName(TEMP_CAL_INDEX_TEMP_SLOPE, "temp_slope");
+	setCalName(TEMP_CAL_INDEX_TEMP_SLOPE, "Temperature Gain");
 	setCalEnable(TEMP_CAL_INDEX_TEMP_OFFSET, true);
-	setCalName(TEMP_CAL_INDEX_TEMP_OFFSET, "temp_offset");
+	setCalName(TEMP_CAL_INDEX_TEMP_OFFSET, "Temperature Offset");
 	setValueEnable(TEMP_VALUE_INDEX_TEMPERATURE, true);
 	setValueName(TEMP_VALUE_INDEX_TEMPERATURE, "tempC");
 
@@ -37,9 +37,9 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 
 	if (m == sensorModule::dht11 || m == sensorModule::dht22 || m == sensorModule::htu21d_si7102) {
 		setCalEnable(TEMP_CAL_INDEX_HUMIDITY_SLOPE, true);
-		setCalName(TEMP_CAL_INDEX_HUMIDITY_SLOPE, "humidity_slope");
+		setCalName(TEMP_CAL_INDEX_HUMIDITY_SLOPE, "Humidity Gain");
 		setCalEnable(TEMP_CAL_INDEX_HUMIDITY_OFFSET, true);
-		setCalName(TEMP_CAL_INDEX_HUMIDITY_OFFSET, "humidity_offset");
+		setCalName(TEMP_CAL_INDEX_HUMIDITY_OFFSET, "Humidity Offset");
 		setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, true);
 		setValueName(TEMP_VALUE_INDEX_HUMIDITY, "rH%");
 	}

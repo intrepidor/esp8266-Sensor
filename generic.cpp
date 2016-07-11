@@ -17,18 +17,18 @@ void GenericSensor::init(sensorModule m, SensorPins& p) {
 
 	// These are the defaults.
 	setCalEnable(TEMP_CAL_CHANNEL_ANALOG_OFFSET, false);
-	setCalName(TEMP_CAL_CHANNEL_ANALOG_OFFSET, "offset");
+	setCalName(TEMP_CAL_CHANNEL_ANALOG_OFFSET, "Analog Offset");
 	setCalEnable(TEMP_CAL_CHANNEL_ANALOG_FIRST_ORDER, false);
-	setCalName(TEMP_CAL_CHANNEL_ANALOG_FIRST_ORDER, "a*raw");
+	setCalName(TEMP_CAL_CHANNEL_ANALOG_FIRST_ORDER, "1st order Gain");
 	setCalEnable(TEMP_CAL_CHANNEL_ANALOG_SECOND_ORDER, false);
-	setCalName(TEMP_CAL_CHANNEL_ANALOG_SECOND_ORDER, "b*raw^2");
+	setCalName(TEMP_CAL_CHANNEL_ANALOG_SECOND_ORDER, "2nd order Gain");
 	setCalEnable(TEMP_CAL_CHANNEL_ANALOG_THIRD_ORDER, false);
-	setCalName(TEMP_CAL_CHANNEL_ANALOG_THIRD_ORDER, "c*raw^3");
+	setCalName(TEMP_CAL_CHANNEL_ANALOG_THIRD_ORDER, "3rd order Gain");
 
 	setValueEnable(TEMP_VALUE_CHANNEL_ANALOG, false);
-	setValueName(TEMP_VALUE_CHANNEL_ANALOG, "analog");
+	setValueName(TEMP_VALUE_CHANNEL_ANALOG, "Analog");
 	setValueEnable(TEMP_VALUE_CHANNEL_DIGITAL, false);
-	setValueName(TEMP_VALUE_CHANNEL_DIGITAL, "digital");
+	setValueName(TEMP_VALUE_CHANNEL_DIGITAL, "Digital");
 
 	if (m == sensorModule::analog || m == sensorModule::analog_digital) {
 		setCalEnable(TEMP_CAL_CHANNEL_ANALOG_OFFSET, true);
