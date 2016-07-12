@@ -80,7 +80,7 @@ ICACHE_FLASH_ATTR const char sHTTP_CSS[] = "<STYLE type=\"text/css\">"
 		"  color:white;"
 		"}"
 		".savediv{"
-		"  float:right;"
+//		"  float:right;"
 		"}"
 		".savebutton{"
 		"  background-color:#4CAF50;"
@@ -186,32 +186,47 @@ const char sHTTP_DEVICE_ID[] = ""
 		"<input type=\"text\" class=\"field fieldmedium\" name=\"deviceid\" value=\"";
 // <print user assigned name>
 // <ENDLABELQ>
-//
+
+const char sHTTP_FARHEN_ENABLE[] = ""
+		"<input type=\"checkbox\" name=\"temp_farhen\" class=\"newcheckbox\" value=\"tempunitsenable\" ";
+// <print "checked" or blank>
+// <ENDLABEL>
 // ## Thingspeak
+
 const char sHTTP_TS_ENABLE[] = ""
 		"<input type=\"checkbox\" name=\"ts_enable\" class=\"newcheckbox\" value=\"tsenable\" ";
 // <print "checked" or blank>
 // <ENDLABEL>
+
 const char sHTTP_TS_URL[] = ""
 		"<label>URL (optional): "
 		"<input type=\"text\" class=\"field fieldlong\" name=\"tsurl\" value=\"";
-// print current apikey
+// print current url
 // <ENDLABELQ>
+
 const char sHTTP_TS_CHANNEL[] = ""
 		"<label>Channel (optional): "
 		"<input type=\"text\" class=\"field fieldshort\" name=\"tschannel\" value=\"";
-// print current apikey
+// print current channel
 // <ENDLABELQ>
+
+const char sHTTP_TS_PERIOD[] = ""
+		"<label>Update Period (sec): "
+		"<input type=\"text\" class=\"field fieldshort\" name=\"tsupdateperiod\" value=\"";
+// print current update period
+// <ENDLABELQ>
+
 const char sHTTP_TS_APIKEY[] = ""
-		"<label>API Key: "
+		"<label>API Write Key: "
 		"<input type=\"text\" class=\"field fieldmedium\" name=\"apikey\" value=\"";
 // print current apikey
 // <ENDLABELQ>
+
 const char sHTTP_TS_IPADDR[] =
 		"<label>IP address: <input type=\"text\" class=\"field fieldmedium\" name=\"ipaddr\" value=\"";
 // print current ipaddress
 // <ENDLABELQ>
-//
+
 // Misc
 const char sHTTP_AHREF_END[] = "</a>";
 
@@ -269,14 +284,17 @@ void config(void) {
 	r = sHTTP_DIVSTART + String("device") + sHTTP_DIVSTART_CLOSE;
 	r += sHTTP_DEVICE_NAME + String(dinfo.getDeviceName()) + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_DEVICE_ID + String(dinfo.getDeviceID()) + sHTTP_ENDLABELQ;
+	r += sHTTP_DIVSTART + String("temp_units") + sHTTP_DIVSTART_CLOSE;
+	r += sHTTP_FARHEN_ENABLE + String(getCheckedStr(dinfo.isFahrenheit())) + "> Farhenheit Units<br>";
 	r += sHTTP_DIVEND;
 
 	// Thingspeak
 	r += sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
-	r += sHTTP_TS_ENABLE + String(dinfo.getEnableStr()) + "> Thingspeak Enable<br>";
+	r += sHTTP_TS_ENABLE + String(dinfo.getThingspeakEnableStr()) + "> Thingspeak Enable<br>";
+	r += sHTTP_TS_PERIOD + String(dinfo.getThingspeakUpdatePeriod()) + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_APIKEY + dinfo.getThingspeakApikey() + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_URL + dinfo.getThingspeakURL() + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_TS_CHANNEL + dinfo.getThingspeakChannel() + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_TS_CHANNEL + String(dinfo.getThingspeakChannel()) + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_IPADDR + dinfo.getThingspeakIpaddr() + sHTTP_ENDLABELQ + " Default=184.106.153.149";
 	r += sHTTP_DIVEND;
 	server.sendContent(r);
@@ -323,10 +341,9 @@ void config(void) {
 //		}
 
 // Current Values
-		r += "Current Values: ";
 		for (int vindx = 0; vindx < getSensorValueCount(); vindx++) {
 			r += " raw/val" + String(i) + String(vindx) + "= " + sensors[i]->getRawValue(vindx) + "/"
-					+ sensors[i]->getValue(vindx) + String(" : ");
+					+ sensors[i]->getValue(vindx) + String("  ");
 		}
 
 // Done with Port content
@@ -385,6 +402,7 @@ int ConfigurationChange(void) {
 		debug.println(DebugLevel::DEBUGMORE, "");
 		debug.println(DebugLevel::DEBUGMORE, F("##########################################################"));
 		dinfo.setThingspeakEnable(false);
+		dinfo.setFahrenheitUnit(false);
 		for (uint8_t i = 0; i < server.args(); i++) {
 			String sarg = server.argName(i);
 			String varg = server.arg(i);
@@ -404,6 +422,17 @@ int ConfigurationChange(void) {
 				debug.println(DebugLevel::DEBUGMORE, F(" ok ts_enable"));
 				found = true;
 			}
+			if (sarg == String("temp_farhen")) {
+				dinfo.setFahrenheitUnit(true);
+				debug.println(DebugLevel::DEBUGMORE, F(" ok tempunitenable"));
+				found = true;
+			}
+			if (sarg == "tsupdateperiod") {
+				long l = ::atol(varg.c_str());
+				dinfo.setThingspeakUpdatePeriod(l);
+				debug.println(DebugLevel::DEBUGMORE, F(" ok tsupdateperiod"));
+				found = true;
+			}
 			if (sarg == "apikey") {
 				dinfo.setThingspeakApikey(varg);
 				debug.println(DebugLevel::DEBUGMORE, F(" ok apikey"));
@@ -420,7 +449,8 @@ int ConfigurationChange(void) {
 				found = true;
 			}
 			if (sarg == "tschannel") {
-				dinfo.setThingspeakChannel(varg);
+				long l = ::atol(varg.c_str());
+				dinfo.setThingspeakChannel(l);
 				debug.println(DebugLevel::DEBUGMORE, F(" ok tschannel"));
 				found = true;
 			}

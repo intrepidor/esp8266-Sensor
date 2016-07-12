@@ -15,6 +15,9 @@ enum class HexDirection
 	: bool {REVERSE = false, FORWARD = true
 };
 extern String memoryToHex(const char* addr, int _len, HexDirection dir);
+extern const char* getCheckedStr(bool);
+extern const char* isTrueStr(bool value_to_check);
+extern const char* getTempUnits(bool true_for_farhenheit);
 
 ////////////
 extern void yield_ms(unsigned long time_duration_to_yield_ms);

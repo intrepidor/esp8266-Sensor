@@ -32,7 +32,7 @@ extern void ConfigurePorts(void);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.08 : Allan Inda 2016July10");
+String ProgramInfo("Environment Sensor v0.10 Allan Inda 2016July11");
 
 // Other
 long count = 0;
@@ -366,6 +366,7 @@ String ICACHE_FLASH_ATTR getsDeviceInfo(String eol) {
 	s += "RSSI: " + String(WiFi.RSSI()) + " dBm" + eol;
 	s += "ESP8266_Device_ID=" + String(dinfo.getDeviceID()) + eol;
 	s += "Friendly Name: " + String(dinfo.getDeviceName()) + eol;
+	s += "Temperature Units: " + String(getTempUnits(dinfo.isFahrenheit())) + eol;
 	s += "Uptime: " + getUptime() + eol;
 	return s;
 }

@@ -14,18 +14,20 @@
 #include "deviceinfo.h"
 #include "wdog.h"
 
+extern String getThingspeakGET(void);
+extern String getTCPStatusString(uint8_t s);
+
 size_t thingspeak_update_counter = 0;
 size_t thingspeak_error_counter = 0;
 long thinkspeak_total_entries = 0; // this is filled in by the response from the REST update
-String getThingspeakGET(void);
-String getTCPStatusString(uint8_t s);
 
 String getsThingspeakInfo(String eol) {
 	String s("== Thingspeak Information ==" + eol);
 	s += "Enabled: " + dinfo.getThingspeakEnableString() + eol;
+	s += "Update Period: " + String(dinfo.getThingspeakUpdatePeriod()) + eol;
 	s += "URL: " + dinfo.getThingspeakURL() + " (future use)" + eol;
 	s += "Write Key: " + dinfo.getThingspeakApikey() + eol;
-	s += "Channel: " + dinfo.getThingspeakChannel() + " (future use)" + eol;
+	s += "Channel: " + String(dinfo.getThingspeakChannel()) + " (future use)" + eol;
 	s += "IP Address: " + dinfo.getThingspeakIpaddr() + eol;
 	s += "Updates: " + String(thingspeak_update_counter) + eol;
 	s += "Errors: " + String(thingspeak_error_counter) + eol;

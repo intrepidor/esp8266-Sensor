@@ -134,3 +134,19 @@ String GPIO2Arduino(uint8_t gpio_pin_number) {
 			return String(gpio_pin_number) + "unknown";
 	}
 }
+
+const char* getCheckedStr(bool value_to_check) {
+	if (value_to_check) return "checked";
+	return " ";
+}
+
+const char* isTrueStr(bool value_to_check) {
+	if (value_to_check) return "true";
+	return "false";
+}
+
+const char* getTempUnits(bool true_for_farhenheit) {
+	if (true_for_farhenheit) return "Fahrenheit";
+	else return "Celsius";
+}
+

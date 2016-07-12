@@ -16,6 +16,7 @@ const uint32_t EEPROM_SIGNATURE = 0xA357; // This is a pattern used to detect if
 
 const int CURRENT_CONFIG_VERSION = 123;
 const int DECIMAL_PRECISION = 5;
+const int SECONDS_PER_DAY = (3600 * 24);
 
 //-----------------------------------------------------------------------------------
 // Device Class
@@ -41,10 +42,13 @@ private:
 		struct {
 			char name[STRING_LENGTH + 1];
 			int id;
+			bool use_fahrenheit_unit;
 		} device;
 
 		// Thingspeak
 		struct {
+			unsigned long channel;
+			int time_between_updates_sec;
 			int status;
 			// bit value
 			// 1 means "HTTP/1.1 200 OK" received
@@ -53,7 +57,6 @@ private:
 			char enabled;
 			char apikey[STRING_LENGTH + 1];
 			char url[URL_LENGTH + 1];
-			char channel[CHANNEL_LENGTH + 1];
 			char ipaddr[16]; // nnn.nnn.nnn.nnn = 4*3+3(dots)+1(nul) = 16 chars; 15 for data, and 1 for terminating nul
 		} thingspeak;
 
@@ -111,6 +114,12 @@ public:
 	void setDeviceID(int newID) {
 		this->db.device.id = newID;
 	}
+	void setFahrenheitUnit(bool true_for_fahrenheit) {
+		this->db.device.use_fahrenheit_unit = true_for_fahrenheit;
+	}
+	bool isFahrenheit(void) {
+		return this->db.device.use_fahrenheit_unit;
+	}
 	void printInfo(void);
 //--------------------------------------------------------
 // Ports
@@ -128,7 +137,7 @@ public:
 	void setPortAdj(int portnum, int adjnum, double v);
 	String getModeStr(int portnum);
 
-	// provide a custom adj field name based on the sensor module type
+// provide a custom adj field name based on the sensor module type
 	String getPortAdjName(int portnum, int adjunum);
 
 //--------------------------------------------------------
@@ -145,6 +154,12 @@ public:
 	void setThingspeakStatus(int s) {
 		db.thingspeak.status = s;
 	}
+
+// Update Period
+	int getThingspeakUpdatePeriod() const {
+		return db.thingspeak.time_between_updates_sec;
+	}
+	void setThingspeakUpdatePeriod(int new_periodsec);
 
 // API
 	void setThingspeakApikey(const char* _apikey) {
@@ -179,20 +194,18 @@ public:
 		return db.thingspeak.url;
 	}
 // CHANNEL
-	void setThingspeakChannel(const char* _channel) {
-		if (_channel) {
-			strncpy(this->db.thingspeak.channel, _channel, sizeof(this->db.thingspeak.channel) - 1);
-		}
+	void setThingspeakChannel(unsigned long _channel) {
+		db.thingspeak.channel = _channel;
 	}
-	void setThingspeakChannel(String _channel) {
-		setThingspeakChannel(_channel.c_str());
-	}
-	String getThingspeakChannel() const {
-		return String(db.thingspeak.channel);
-	}
-	const char* getcThingspeakChannel() const {
+//	void setThingspeakChannel(String _channel) {
+//		setThingspeakChannel(_channel.c_str());
+//	}
+	unsigned long getThingspeakChannel() const {
 		return db.thingspeak.channel;
 	}
+//	const char* getcThingspeakChannel() const {
+//		return db.thingspeak.channel;
+//	}
 // IPADDR
 	void setThingspeakIpaddr(String _ipaddr) {
 		setThingspeakIpaddr(_ipaddr.c_str());
@@ -220,7 +233,7 @@ public:
 		if (db.thingspeak.enabled) return String("true");
 		return String("false");
 	}
-	const char* PROGMEM getEnableStr();
+	const char* PROGMEM getThingspeakEnableStr();
 };
 
 #endif /* DEVICEINFO_H_ */

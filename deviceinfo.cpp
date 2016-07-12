@@ -41,6 +41,18 @@ unsigned int validate_string(char* str, const char* const def, unsigned int size
 	return 0;
 }
 
+void Device::setThingspeakUpdatePeriod(int new_periodsec) {
+	if (new_periodsec < 20) {
+		db.thingspeak.time_between_updates_sec = 20;	// fastest possible per thingspeak rules
+	}
+	else if (new_periodsec > SECONDS_PER_DAY) {
+		db.thingspeak.time_between_updates_sec = SECONDS_PER_DAY; // slowest is once per day
+	}
+	else {
+		db.thingspeak.time_between_updates_sec = new_periodsec;
+	}
+}
+
 void Device::validateDatabase(void) {
 	validate_string(db.device.name, "<not named>", sizeof(db.device.name), 32, 126);
 	validate_string(db.thingspeak.apikey, "<no api key>", sizeof(db.thingspeak.apikey), 48, 95);
@@ -56,10 +68,12 @@ void Device::writeDefaultsToDatabase(void) {
 	db.end_of_eeprom_signature = EEPROM_SIGNATURE; // special code used to detect if configuration structure exists
 	setDeviceName("");
 	setDeviceID(999);
+	setFahrenheitUnit(true);
 	setThingspeakEnable(false);
+	setThingspeakUpdatePeriod(60); // once per minute
 	setThingspeakApikey("");
 	setThingspeakURL("http://api.thingspeak.com");
-	setThingspeakChannel("");
+	setThingspeakChannel(0);
 	setThingspeakIpaddr("184.106.153.149");
 	db.debuglevel = 0;
 	for (int i = 0; i < MAX_PORTS; i++) {
@@ -81,6 +95,7 @@ String Device::databaseToString(String eol) {
 	s += "device.id=" + String(getDeviceID()) + eol;
 	s += "thingspeak.status=" + String(getThingspeakStatus()) + eol;
 	s += "thingspeak.enable=" + getThingspeakEnableString() + eol;
+	s += "thingspeak.time_between_updates_sec=" + String(getThingspeakUpdatePeriod()) + eol;
 	s += "TS_apikey=" + getThingspeakApikey() + eol;
 	s += "thingspeak.url=" + getThingspeakURL() + eol;
 	s += "thingspeak.channel=" + getThingspeakChannel() + eol;
@@ -119,7 +134,8 @@ static bool isValidPort(int portnum) {
 	return false;
 }
 
-const char* PROGMEM Device::getEnableStr() {
+const char* PROGMEM
+Device::getThingspeakEnableStr() {
 	if (db.thingspeak.enabled) return "checked";
 	return " ";
 }
