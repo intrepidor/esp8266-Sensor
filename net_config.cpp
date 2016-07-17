@@ -398,6 +398,7 @@ int ConfigurationChange(void) {
 	 */
 
 	bool need_reboot = false;
+	bool taskclock_found = false;
 	if (server.args() > 0) {
 		bool found = false;
 		debug.println(DebugLevel::DEBUG2, "");
@@ -494,8 +495,21 @@ int ConfigurationChange(void) {
 						for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
 							if (strcmp(varg.c_str(), sensorList[j].name) == 0) {
 								sensorModule current = dinfo.getPortMode(n1);
-								if (current != sensorList[j].id) {
-									dinfo.setPortMode(n1, sensorList[j].id);
+								sensorModule newmode = sensorList[j].id;
+								// Handle the special case for taskclock
+								if (current == sensorModule::taskclock) {
+									if (taskclock_found) {
+										// only one sensorModule::taskclock allowed. Turn off
+										//   attempts to add more than one
+										newmode = sensorModule::off;
+									}
+									else {
+										taskclock_found = true;
+									}
+								}
+								// Set the new port Mode
+								if (current != newmode) {
+									dinfo.setPortMode(n1, newmode);
 									need_reboot = true;
 								}
 								debug.print(DebugLevel::DEBUG2, nl + "Info: Setting mode to ");
