@@ -10,6 +10,14 @@
 
 #include <Arduino.h>
 
+const unsigned long MS_PER_SECOND = (1000);
+const unsigned long MS_PER_MINUTE = (MS_PER_SECOND * 60 /*times 60 seconds*/);
+const unsigned long MS_PER_HOUR = (MS_PER_MINUTE * 60 /*times 60 minutes*/);
+const unsigned long MS_PER_DAY = (MS_PER_HOUR * 24 /*times 24 hours*/);
+const unsigned long SECONDS_PER_DAY = (3600 * 24);
+
+String getTimeString(unsigned long uptime);
+
 ////////////
 enum class HexDirection
 	: bool {REVERSE = false, FORWARD = true

@@ -2,7 +2,7 @@
 #include <EEPROM.h>
 #include <Esp.h>
 #include <Ticker.h>
-#include <gdbstub.h>
+//#include <gdbstub.h>
 #include "main.h"
 #include "temperature.h"
 #include "generic.h"
@@ -15,6 +15,7 @@
 #include "debugprint.h"
 #include "thingspeak.h"
 #include "wdog.h"
+#include "util.h"
 
 extern int task_readpir(unsigned long now);
 extern int task_acquire(unsigned long now);
@@ -147,9 +148,10 @@ void setup(void) {
 	kickAllWatchdogs();
 
 // Configure Scheduler, scheduleFunction (function pointer, task name, start delay in ms, repeat interval in ms)
+// WARNING: Tasks must run minimally every 30 seconds to prevent software watchdog timer resets
 	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
 	myQueue.scheduleFunction(task_acquire, "acquire", 1000, 500);
-	myQueue.scheduleFunction(task_updatethingspeak, "thingspeak", 2000, dinfo.getThingspeakUpdatePeriod());
+	myQueue.scheduleFunction(task_updatethingspeak, "thingspeak", 2000, dinfo.getThingspeakUpdatePeriodMS());
 	myQueue.scheduleFunction(task_flashled, "led", 250, 100);
 	myQueue.scheduleFunction(task_serialport_menu, "menu", 2000, 500);
 	myQueue.scheduleFunction(task_webServer, "webserver", 3000, 10);
@@ -163,10 +165,22 @@ void setup(void) {
 
 // Start the task scheduler
 	setStartupComplete(); // tell the watchdog the long startup is done and to use normal watchdog timeouts
+	kickAllSoftwareWatchdogs();
+	Serial.println("Startup complete");
+	bool pol = false;
+	pinMode(DIGITAL_PIN_4, OUTPUT); // Initialize the BUILTIN_LED pin as an output
 	for (;;) {
 		softwareWatchdog(); // must call minimally every 1.6s to avoid the external watchdog reseting the ESP8266
 		myQueue.Run(millis());
-		yield();
+		if (pol) {
+			digitalWrite(DIGITAL_PIN_4, 0);
+		}
+		else {
+			digitalWrite(DIGITAL_PIN_4, 1);
+		}
+		pol = !pol;
+		//yield();
+		optimistic_yield(10000);
 	}
 }
 
@@ -316,7 +330,7 @@ void ConfigurePorts(void) {
 	CopyCalibrationDataToSensors();
 }
 
-void ICACHE_FLASH_ATTR CopyCalibrationDataToSensors(void) {
+void CopyCalibrationDataToSensors(void) {
 // Note: This routine assumes the SENSOR_COUNT and getPortMax() are identical values
 	for (int idx = 0; idx < SENSOR_COUNT && idx < dinfo.getPortMax(); idx++) {
 		if (sensors[idx] /* make sure it exists*/) {
@@ -329,31 +343,8 @@ void ICACHE_FLASH_ATTR CopyCalibrationDataToSensors(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-String ICACHE_FLASH_ATTR getUptime(void) {
-	static const unsigned long MS_PER_SECOND = (1000);
-	static const unsigned long MS_PER_MINUTE = (MS_PER_SECOND * 60 /*times 60 seconds*/);
-	static const unsigned long MS_PER_HOUR = (MS_PER_MINUTE * 60 /*times 60 minutes*/);
-	static const unsigned long MS_PER_DAY = (MS_PER_HOUR * 24 /*times 24 hours*/);
-	unsigned long uptime = millis() - startup_millis;
-	unsigned long up_day = uptime / MS_PER_DAY;
-	unsigned long up_hrs = (uptime - (up_day * MS_PER_DAY)) / MS_PER_HOUR;
-	unsigned long up_min = (uptime - ((up_day * MS_PER_DAY) + (up_hrs * MS_PER_HOUR))) / MS_PER_MINUTE;
-	unsigned long up_sec = (uptime
-			- ((up_day * MS_PER_DAY) + (up_hrs * MS_PER_HOUR) + (up_min * MS_PER_MINUTE))) / MS_PER_SECOND;
-	String s(String(uptime) + " ms, or ");
-	s += String(up_day) + "d ";
-	if (up_hrs < 10) s += "0";
-	s += String(up_hrs) + ":";
-	if (up_min < 10) s += "0";
-	s += String(up_min) + ":";
-	if (up_sec < 10) s += "0";
-	s += String(up_sec);
-	// Example: 897234 ms, 10d 01:23:04
-	return s;
-}
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-String ICACHE_FLASH_ATTR getsDeviceInfo(String eol) {
+String getsDeviceInfo(String eol) {
 	String s(ProgramInfo + eol);
 	s += "Hostname: " + WiFi.hostname() + eol;
 	s += "Device MAC: " + WiFi.macAddress() + eol;
@@ -365,11 +356,11 @@ String ICACHE_FLASH_ATTR getsDeviceInfo(String eol) {
 	s += "ESP8266_Device_ID=" + String(dinfo.getDeviceID()) + eol;
 	s += "Friendly Name: " + String(dinfo.getDeviceName()) + eol;
 	s += "Temperature Units: " + String(getTempUnits(dinfo.isFahrenheit())) + eol;
-	s += "Uptime: " + getUptime() + eol;
+	s += "Uptime: " + getTimeString(millis() - startup_millis) + eol;
 	return s;
 }
 
-String ICACHE_FLASH_ATTR getsSensorInfo(String eol) {
+String getsSensorInfo(String eol) {
 	String s("");
 	for (int sensor_number = 0; sensor_number < dinfo.getPortMax() && sensor_number < SENSOR_COUNT;
 			sensor_number++) {

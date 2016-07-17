@@ -66,13 +66,14 @@ void softwareWatchdog(void) {
 		if (stillStartingUp) {
 			kickExternalWatchdog();
 			if ((now - startedTime) > STARTUP_ABORT_TIMEOUT_MS) {
-				Serial.println("Startup time exceeded, restarting");
+				Serial.println("User startup time exceeded, restarting");
 				ESP.reset();
 			}
 		}
 		else {
 			for (int i = 0; i < static_cast<int>(taskname_NUM_TASKS); i++) {
 				if ((now - wdog_timer[i]) >= WATCHDOG_TIMEOUT_MS) {
+					Serial.println("User software wdt timeout for task " + String(i));
 					ESP.reset();
 				}
 				else {

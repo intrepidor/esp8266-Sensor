@@ -11,12 +11,13 @@
 //#include <array>
 #include <Arduino.h>
 #include "sensor.h"
+#include "util.h"
 
 const uint32_t EEPROM_SIGNATURE = 0xA357; // This is a pattern used to detect if the EEPROM data is present
 
 const int CURRENT_CONFIG_VERSION = 123;
 const int DECIMAL_PRECISION = 5;
-const int SECONDS_PER_DAY = (3600 * 24);
+
 const unsigned long DEF_THINGSPEAK_UPDATE_PERIOD_MS = (60000); // 60 seconds
 const unsigned long MIN_THINGSPEAK_UPDATE_PERIOD_MS = (20000); // 20 seconds
 
@@ -50,7 +51,7 @@ private:
 		// Thingspeak
 		struct {
 			unsigned long channel;
-			unsigned long time_between_updates_sec;
+			unsigned long time_between_updates_ms;
 			int status;
 			// bit value
 			// 1 means "HTTP/1.1 200 OK" received
@@ -157,13 +158,17 @@ public:
 	}
 
 // Update Period
-	unsigned long getThingspeakUpdatePeriod() {
-		if (db.thingspeak.time_between_updates_sec < MIN_THINGSPEAK_UPDATE_PERIOD_MS) {
-			db.thingspeak.time_between_updates_sec = MIN_THINGSPEAK_UPDATE_PERIOD_MS;
+	unsigned long getThingspeakUpdatePeriodSeconds() {
+		if (db.thingspeak.time_between_updates_ms < MIN_THINGSPEAK_UPDATE_PERIOD_MS) {
+			db.thingspeak.time_between_updates_ms = MIN_THINGSPEAK_UPDATE_PERIOD_MS;
 		}
-		return db.thingspeak.time_between_updates_sec;
+		return db.thingspeak.time_between_updates_ms / MS_PER_SECOND;
 	}
-	void setThingspeakUpdatePeriod(unsigned long new_periodsec);
+	unsigned long getThingspeakUpdatePeriodMS() {
+		return getThingspeakUpdatePeriodSeconds() * MS_PER_SECOND;
+	}
+	void setThingspeakUpdatePeriodSeconds(unsigned long new_periodsec);
+	void setThingspeakUpdatePeriodMS(unsigned long new_periodms);
 
 // API
 	void setThingspeakApikey(const char* _apikey) {

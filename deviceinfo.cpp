@@ -11,16 +11,20 @@
 #include "debugprint.h"
 #include "sensor.h"
 
-void Device::setThingspeakUpdatePeriod(unsigned long new_periodsec) {
-	if (new_periodsec < MIN_THINGSPEAK_UPDATE_PERIOD_MS) {
-		db.thingspeak.time_between_updates_sec = MIN_THINGSPEAK_UPDATE_PERIOD_MS; // fastest possible per thingspeak rules
+void Device::setThingspeakUpdatePeriodMS(unsigned long new_periodms) {
+	if (new_periodms < MIN_THINGSPEAK_UPDATE_PERIOD_MS) {
+		db.thingspeak.time_between_updates_ms = MIN_THINGSPEAK_UPDATE_PERIOD_MS; // fastest possible per thingspeak rules
 	}
-	else if (new_periodsec > SECONDS_PER_DAY) {
-		db.thingspeak.time_between_updates_sec = SECONDS_PER_DAY; // slowest is once per day
+	else if (new_periodms > MS_PER_DAY) {
+		db.thingspeak.time_between_updates_ms = MS_PER_DAY; // slowest is once per day
 	}
 	else {
-		db.thingspeak.time_between_updates_sec = new_periodsec;
+		db.thingspeak.time_between_updates_ms = new_periodms;
 	}
+}
+
+void Device::setThingspeakUpdatePeriodSeconds(unsigned long new_periodsec) {
+	setThingspeakUpdatePeriodMS(new_periodsec * MS_PER_SECOND);
 }
 
 void Device::corruptConfigurationMemory(void) {
@@ -34,7 +38,7 @@ void Device::writeDefaultsToDatabase(void) {
 	setDeviceID(999);
 	setFahrenheitUnit(true);
 	setThingspeakEnable(false);
-	setThingspeakUpdatePeriod (DEF_THINGSPEAK_UPDATE_PERIOD_MS); // once per minute
+	setThingspeakUpdatePeriodMS (DEF_THINGSPEAK_UPDATE_PERIOD_MS); // once per minute
 	setThingspeakApikey("");
 	setThingspeakURL("http://api.thingspeak.com");
 	setThingspeakChannel(0);
@@ -59,7 +63,7 @@ String Device::databaseToString(String eol) {
 	s += "device.id=" + String(getDeviceID()) + eol;
 	s += "thingspeak.status=" + String(getThingspeakStatus()) + eol;
 	s += "thingspeak.enable=" + getThingspeakEnableString() + eol;
-	s += "thingspeak.time_between_updates_sec=" + String(getThingspeakUpdatePeriod()) + eol;
+	s += "thingspeak.time_between_updates_sec=" + String(getThingspeakUpdatePeriodSeconds()) + " sec" + eol;
 	s += "TS_apikey=" + getThingspeakApikey() + eol;
 	s += "thingspeak.url=" + getThingspeakURL() + eol;
 	s += "thingspeak.channel=" + getThingspeakChannel() + eol;

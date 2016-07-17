@@ -31,7 +31,6 @@ int Queue::scheduleFunction(queuedFunction func, String id, unsigned long initia
 }
 
 int Queue::scheduleRemoveFunction(String id) {
-//l int --e{534}    ignore warning about ignoring return value from _addToQueue()
 	queueItem target;
 	int rv = QUEUE_RETURNCODE_ERROR;
 	for (unsigned int i = 0; i < _itemsInQueue; ++i) {
@@ -40,7 +39,7 @@ int Queue::scheduleRemoveFunction(String id) {
 				rv = QUEUE_RETURNCODE_NOERROR;
 			}
 			else {
-				return _addToQueue(target);
+				_addToQueue(target);
 			}
 		}
 		else {
@@ -53,7 +52,6 @@ int Queue::scheduleRemoveFunction(String id) {
 }
 
 int Queue::scheduleChangeFunction(String id, unsigned long nextRunTime, unsigned long newRecur) {
-//l int --e{534}    ignore warning about ignoring return value from _addToQueue()
 	queueItem target;
 	int rv = QUEUE_RETURNCODE_ERROR;
 	for (unsigned int i = 0; i < _itemsInQueue; ++i) {
@@ -63,7 +61,7 @@ int Queue::scheduleChangeFunction(String id, unsigned long nextRunTime, unsigned
 				target.recur = newRecur;
 				rv = QUEUE_RETURNCODE_NOERROR;
 			}
-			return _addToQueue(target);
+			_addToQueue(target);
 		}
 		else {
 			rv = QUEUE_RETURNCODE_ERROR;
@@ -75,7 +73,6 @@ int Queue::scheduleChangeFunction(String id, unsigned long nextRunTime, unsigned
 }
 
 int Queue::Run(unsigned long now) {
-//l int --e{534}    ignore warning about ignoring return value from _addToQueue()
 	queueItem target;
 	int rv = QUEUE_RETURNCODE_NOERROR;
 	if (_itemsInQueue == 0) {
@@ -91,11 +88,11 @@ int Queue::Run(unsigned long now) {
 				}
 				if (target.recur != 0) {
 					target.next = now + target.recur;
-					return _addToQueue(target);
+					_addToQueue(target);
 				}
 			}
 			else {
-				return _addToQueue(target);
+				_addToQueue(target);
 			}
 		}
 		else {
@@ -103,7 +100,6 @@ int Queue::Run(unsigned long now) {
 			break;
 		}
 	}
-
 	return rv;
 }
 
@@ -125,7 +121,6 @@ int Queue::_queueGetTop(queueItem &item) {
 }
 
 int Queue::_addToQueue(queueItem item) {
-//lint --e{1746}    ignore information about making item a const reference
 	//This is just a circular buffer, and this algorithm is stolen from wikipedia
 	int rv = QUEUE_RETURNCODE_NOERROR;
 	if ((_queueEnd + 1) % QUEUE_SCHEDULE_SIZE != _queueStart) {

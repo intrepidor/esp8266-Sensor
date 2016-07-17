@@ -292,7 +292,7 @@ void config(void) {
 	// Thingspeak
 	r += sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
 	r += sHTTP_TS_ENABLE + String(dinfo.getThingspeakEnableStr()) + "> Thingspeak Enable<br>";
-	r += sHTTP_TS_PERIOD + String(dinfo.getThingspeakUpdatePeriod()) + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_TS_PERIOD + String(dinfo.getThingspeakUpdatePeriodSeconds()) + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_APIKEY + dinfo.getThingspeakApikey() + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_URL + dinfo.getThingspeakURL() + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_CHANNEL + String(dinfo.getThingspeakChannel()) + sHTTP_ENDLABELQ_BR;
@@ -430,11 +430,11 @@ int ConfigurationChange(void) {
 			}
 			if (sarg == "tsupdateperiod") {
 				unsigned long l = static_cast<unsigned long>(::atol(varg.c_str()));
-				dinfo.setThingspeakUpdatePeriod(l);
+				dinfo.setThingspeakUpdatePeriodSeconds(l);
 				debug.println(DebugLevel::DEBUG2, F(" ok tsupdateperiod"));
 				// Reschedule the thinkspeak task
-				l = dinfo.getThingspeakUpdatePeriod();
-				myQueue.scheduleChangeFunction("thingspeak", millis() + l, l);
+				l = dinfo.getThingspeakUpdatePeriodSeconds();
+				myQueue.scheduleChangeFunction("thingspeak", millis() + l * MS_PER_SECOND, l * MS_PER_SECOND);
 				found = true;
 			}
 			if (sarg == "apikey") {

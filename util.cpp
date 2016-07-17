@@ -11,6 +11,24 @@
 #include "main.h"
 #include "deviceinfo.h"
 
+String getTimeString(unsigned long thetime) {
+	unsigned long up_day = thetime / MS_PER_DAY;
+	unsigned long up_hrs = (thetime - (up_day * MS_PER_DAY)) / MS_PER_HOUR;
+	unsigned long up_min = (thetime - ((up_day * MS_PER_DAY) + (up_hrs * MS_PER_HOUR))) / MS_PER_MINUTE;
+	unsigned long up_sec = (thetime
+			- ((up_day * MS_PER_DAY) + (up_hrs * MS_PER_HOUR) + (up_min * MS_PER_MINUTE))) / MS_PER_SECOND;
+	String s(String(thetime) + " ms, or ");
+	s += String(up_day) + "d ";
+	if (up_hrs < 10) s += "0";
+	s += String(up_hrs) + ":";
+	if (up_min < 10) s += "0";
+	s += String(up_min) + ":";
+	if (up_sec < 10) s += "0";
+	s += String(up_sec);
+	// Example: 897234 ms, 10d 01:23:04
+	return s;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 /* These are replacements for delay() and delayMicroseconds(). While delay() loops
  * doing nothing and holding the CPU until the time duration passes, these functions

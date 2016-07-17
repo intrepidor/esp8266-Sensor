@@ -25,8 +25,8 @@ long thinkspeak_total_entries = 0; // this is filled in by the response from the
 String getsThingspeakInfo(String eol) {
 	String s("== Thingspeak Information ==" + eol);
 	s += "Enabled: " + dinfo.getThingspeakEnableString() + eol;
-	s += "Update Period ms: " + String(dinfo.getThingspeakUpdatePeriod()) + " Queue.recur="
-			+ String(myQueue.getTimeInterval("thingspeak")) + eol;
+	s += "Update Period[s]: " + String(dinfo.getThingspeakUpdatePeriodSeconds()) + " Queue.recur="
+			+ String(myQueue.getTimeInterval("thingspeak")) + " ms" + eol;
 	s += "Next Update: " + String(myQueue.getTimeTillRun("thingspeak")) + " millis()" + eol;
 	s += "URL: " + dinfo.getThingspeakURL() + " (future use)" + eol;
 	s += "Write Key: " + dinfo.getThingspeakApikey() + eol;
