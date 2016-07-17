@@ -6,6 +6,7 @@ extern const char sHTTP_DIVBASE[];
 extern const char sHTTP_DIVEND[];
 
 extern void config(void);
+extern void tsconfig(void);
 extern String getWebFooter(bool all);
 extern void sendHTML_Header(bool sendCSS);
 

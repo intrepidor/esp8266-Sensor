@@ -25,7 +25,7 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	setCalEnable(TEMP_CAL_INDEX_TEMP_OFFSET, true);
 	setCalName(TEMP_CAL_INDEX_TEMP_OFFSET, "Temperature Offset");
 	setValueEnable(TEMP_VALUE_INDEX_TEMPERATURE, true);
-	setValueName(TEMP_VALUE_INDEX_TEMPERATURE, "tempC");
+	setValueName(TEMP_VALUE_INDEX_TEMPERATURE, "temp");
 	setType(TEMP_VALUE_INDEX_TEMPERATURE, valueType::temperature);
 	setUOM(TEMP_VALUE_INDEX_TEMPERATURE, uomType::celsius);
 

@@ -9,6 +9,7 @@
 #include <WString.h>
 #include <ESP8266WiFi.h>
 #include "include/wl_definitions.h"
+#include "thingspeak.h"
 #include "debugprint.h"
 #include "main.h"
 #include "queue.h"
@@ -86,7 +87,6 @@ String getTCPStatusString(uint8_t s) {
 }
 
 String getThingspeakGET(void) {
-	int const MAX_THINGSPEAK_FIELD_COUNT = 8; // Thingspeak only accept 8 fields
 	String getStr = "/update?api_key=" + dinfo.getThingspeakApikey();
 
 	getStr += "&field1=" + String(PIRcount); // The built-in PIR sensor is always field1

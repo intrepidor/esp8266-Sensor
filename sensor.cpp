@@ -86,7 +86,7 @@ bool Sensor::isValueStale(int _channel) {
 
 bool Sensor::setValueName(int _channel, String name) {
 	if (isValueChannelValid(_channel)) {
-		value[_channel].name = name;
+		value[_channel].vname = name;
 		return true;
 	}
 	return false;
@@ -94,7 +94,7 @@ bool Sensor::setValueName(int _channel, String name) {
 
 String Sensor::getValueName(int _channel) {
 	if (isValueChannelValid(_channel)) {
-		return value[_channel].name;
+		return value[_channel].vname;
 	}
 	return String("");
 }
@@ -167,7 +167,7 @@ void Sensor::printValues(void) {
 			Serial.print(F("   Val["));
 			Serial.print(i);
 			Serial.print(F(","));
-			Serial.print(value[i].name);
+			Serial.print(value[i].vname);
 			Serial.print(F("]="));
 			Serial.print(getValue(i));
 
@@ -177,7 +177,7 @@ void Sensor::printValues(void) {
 			Serial.print(F("   Raw["));
 			Serial.print(i);
 			Serial.print(F(","));
-			Serial.print(value[i].name);
+			Serial.print(value[i].vname);
 			Serial.print(F("]="));
 			Serial.print(getRawValue(i));
 			Serial.print(F(", Age="));
@@ -201,7 +201,7 @@ bool Sensor::isCalChannelValid(int _channel) {
 
 bool Sensor::setCalName(int _channel, String name) {
 	if (isCalChannelValid(_channel)) {
-		cal[_channel].name = name;
+		cal[_channel].vname = name;
 		return true;
 	}
 	return false;
@@ -210,7 +210,7 @@ bool Sensor::setCalName(int _channel, String name) {
 String Sensor::getCalName(int _channel) {
 	String s("");
 	if (isCalChannelValid(_channel)) {
-		s = cal[_channel].name;
+		s = cal[_channel].vname;
 	}
 	return s;
 }
@@ -255,7 +255,7 @@ void Sensor::printCals(void) {
 			Serial.print(F("   Cal["));
 			Serial.print(i);
 			Serial.print(F(","));
-			Serial.print(cal[i].name);
+			Serial.print(cal[i].vname);
 			Serial.print(F("]="));
 			Serial.println(getCal(i));
 		}

@@ -8,6 +8,8 @@
 #ifndef THINGSPEAK_H_
 #define THINGSPEAK_H_
 
+int const MAX_THINGSPEAK_FIELD_COUNT = 8; // Thingspeak only accept 8 fields
+
 extern size_t thingspeak_update_counter;
 extern size_t thingspeak_error_counter;
 extern long thinkspeak_total_entries; // response from thingspeak after update

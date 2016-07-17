@@ -12,6 +12,7 @@
 #include "main.h"
 #include "deviceinfo.h"
 #include "net_config.h"
+#include "thingspeak.h"
 
 extern int ConfigurationChange(void);
 
@@ -244,6 +245,7 @@ String getWebFooter(bool all) {
 	wf += a + hre + lin + "\">Show Data" + sHTTP_AHREF_END;
 	wf += a + hre + lin + "/csv\">Show CSV" + sHTTP_AHREF_END;
 	wf += a + hre + lin + "/config\">Configure" + sHTTP_AHREF_END;
+	wf += a + hre + lin + "/tsconfig\">ThingSpeak" + sHTTP_AHREF_END;
 	wf += a + hre + lin + "/status\">Status" + sHTTP_AHREF_END;
 	wf += a + hre + lin + "/sensordebug\">Sensor Debug" + sHTTP_AHREF_END;
 	if (all) {
@@ -355,6 +357,85 @@ void config(void) {
 	}
 
 // Buttons and links then END of Page
+	r = getWebFooter(true) + "</form>" + sHTTP_END;
+	server.sendContent(r);
+}
+
+String getfieldHTMLcode(int selectedfield) {
+	String s("");
+	for (int field = 0; field <= MAX_THINGSPEAK_FIELD_COUNT; field++) {
+		s += "<option value=\"";
+		if (field == 0) {
+			s += "None";
+		}
+		else {
+			s += "field" + String(field);
+		}
+		s += "\"";
+		if (field == selectedfield) {
+			s += "selected";
+		}
+		if (field == 0) {
+			s += ">None";
+		}
+		else {
+			s += ">Field" + String(field);
+		}
+		s += "</option>";
+	}
+	s += "</select>";
+	return s;
+}
+
+//-----------------------------------------------------------------------------------
+void tsconfig(void) {
+	// If there was a submit, then process the changes
+	ConfigurationChange();
+
+	// Start of page
+	String r("");
+	sendHTML_Header(true);
+	r += "<form action=\"tsconfig\" method=\"get\" name=\"Thingspeak Configuration\">";
+	r += "<h2>Thingspeak Configuration :: " + ProgramInfo + "</h2>";
+	server.sendContent(r);
+
+	// Thingspeak
+	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
+	r += sHTTP_TS_ENABLE + String(dinfo.getThingspeakEnableStr()) + "> Thingspeak Enable<br>";
+	r += sHTTP_TS_PERIOD + String(dinfo.getThingspeakUpdatePeriodSeconds()) + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_TS_APIKEY + dinfo.getThingspeakApikey() + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_TS_URL + dinfo.getThingspeakURL() + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_TS_CHANNEL + String(dinfo.getThingspeakChannel()) + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_TS_IPADDR + dinfo.getThingspeakIpaddr() + sHTTP_ENDLABELQ + " Default=184.106.153.149";
+	r += sHTTP_DIVEND;
+	server.sendContent(r);
+
+	// Fields
+	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
+
+	r += "<br>PIR <select name=\"pirmenu\">" + getfieldHTMLcode(1);
+	r += "<br>RSSI <select name=\"rssimenu\">" + getfieldHTMLcode(2);
+	r += "<br>Uptime <select name=\"uptimemenu\">" + getfieldHTMLcode(3);
+	r += "<br>";
+
+	for (int sensor = 0; sensor < SENSOR_COUNT; sensor++) {
+		r += "<br><b>Port " + String(sensor) + "</b><br>";
+		if (sensors[sensor]) {
+			for (int channel = 0; channel < getSensorValueCount(); channel++) {
+				r += "Channel " + String(channel) + ": ";
+				r += sensors[sensor]->getValueName(channel);
+				r += " <select name=\"sensormenu" + String(sensor) + String(channel) + "\">";
+				r += getfieldHTMLcode(0);
+				r += "<input type=\"text\" class=\"field fieldshort\" name=\"fieldname";
+				r += String(sensor) + String(channel);
+				r += "\" value=\"" + String("somename") + "\"><br>";
+			}
+		}
+	}
+	r += sHTTP_DIVEND;
+	server.sendContent(r);
+
+	// Buttons and links then END of Page
 	r = getWebFooter(true) + "</form>" + sHTTP_END;
 	server.sendContent(r);
 }

@@ -47,14 +47,16 @@ private:
 
 public:
 	bool enabled;
-	String name;
+	String vname;
 	unsigned long last_sample_time_ms;
+	int thingspeak_field_number;
+	String thingspeak_field_name;
 
 	~SensorValue() { /* nothing to destroy */
 	}
 	SensorValue()
-			: v(0), type(valueType::undefined), uom(uomType::undefined), enabled(false), name(""),
-					last_sample_time_ms(0) {
+			: v(0), type(valueType::undefined), uom(uomType::undefined), enabled(false), vname(""),
+					last_sample_time_ms(0), thingspeak_field_number(0), thingspeak_field_name("") {
 	}
 	uomType getUOM() {
 		return this->uom;

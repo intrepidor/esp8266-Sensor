@@ -76,7 +76,7 @@ void WebInit(void) {
 
 	Serial.println("");
 	Serial.println("Connected to " + WiFi.SSID());
-	Serial.print( F("IP address: "));
+	Serial.print(F("IP address: "));
 	Serial.println(WiFi.localIP());
 	kickAllWatchdogs();
 
@@ -198,6 +198,7 @@ void WebInit(void) {
 	server.on("/config", config);
 	server.on("/default_configuration", _WriteDefaultsToDatabase);
 	server.on("/erase_eeprom", _EraseEEPROM);
+	server.on("/tsconfig", tsconfig);
 	server.on("/reboot", ESPreset);
 
 	kickAllWatchdogs();
