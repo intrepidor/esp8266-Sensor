@@ -42,6 +42,8 @@ enum class sensorModule {
 // serial
 	rfid,
 	marquee,
+// other
+	taskclock,
 	END
 };
 struct t_sensor {

@@ -42,6 +42,10 @@ void GenericSensor::init(sensorModule m, SensorPins& p) {
 		setValueEnable(TEMP_VALUE_CHANNEL_DIGITAL, true);
 	}
 
+	if (m == sensorModule::taskclock) {
+		// none are used
+	}
+
 	// The pins used to interact with the sensor
 	digital_pin = static_cast<uint8_t>(p.digital);
 	analog_pin = static_cast<uint8_t>(p.analog);
@@ -80,6 +84,11 @@ bool GenericSensor::acquire_setup(void) {
 			pinMode(digital_pin, INPUT);
 			started = true;
 		}
+		if (getModule() == sensorModule::taskclock) {
+			debug.println(DebugLevel::DEBUG2, String(millis()) + ", setup() " + String(digital_pin));
+			pinMode(digital_pin, OUTPUT);
+			started = true;
+		}
 		if (getModule() == sensorModule::off) {
 			started = true;
 		}
@@ -113,6 +122,9 @@ bool GenericSensor::acquire1(void) {
 			else {
 				setDigital(1);
 			}
+		}
+		if (getModule() == sensorModule::taskclock) {
+			return true; // do nothing
 		}
 	}
 	return true;

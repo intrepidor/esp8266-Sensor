@@ -74,6 +74,8 @@ Sensor* sensors[SENSOR_COUNT] = { nullptr, nullptr, nullptr, nullptr };
 
 Device dinfo; // create AFTER Sensor declaration above
 Queue myQueue;
+bool outputTaskClock = false;
+uint8_t outputTaskClockPin = BUILTIN_LED;
 
 //extern void pp_soft_wdt_stop();
 
@@ -168,17 +170,18 @@ void setup(void) {
 	kickAllSoftwareWatchdogs();
 	Serial.println("Startup complete");
 	bool pol = false;
-	pinMode(DIGITAL_PIN_4, OUTPUT); // Initialize the BUILTIN_LED pin as an output
 	for (;;) {
 		softwareWatchdog(); // must call minimally every 1.6s to avoid the external watchdog reseting the ESP8266
 		myQueue.Run(millis());
-		if (pol) {
-			digitalWrite(DIGITAL_PIN_4, 0);
+		if (outputTaskClock) {
+			if (pol) {
+				digitalWrite(outputTaskClockPin, 0);
+			}
+			else {
+				digitalWrite(outputTaskClockPin, 1);
+			}
+			pol = !pol;
 		}
-		else {
-			digitalWrite(DIGITAL_PIN_4, 1);
-		}
-		pol = !pol;
 		//yield();
 		optimistic_yield(10000);
 	}
@@ -308,6 +311,13 @@ void ConfigurePorts(void) {
 						case static_cast<int>(sensorModule::rfid):
 							break;
 						case static_cast<int>(sensorModule::marquee):
+							break;
+						case static_cast<int>(sensorModule::taskclock):
+							sensors[portNumber] = new GenericSensor();
+							sensors[portNumber]->init(sensorModule::taskclock, p);
+							sensors[portNumber]->setName("taskclock");
+							outputTaskClock = true;
+							outputTaskClockPin = static_cast<uint8_t>(p.digital); // yes. it overwrites if already set in a different port
 							break;
 						case static_cast<int>(sensorModule::off):
 						default:

@@ -66,5 +66,7 @@ t_sensor const sensorList[static_cast<int>(sensorModule::END)] = {
 		{ "LCD1602", sensorModule::lcd1602 },				// I2C
 		// Serial
 		{ "RFID", sensorModule::rfid },
-		{ "Marquee", sensorModule::marquee } };
+		{ "Marquee", sensorModule::marquee },
+		// OTHER
+		{ "TaskClock", sensorModule::taskclock } };
 
