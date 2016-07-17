@@ -12,24 +12,26 @@
  * Copied from github on 2016Jan23. Some small changes were made.
  */
 
-// Modified by Allan Inda to use String class instead of char* buffers.
+// Modified by Allan Inda to use String class instead of char* buffers and to
+//   add getTime.. functions.
 #ifndef QUEUE_H
 #define QUEUE_H
 
 #include <Arduino.h>
+#include <limits.h>
 
 typedef int (*queuedFunction)(unsigned long);
 
 const int QUEUE_SCHEDULE_SIZE = 11; /*lint -e551 Don't warning about not accessing this variable */
 const int QUEUE_RETURNCODE_NOERROR = 0;
 const int QUEUE_RETURNCODE_ERROR = -1;
+const unsigned long QUEUE_RETURNCODE_ID_NOT_FOUND = ULONG_MAX - 1;
 
 struct queueItem {
 	queuedFunction fPtr;
 	unsigned long next;
 	unsigned long recur;
 	String itemName;
-	//char itemName[ITEM_NAME_BUFFER_SIZE];
 };
 
 class Queue {
@@ -48,7 +50,8 @@ public:
 	int scheduleFunction(queuedFunction func, String id, unsigned long initialRun, unsigned long recur);
 	int scheduleRemoveFunction(String id);
 	int scheduleChangeFunction(String id, unsigned long nextRunTime, unsigned long newRecur);
-
+	unsigned long getTimeInterval(String id);
+	unsigned long getTimeTillRun(String id);
 	int Run(unsigned long now);
 	/* data */
 };

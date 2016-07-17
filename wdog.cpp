@@ -66,7 +66,7 @@ void softwareWatchdog(void) {
 		if (stillStartingUp) {
 			kickExternalWatchdog();
 			if ((now - startedTime) > STARTUP_ABORT_TIMEOUT_MS) {
-				debug.println(DebugLevel::ALWAYS, "Startup time exceeded, restarting");
+				Serial.println("Startup time exceeded, restarting");
 				ESP.reset();
 			}
 		}

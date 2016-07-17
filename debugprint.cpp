@@ -42,9 +42,6 @@ String DebugPrint::convertDebugLevelToString(DebugLevel dl) {
 		case DebugLevel::ALWAYS:
 			return String("ALWAYS");
 			break;
-		case DebugLevel::NONE:
-			return String("NONE");
-			break;
 		case DebugLevel::INFO:
 			return String("INFO");
 			break;
@@ -57,8 +54,8 @@ String DebugPrint::convertDebugLevelToString(DebugLevel dl) {
 		case DebugLevel::TIMINGS:
 			return String("TIMINGS");
 			break;
-		case DebugLevel::DEBUGMORE:
-			return String("DEBUGMORE");
+		case DebugLevel::DEBUG2:
+			return String("DEBUG2");
 			break;
 		case DebugLevel::END:
 		default:

@@ -17,6 +17,8 @@ const uint32_t EEPROM_SIGNATURE = 0xA357; // This is a pattern used to detect if
 const int CURRENT_CONFIG_VERSION = 123;
 const int DECIMAL_PRECISION = 5;
 const int SECONDS_PER_DAY = (3600 * 24);
+const unsigned long DEF_THINGSPEAK_UPDATE_PERIOD_MS = (60000); // 60 seconds
+const unsigned long MIN_THINGSPEAK_UPDATE_PERIOD_MS = (20000); // 20 seconds
 
 //-----------------------------------------------------------------------------------
 // Device Class
@@ -48,7 +50,7 @@ private:
 		// Thingspeak
 		struct {
 			unsigned long channel;
-			int time_between_updates_sec;
+			unsigned long time_between_updates_sec;
 			int status;
 			// bit value
 			// 1 means "HTTP/1.1 200 OK" received
@@ -83,7 +85,6 @@ public:
 		//   case objects of those other classes might not have been declared.
 		writeDefaultsToDatabase();
 	}
-	void validateDatabase(void);
 	String databaseToString(String _eol); // pass end of line delimiter
 	void writeDefaultsToDatabase(void);
 	void eraseDatabase(void) {
@@ -156,10 +157,13 @@ public:
 	}
 
 // Update Period
-	int getThingspeakUpdatePeriod() const {
+	unsigned long getThingspeakUpdatePeriod() {
+		if (db.thingspeak.time_between_updates_sec < MIN_THINGSPEAK_UPDATE_PERIOD_MS) {
+			db.thingspeak.time_between_updates_sec = MIN_THINGSPEAK_UPDATE_PERIOD_MS;
+		}
 		return db.thingspeak.time_between_updates_sec;
 	}
-	void setThingspeakUpdatePeriod(int new_periodsec);
+	void setThingspeakUpdatePeriod(unsigned long new_periodsec);
 
 // API
 	void setThingspeakApikey(const char* _apikey) {

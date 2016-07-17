@@ -44,7 +44,7 @@ void reset(void) {
 	 */
 	reset_config();
 
-	debug.println(DebugLevel::ALWAYS, "Rebooting ... this may take 15 seconds or more.");
+	Serial.println("Rebooting ... this may take 15 seconds or more.");
 
 	pinMode(PIN_SOFTRESET, OUTPUT);
 	for (int a = 0; a < 10; a++) {

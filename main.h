@@ -9,6 +9,7 @@
 #define MAIN_H_
 
 #include <Arduino.h>
+#include "Queue.h"
 #include "temperature.h"
 #include "deviceinfo.h"
 #include "debugprint.h"
@@ -27,6 +28,7 @@ extern Sensor* sensors[];
 
 extern Device dinfo;
 extern DebugPrint debug;
+extern Queue myQueue;
 
 extern const uint8_t PIN_SOFTRESET;
 extern const uint8_t PIN_BUILTIN_LED;

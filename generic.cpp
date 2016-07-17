@@ -72,11 +72,11 @@ bool GenericSensor::acquire_setup(void) {
 	}
 	else {
 		if (getModule() == sensorModule::analog || getModule() == sensorModule::analog_digital) {
-			debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", setup() " + String(analog_pin));
+			debug.println(DebugLevel::DEBUG2, String(millis()) + ", setup() " + String(analog_pin));
 			started = true;
 		}
 		if (getModule() == sensorModule::digital || getModule() == sensorModule::analog_digital) {
-			debug.println(DebugLevel::DEBUGMORE, String(millis()) + ", setup() " + String(digital_pin));
+			debug.println(DebugLevel::DEBUG2, String(millis()) + ", setup() " + String(digital_pin));
 			pinMode(digital_pin, INPUT);
 			started = true;
 		}

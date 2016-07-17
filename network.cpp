@@ -63,34 +63,34 @@ void WebInit(void) {
 
 // Start WiFi
 //  WiFi.begin(factory_default_ssid, factory_default_pass);
-//  debug.print(DebugLevel::ALWAYS, "Searching for ");
-//  debug.print(DebugLevel::ALWAYS, factory_default_ssid);
+//  Serial.print( "Searching for ");
+//  Serial.print( factory_default_ssid);
 //
 //  while (WiFi.status() != WL_CONNECTED) {
 //    digitalWrite(BUILTIN_LED, BUILTIN_LED_OFF);
 //    delay(250);
 //    digitalWrite(BUILTIN_LED, BUILTIN_LED_ON);
 //    delay(250);
-//    debug.print(DebugLevel::ALWAYS, ".");
+//    Serial.print( ".");
 //  }
 
-	debug.println(DebugLevel::ALWAYS, "");
-	debug.println(DebugLevel::ALWAYS, "Connected to " + WiFi.SSID());
-	debug.print(DebugLevel::ALWAYS, F("IP address: "));
-	debug.println(DebugLevel::ALWAYS, WiFi.localIP());
+	Serial.println("");
+	Serial.println("Connected to " + WiFi.SSID());
+	Serial.print( F("IP address: "));
+	Serial.println(WiFi.localIP());
 	kickAllWatchdogs();
 
 	uint8_t available_networks = static_cast<uint8_t>(WiFi.scanNetworks());
 	for (uint8_t network = 0; network < available_networks; network++) {
 		if (strcmp(WiFi.SSID(network).c_str(), WiFi.SSID().c_str()) == 0) {
 			rssi = WiFi.RSSI(network);
-			debug.println(DebugLevel::ALWAYS, "RSSI: " + String(rssi) + " dBm");
+			Serial.println("RSSI: " + String(rssi) + " dBm");
 		}
 	}
 	kickAllWatchdogs();
 
 	if (MDNS.begin("esp8266")) {
-		debug.println(DebugLevel::ALWAYS, F("mDNS started"));
+		Serial.println(F("mDNS started"));
 	}
 	kickAllWatchdogs();
 
@@ -202,7 +202,7 @@ void WebInit(void) {
 
 	kickAllWatchdogs();
 	server.begin();
-	debug.println(DebugLevel::ALWAYS, F("Web server started"));
+	Serial.println(F("Web server started"));
 }
 
 void WebWorker(void) {

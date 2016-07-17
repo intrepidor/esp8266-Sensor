@@ -113,35 +113,35 @@ bool Sensor::setRawValue(int _channel, float v) {
 }
 
 void Sensor::printValues(void) {
-	debug.print(DebugLevel::ALWAYS, F("Sensor: "));
+	Serial.print( F("Sensor: "));
 	if (getName().length() > 0) {
-		debug.print(DebugLevel::ALWAYS, getName());
+		Serial.print( getName());
 	}
-	debug.println(DebugLevel::ALWAYS, "");
+	Serial.println("");
 	for (int i = 0; i < getSensorValueCount(); i++) {
 		if (value[i].enabled) {
-			debug.print(DebugLevel::ALWAYS, F("   Val["));
-			debug.print(DebugLevel::ALWAYS, i);
-			debug.print(DebugLevel::ALWAYS, F(","));
-			debug.print(DebugLevel::ALWAYS, value[i].name);
-			debug.print(DebugLevel::ALWAYS, F("]="));
-			debug.print(DebugLevel::ALWAYS, getValue(i));
+			Serial.print( F("   Val["));
+			Serial.print( i);
+			Serial.print( F(","));
+			Serial.print( value[i].name);
+			Serial.print( F("]="));
+			Serial.print( getValue(i));
 
-			debug.print(DebugLevel::ALWAYS, F(", Age="));
-			debug.println(DebugLevel::ALWAYS, getAge(i));
+			Serial.print( F(", Age="));
+			Serial.println(getAge(i));
 
-			debug.print(DebugLevel::ALWAYS, F("   Raw["));
-			debug.print(DebugLevel::ALWAYS, i);
-			debug.print(DebugLevel::ALWAYS, F(","));
-			debug.print(DebugLevel::ALWAYS, value[i].name);
-			debug.print(DebugLevel::ALWAYS, F("]="));
-			debug.print(DebugLevel::ALWAYS, getRawValue(i));
-			debug.print(DebugLevel::ALWAYS, F(", Age="));
-			debug.println(DebugLevel::ALWAYS, getRawAge(i));
+			Serial.print( F("   Raw["));
+			Serial.print( i);
+			Serial.print( F(","));
+			Serial.print( value[i].name);
+			Serial.print( F("]="));
+			Serial.print( getRawValue(i));
+			Serial.print( F(", Age="));
+			Serial.println(getRawAge(i));
 
 		}
 	}
-	debug.println(DebugLevel::ALWAYS, "");
+	Serial.println("");
 }
 
 //--------------------------------
@@ -201,21 +201,21 @@ bool Sensor::setCal(int _channel, float v) {
 }
 
 void Sensor::printCals(void) {
-	debug.print(DebugLevel::ALWAYS, F("Sensor: "));
+	Serial.print( F("Sensor: "));
 	if (getName().length() > 0) {
-		debug.print(DebugLevel::ALWAYS, getName());
+		Serial.print( getName());
 	}
-	debug.println(DebugLevel::ALWAYS, "");
+	Serial.println("");
 	for (int i = 0; i < getSensorCalCount(); i++) {
 		if (cal[i].enabled) {
-			debug.print(DebugLevel::ALWAYS, F("   Cal["));
-			debug.print(DebugLevel::ALWAYS, i);
-			debug.print(DebugLevel::ALWAYS, F(","));
-			debug.print(DebugLevel::ALWAYS, cal[i].name);
-			debug.print(DebugLevel::ALWAYS, F("]="));
-			debug.println(DebugLevel::ALWAYS, getCal(i));
+			Serial.print( F("   Cal["));
+			Serial.print( i);
+			Serial.print( F(","));
+			Serial.print( cal[i].name);
+			Serial.print( F("]="));
+			Serial.println(getCal(i));
 		}
 	}
-	debug.println(DebugLevel::ALWAYS, "");
+	Serial.println("");
 }
 

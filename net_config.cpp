@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "Queue.h"
 #include "network.h"
 #include "util.h"
 #include "main.h"
@@ -399,80 +400,82 @@ int ConfigurationChange(void) {
 	bool need_reboot = false;
 	if (server.args() > 0) {
 		bool found = false;
-		debug.println(DebugLevel::DEBUGMORE, "");
-		debug.println(DebugLevel::DEBUGMORE, F("##########################################################"));
+		debug.println(DebugLevel::DEBUG2, "");
+		debug.println(DebugLevel::DEBUG2, F("##########################################################"));
 		dinfo.setThingspeakEnable(false);
 		dinfo.setFahrenheitUnit(false);
 		for (uint8_t i = 0; i < server.args(); i++) {
 			String sarg = server.argName(i);
 			String varg = server.arg(i);
-			debug.print(DebugLevel::DEBUGMORE, "NAME=" + sarg + ", VALUE=" + varg);
+			debug.print(DebugLevel::DEBUG2, "NAME=" + sarg + ", VALUE=" + varg);
 			if (sarg == String("name")) {
 				dinfo.setDeviceName(varg);
-				debug.println(DebugLevel::DEBUGMORE, F(" ok name"));
+				debug.println(DebugLevel::DEBUG2, F(" ok name"));
 				found = true;
 			}
 			if (sarg == String("deviceid")) {
 				dinfo.setDeviceID(atoi(varg.c_str()));
-				debug.println(DebugLevel::DEBUGMORE, F(" ok deviceid"));
+				debug.println(DebugLevel::DEBUG2, F(" ok deviceid"));
 				found = true;
 			}
 			if (sarg == String("ts_enable")) {
 				dinfo.setThingspeakEnable(true);
-				debug.println(DebugLevel::DEBUGMORE, F(" ok ts_enable"));
+				debug.println(DebugLevel::DEBUG2, F(" ok ts_enable"));
 				found = true;
 			}
 			if (sarg == String("temp_farhen")) {
 				dinfo.setFahrenheitUnit(true);
-				debug.println(DebugLevel::DEBUGMORE, F(" ok tempunitenable"));
+				debug.println(DebugLevel::DEBUG2, F(" ok tempunitenable"));
 				found = true;
 			}
 			if (sarg == "tsupdateperiod") {
-				long l = ::atol(varg.c_str());
+				unsigned long l = static_cast<unsigned long>(::atol(varg.c_str()));
 				dinfo.setThingspeakUpdatePeriod(l);
-				debug.println(DebugLevel::DEBUGMORE, F(" ok tsupdateperiod"));
+				debug.println(DebugLevel::DEBUG2, F(" ok tsupdateperiod"));
+				// Reschedule the thinkspeak task
+				l = dinfo.getThingspeakUpdatePeriod();
+				myQueue.scheduleChangeFunction("thingspeak", millis() + l, l);
 				found = true;
 			}
 			if (sarg == "apikey") {
 				dinfo.setThingspeakApikey(varg);
-				debug.println(DebugLevel::DEBUGMORE, F(" ok apikey"));
+				debug.println(DebugLevel::DEBUG2, F(" ok apikey"));
 				found = true;
 			}
 			if (sarg == "ipaddr") {
 				dinfo.setThingspeakIpaddr(varg);
-				debug.println(DebugLevel::DEBUGMORE, F(" ok ipaddr"));
+				debug.println(DebugLevel::DEBUG2, F(" ok ipaddr"));
 				found = true;
 			}
 			if (sarg == "tsurl") {
 				dinfo.setThingspeakURL(varg);
-				debug.println(DebugLevel::DEBUGMORE, F(" ok tsurl"));
+				debug.println(DebugLevel::DEBUG2, F(" ok tsurl"));
 				found = true;
 			}
 			if (sarg == "tschannel") {
-				long l = ::atol(varg.c_str());
+				unsigned long l = static_cast<unsigned long>(::atol(varg.c_str()));
 				dinfo.setThingspeakChannel(l);
-				debug.println(DebugLevel::DEBUGMORE, F(" ok tschannel"));
+				debug.println(DebugLevel::DEBUG2, F(" ok tschannel"));
 				found = true;
 			}
 			if (strncmp(sarg.c_str(), "port", 4) == 0) {
 				found = true;
 				char c = sarg.c_str()[4];
 				int n = static_cast<int>(c) - static_cast<int>('0');
-				debug.print(DebugLevel::DEBUGMORE, F(", n="));
-				debug.print(DebugLevel::DEBUGMORE, n);
+				debug.print(DebugLevel::DEBUG2, F(", n="));
+				debug.print(DebugLevel::DEBUG2, n);
 				if (n >= 0 && n < dinfo.getPortMax()) {
 					if (varg.length() > 0) {
 						dinfo.setPortName(n, varg);
-						debug.print(DebugLevel::DEBUGMORE,
-								" ok, port[" + String(n) + "].name set to " + varg);
+						debug.print(DebugLevel::DEBUG2, " ok, port[" + String(n) + "].name set to " + varg);
 					}
 					else {
 						dinfo.setPortName(n, "");
-						debug.println(DebugLevel::DEBUGMORE, F(" ok - cleared"));
+						debug.println(DebugLevel::DEBUG2, F(" ok - cleared"));
 					}
 				}
 				else {
-					debug.println(DebugLevel::DEBUGMORE,
+					debug.println(DebugLevel::DEBUG2,
 							nl + "ERROR: Bug - Invalid port #(" + String(n) + "," + String(c)
 									+ ") found in ConfigurationChange() - " + sarg);
 				}
@@ -482,8 +485,8 @@ int ConfigurationChange(void) {
 				found = true;
 				char c1 = sarg.c_str()[8];
 				int n1 = static_cast<int>(c1) - static_cast<int>('0');
-				debug.print(DebugLevel::DEBUGMORE, ", n1=");
-				debug.print(DebugLevel::DEBUGMORE, n1);
+				debug.print(DebugLevel::DEBUG2, ", n1=");
+				debug.print(DebugLevel::DEBUG2, n1);
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					bool found1 = false;
 					if (varg.length() > 0) {
@@ -495,36 +498,36 @@ int ConfigurationChange(void) {
 									dinfo.setPortMode(n1, sensorList[j].id);
 									need_reboot = true;
 								}
-								debug.print(DebugLevel::DEBUGMORE, nl + "Info: Setting mode to ");
-								debug.print(DebugLevel::DEBUGMORE, static_cast<int>(sensorList[j].id));
-								debug.print(DebugLevel::DEBUGMORE, F("("));
-								debug.print(DebugLevel::DEBUGMORE, sensorList[j].name);
-								debug.print(DebugLevel::DEBUGMORE, F("), Reboot needed: "));
+								debug.print(DebugLevel::DEBUG2, nl + "Info: Setting mode to ");
+								debug.print(DebugLevel::DEBUG2, static_cast<int>(sensorList[j].id));
+								debug.print(DebugLevel::DEBUG2, F("("));
+								debug.print(DebugLevel::DEBUG2, sensorList[j].name);
+								debug.print(DebugLevel::DEBUG2, F("), Reboot needed: "));
 								if (need_reboot) {
-									debug.println(DebugLevel::DEBUGMORE, "yes");
+									debug.println(DebugLevel::DEBUG2, "yes");
 								}
 								else {
-									debug.println(DebugLevel::DEBUGMORE, "no");
+									debug.println(DebugLevel::DEBUG2, "no");
 								}
 								found1 = true;
 								break;
 							}
 						}
 						if (!found1) {
-							debug.println(DebugLevel::DEBUGMORE, nl + "ERROR: unable to map mode: " + varg);
+							debug.println(DebugLevel::DEBUG2, nl + "ERROR: unable to map mode: " + varg);
 						}
 					}
 					else {
-						debug.print(DebugLevel::DEBUGMORE, nl + "ERROR: Invalid varg mode: (" + varg);
-						debug.println(DebugLevel::DEBUGMORE, ") found in ConfigurationChange() - " + sarg);
+						debug.print(DebugLevel::DEBUG2, nl + "ERROR: Invalid varg mode: (" + varg);
+						debug.println(DebugLevel::DEBUG2, ") found in ConfigurationChange() - " + sarg);
 					}
 				}
 				else {
-					debug.print(DebugLevel::DEBUGMORE, nl + "ERROR:Invalid port #(");
-					debug.print(DebugLevel::DEBUGMORE, n1);
-					debug.print(DebugLevel::DEBUGMORE, ",");
-					debug.print(DebugLevel::DEBUGMORE, c1);
-					debug.println(DebugLevel::DEBUGMORE, ") found in ConfigurationChange() - " + sarg);
+					debug.print(DebugLevel::DEBUG2, nl + "ERROR:Invalid port #(");
+					debug.print(DebugLevel::DEBUG2, n1);
+					debug.print(DebugLevel::DEBUG2, ",");
+					debug.print(DebugLevel::DEBUG2, c1);
+					debug.println(DebugLevel::DEBUG2, ") found in ConfigurationChange() - " + sarg);
 				}
 			}
 
@@ -534,21 +537,21 @@ int ConfigurationChange(void) {
 				char c2 = sarg.c_str()[8];
 				int n1 = static_cast<int>(c1) - static_cast<int>('0');
 				int n2 = static_cast<int>(c2) - static_cast<int>('0');
-				debug.print(DebugLevel::DEBUGMORE, ", n1=" + String(n1));
-				debug.print(DebugLevel::DEBUGMORE, ", n2=" + String(n2));
+				debug.print(DebugLevel::DEBUG2, ", n1=" + String(n1));
+				debug.print(DebugLevel::DEBUG2, ", n2=" + String(n2));
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					double d = 0;
 					if (varg.length() > 0) {
-						debug.println(DebugLevel::DEBUGMORE, F(" ok, set"));
+						debug.println(DebugLevel::DEBUG2, F(" ok, set"));
 						d = ::atof(varg.c_str());
 					}
 					else {
-						debug.println(DebugLevel::DEBUGMORE, F(" ok, cleared"));
+						debug.println(DebugLevel::DEBUG2, F(" ok, cleared"));
 					}
 					dinfo.setPortAdj(n1, n2, d);
 				}
 				else {
-					debug.println(DebugLevel::DEBUGMORE,
+					debug.println(DebugLevel::DEBUG2,
 							nl + "ERROR: Bug - Invalid port #(" + String(n1) + "," + String(c1)
 									+ ") found in ConfigurationChange() - " + sarg);
 				}
@@ -558,8 +561,8 @@ int ConfigurationChange(void) {
 //				found = true;
 //				char c1 = sarg.c_str()[7];
 //				int n1 = static_cast<int>(c1) - static_cast<int>('0');
-//				debug.print(DebugLevel::DEBUGMORE, ", n1=");
-//				debug.print(DebugLevel::DEBUGMORE, n1);
+//				debug.print(DebugLevel::DEBUG2, ", n1=");
+//				debug.print(DebugLevel::DEBUG2, n1);
 //				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 //					bool found1 = false;
 //					if (varg.length() > 0) {
@@ -571,55 +574,55 @@ int ConfigurationChange(void) {
 //									dinfo.setPortMode(n1, sensorList[j].id);
 //									need_reboot = true;
 //								}
-//								debug.print(DebugLevel::DEBUGMORE, nl + "Info: Setting mode to ");
-//								debug.print(DebugLevel::DEBUGMORE, static_cast<int>(sensorList[j].id));
-//								debug.print(DebugLevel::DEBUGMORE, F("("));
-//								debug.print(DebugLevel::DEBUGMORE, sensorList[j].name);
-//								debug.print(DebugLevel::DEBUGMORE, F("), Reboot needed: "));
+//								debug.print(DebugLevel::DEBUG2, nl + "Info: Setting mode to ");
+//								debug.print(DebugLevel::DEBUG2, static_cast<int>(sensorList[j].id));
+//								debug.print(DebugLevel::DEBUG2, F("("));
+//								debug.print(DebugLevel::DEBUG2, sensorList[j].name);
+//								debug.print(DebugLevel::DEBUG2, F("), Reboot needed: "));
 //								if (need_reboot) {
-//									debug.println(DebugLevel::DEBUGMORE, "yes");
+//									debug.println(DebugLevel::DEBUG2, "yes");
 //								}
 //								else {
-//									debug.println(DebugLevel::DEBUGMORE, "no");
+//									debug.println(DebugLevel::DEBUG2, "no");
 //								}
 //								found1 = true;
 //								break;
 //							}
 //						}
 //						if (!found1) {
-//							debug.println(DebugLevel::DEBUGMORE, nl + "ERROR: unable to map mode: " + varg);
+//							debug.println(DebugLevel::DEBUG2, nl + "ERROR: unable to map mode: " + varg);
 //						}
 //					}
 //					else {
-//						debug.print(DebugLevel::DEBUGMORE, nl + "ERROR: Invalid varg mode: (" + varg);
-//						debug.println(DebugLevel::DEBUGMORE, ") found in ConfigurationChange() - " + sarg);
+//						debug.print(DebugLevel::DEBUG2, nl + "ERROR: Invalid varg mode: (" + varg);
+//						debug.println(DebugLevel::DEBUG2, ") found in ConfigurationChange() - " + sarg);
 //					}
 //				}
 //				else {
-//					debug.print(DebugLevel::DEBUGMORE, nl + "ERROR:Invalid port #(");
-//					debug.print(DebugLevel::DEBUGMORE, n1);
-//					debug.print(DebugLevel::DEBUGMORE, ",");
-//					debug.print(DebugLevel::DEBUGMORE, c1);
-//					debug.println(DebugLevel::DEBUGMORE, ") found in ConfigurationChange() - " + sarg);
+//					debug.print(DebugLevel::DEBUG2, nl + "ERROR:Invalid port #(");
+//					debug.print(DebugLevel::DEBUG2, n1);
+//					debug.print(DebugLevel::DEBUG2, ",");
+//					debug.print(DebugLevel::DEBUG2, c1);
+//					debug.println(DebugLevel::DEBUG2, ") found in ConfigurationChange() - " + sarg);
 //				}
 //			}
 
 			if (sarg == "reboot") {
-				debug.println(DebugLevel::DEBUGMORE, F(", reboot button pressed"));
+				debug.println(DebugLevel::DEBUG2, F(", reboot button pressed"));
 				found = true;
 				// do the action
 				ESP.reset();
 			}
 
 			if (sarg == "status") {
-				debug.println(DebugLevel::DEBUGMORE, F(", status button pressed"));
+				debug.println(DebugLevel::DEBUG2, F(", status button pressed"));
 				found = true;
 				// do the action
 				server.send(200, "text/plain", dinfo.databaseToString(",\n"));
 			}
 
 			if (!found) {
-				debug.println(DebugLevel::DEBUGMORE, "");
+				debug.println(DebugLevel::DEBUG2, "");
 			}
 			found = false;
 		}

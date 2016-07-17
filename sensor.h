@@ -10,6 +10,14 @@ const int ACQUIRE_READS_PER_SENSOR = 2;
 const int ACQUIRE_SETUPS_PER_SENSOR = 1;
 const int ACQUIRES_PER_SENSOR = (ACQUIRE_READS_PER_SENSOR + ACQUIRE_SETUPS_PER_SENSOR);
 
+enum class valueType
+	: int {undefined = 0, temperature, humidity, voltage, logic, LAST
+};
+
+enum class uomType
+	: int {undefined = 0, farhenheit, celsius, rh, volts, level, LAST
+};
+
 //-------------------------------------------------------------------
 class SensorPins {
 public:
@@ -35,10 +43,13 @@ public:
 	bool enabled;
 	String name;
 	unsigned long last_sample_time_ms;
+	valueType type;
+	uomType uom;
 	~SensorValue() { /* nothing to destroy */
 	}
 	SensorValue()
-			: v(0), enabled(false), name(""), last_sample_time_ms(0) {
+			: v(0), enabled(false), name(""), last_sample_time_ms(0), type(valueType::undefined),
+					uom(uomType::undefined) {
 	}
 };
 

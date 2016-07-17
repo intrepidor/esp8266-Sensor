@@ -11,6 +11,7 @@
 #include "include/wl_definitions.h"
 #include "debugprint.h"
 #include "main.h"
+#include "queue.h"
 #include "deviceinfo.h"
 #include "wdog.h"
 
@@ -24,7 +25,9 @@ long thinkspeak_total_entries = 0; // this is filled in by the response from the
 String getsThingspeakInfo(String eol) {
 	String s("== Thingspeak Information ==" + eol);
 	s += "Enabled: " + dinfo.getThingspeakEnableString() + eol;
-	s += "Update Period: " + String(dinfo.getThingspeakUpdatePeriod()) + eol;
+	s += "Update Period ms: " + String(dinfo.getThingspeakUpdatePeriod()) + " Queue.recur="
+			+ String(myQueue.getTimeInterval("thingspeak")) + eol;
+	s += "Next Update: " + String(myQueue.getTimeTillRun("thingspeak")) + " millis()" + eol;
 	s += "URL: " + dinfo.getThingspeakURL() + " (future use)" + eol;
 	s += "Write Key: " + dinfo.getThingspeakApikey() + eol;
 	s += "Channel: " + String(dinfo.getThingspeakChannel()) + " (future use)" + eol;
@@ -117,7 +120,7 @@ void updateThingspeak(void) {
 	// Create the connection
 	kickExternalWatchdog();
 	if (!client.connect(dinfo.getThingspeakIpaddr_c(), 80)) {
-		debug.println(DebugLevel::ALWAYS,
+		Serial.println(
 				nl + "Connecting to " + dinfo.getThingspeakIpaddr() + ": "
 						+ getTCPStatusString(client.status()) + " : FAILED");
 		thingspeak_error_counter++;
@@ -146,7 +149,7 @@ void updateThingspeak(void) {
 		debug.println(DebugLevel::DEBUG, "        -> " + String(r) + " bytes sent");
 
 		if (r == 0) {
-			debug.println(DebugLevel::ALWAYS, getStr + "  Send FAILED");
+			Serial.println(getStr + "  Send FAILED");
 			thingspeak_error_counter++;
 		}
 		else if (client.available()) {

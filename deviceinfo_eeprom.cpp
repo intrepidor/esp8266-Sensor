@@ -19,13 +19,13 @@ void Device::restoreDatabaseFromEEPROM(void) {
 		*(pp + addr) = EEPROM.read(static_cast<int>(addr));
 	}
 	eeprom_is_dirty = false;
-	debug.println(DebugLevel::DEBUGMORE, nl);
-	debug.println(DebugLevel::DEBUGMORE, F("Data copied from EEPROM into RAM data structure"));
+	debug.println(DebugLevel::DEBUG2, nl);
+	debug.println(DebugLevel::DEBUG2, F("Data copied from EEPROM into RAM data structure"));
 	// Look for the EEPROM signature. Failure to find this means the EEPROM data was
 	//    never stored, such as the case with a freshly programmed micro.
 	if (dinfo.db.end_of_eeprom_signature != EEPROM_SIGNATURE) {
-		debug.println(DebugLevel::ALWAYS, nl);
-		debug.println(DebugLevel::ALWAYS, F("EEPROM data was not valid - setting to defaults"));
+		Serial.println(nl);
+		Serial.println(F("EEPROM data was not valid - setting to defaults"));
 		dinfo.writeDefaultsToDatabase();
 	}
 }
@@ -39,8 +39,8 @@ bool Device::saveDatabaseToEEPROM(void) {
 	}
 
 	if (EEPROM.commit()) {
-		debug.println(DebugLevel::DEBUGMORE, nl);
-		debug.println(DebugLevel::DEBUGMORE, F("Write from RAM data structure to EEPROM ok."));
+		debug.println(DebugLevel::DEBUG2, nl);
+		debug.println(DebugLevel::DEBUG2, F("Write from RAM data structure to EEPROM ok."));
 		restoreDatabaseFromEEPROM();
 		eeprom_is_dirty = false;
 		return true;

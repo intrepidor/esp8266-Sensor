@@ -8,6 +8,8 @@
 #include <Arduino.h>
 #include "network.h"
 #include "util.h"
+#include "main.h"
+#include "deviceinfo.h"
 
 //////////////////////////////////////////////////////////////////////////////////////
 /* These are replacements for delay() and delayMicroseconds(). While delay() loops
@@ -150,3 +152,13 @@ const char* getTempUnits(bool true_for_farhenheit) {
 	else return "Celsius";
 }
 
+float fixUOM(float val) {
+// FIXME need to determine if this is a temperature value or something else.
+	if (dinfo.isFahrenheit()) return val * 1.8 + 32.0;
+	return val;
+}
+
+double fixUOM(double val) {
+	if (dinfo.isFahrenheit()) return val * 1.8 + 32.0;
+	return val;
+}

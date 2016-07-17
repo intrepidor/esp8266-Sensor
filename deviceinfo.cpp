@@ -11,39 +11,9 @@
 #include "debugprint.h"
 #include "sensor.h"
 
-unsigned int validate_string(char* str, const char* const def, unsigned int size, int lowest, int highest) {
-	bool ok = true;
-	unsigned int n = 0; /*lint -e838 */
-	if (str && def) {
-		if (size < strlen(str)) {
-			debug.println(DebugLevel::DEBUG,
-					("ERROR: validate_string() string passed by pointer is shorter than the passed size value"));
-		}
-
-		str[size - 1] = 0;
-		for (n = 0; n < size - 1; n++) {
-			if (str[n] < lowest || str[n] > highest) {
-				ok = false;
-				break;
-			}
-		}
-		if (ok == false) {
-			memset(str, 0, size);
-			strncpy(str, def, size - 1);
-			str[size - 1] = 0;
-			return n;
-		}
-	}
-	else {
-		debug.println(DebugLevel::DEBUG,
-				("ERROR: validate_string() value for either/both def* or str* is null"));
-	}
-	return 0;
-}
-
-void Device::setThingspeakUpdatePeriod(int new_periodsec) {
-	if (new_periodsec < 20) {
-		db.thingspeak.time_between_updates_sec = 20;	// fastest possible per thingspeak rules
+void Device::setThingspeakUpdatePeriod(unsigned long new_periodsec) {
+	if (new_periodsec < MIN_THINGSPEAK_UPDATE_PERIOD_MS) {
+		db.thingspeak.time_between_updates_sec = MIN_THINGSPEAK_UPDATE_PERIOD_MS; // fastest possible per thingspeak rules
 	}
 	else if (new_periodsec > SECONDS_PER_DAY) {
 		db.thingspeak.time_between_updates_sec = SECONDS_PER_DAY; // slowest is once per day
@@ -51,12 +21,6 @@ void Device::setThingspeakUpdatePeriod(int new_periodsec) {
 	else {
 		db.thingspeak.time_between_updates_sec = new_periodsec;
 	}
-}
-
-void Device::validateDatabase(void) {
-	validate_string(db.device.name, "<not named>", sizeof(db.device.name), 32, 126);
-	validate_string(db.thingspeak.apikey, "<no api key>", sizeof(db.thingspeak.apikey), 48, 95);
-	validate_string(db.thingspeak.url, "<no url>", sizeof(db.thingspeak.url), 32, 126);
 }
 
 void Device::corruptConfigurationMemory(void) {
@@ -70,7 +34,7 @@ void Device::writeDefaultsToDatabase(void) {
 	setDeviceID(999);
 	setFahrenheitUnit(true);
 	setThingspeakEnable(false);
-	setThingspeakUpdatePeriod(60); // once per minute
+	setThingspeakUpdatePeriod (DEF_THINGSPEAK_UPDATE_PERIOD_MS); // once per minute
 	setThingspeakApikey("");
 	setThingspeakURL("http://api.thingspeak.com");
 	setThingspeakChannel(0);
@@ -113,9 +77,9 @@ String Device::databaseToString(String eol) {
 
 void Device::printInfo(void) {
 	for (int i = 0; i < getPortMax(); i++) {
-		debug.println(DebugLevel::ALWAYS, "Port#" + String(i) + ": " + getSensorModuleName(getPortMode(i)));
+		Serial.println("Port#" + String(i) + ": " + getSensorModuleName(getPortMode(i)));
 	}
-	debug.println(DebugLevel::ALWAYS, "");
+	Serial.println("");
 }
 
 void Device::setcDeviceName(const char* newname) {
