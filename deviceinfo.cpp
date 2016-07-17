@@ -66,7 +66,7 @@ String Device::databaseToString(String eol) {
 	s += "thingspeak.time_between_updates_sec=" + String(getThingspeakUpdatePeriodSeconds()) + " sec" + eol;
 	s += "TS_apikey=" + getThingspeakApikey() + eol;
 	s += "thingspeak.url=" + getThingspeakURL() + eol;
-	s += "thingspeak.channel=" + getThingspeakChannel() + eol;
+	s += "thingspeak.channel=" + String(getThingspeakChannel()) + eol;
 	s += "thingspeak.ipaddr=" + getThingspeakIpaddr();
 	for (int i = 0; i < getPortMax(); i++) {
 		s += eol + "port[" + String(i) + "].name=" + getPortName(i) + ", mode=" + String(getModeStr(i));

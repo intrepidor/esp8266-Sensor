@@ -26,8 +26,6 @@ extern String memoryToHex(const char* addr, int _len, HexDirection dir);
 extern const char* getCheckedStr(bool);
 extern const char* isTrueStr(bool value_to_check);
 extern const char* getTempUnits(bool true_for_farhenheit);
-extern float fixUOM(float val);
-extern double fixUOM(double val);
 
 ////////////
 extern void yield_ms(unsigned long time_duration_to_yield_ms);

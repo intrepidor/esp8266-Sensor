@@ -12,9 +12,53 @@
 
 ///////////////////////////////////////////////////////////////////////////
 //
+// SensorValue Class
+//
+///////////////////////////////////////////////////////////////////////////
+float SensorValue::getValue() {
+	if (type == valueType::temperature && dinfo.isFahrenheit()) {
+		return v * 1.8F + 32.0F;
+	}
+	return v;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//
 // Sensor Class
 //
 ///////////////////////////////////////////////////////////////////////////
+
+void Sensor::setType(int _channel, valueType t) {
+	if (isValueChannelValid(_channel)) {
+		value[_channel].setType(t);
+		rawval[_channel].setType(t);
+	}
+}
+
+valueType Sensor::getType(int _channel) {
+	if (isValueChannelValid(_channel)) {
+		return value[_channel].getType();
+	}
+	else {
+		return valueType::undefined;
+	}
+}
+
+void Sensor::setUOM(int _channel, uomType u) {
+	if (isValueChannelValid(_channel)) {
+		value[_channel].setUOM(u);
+		rawval[_channel].setUOM(u);
+	}
+}
+
+uomType Sensor::getUOM(int _channel) {
+	if (isValueChannelValid(_channel)) {
+		return value[_channel].getUOM();
+	}
+	else {
+		return uomType::undefined;
+	}
+}
 
 String Sensor::getModuleName(void) {
 	return getSensorModuleName(this->getModule());
@@ -71,14 +115,14 @@ bool Sensor::setValueEnable(int _channel, bool _b) {
 
 float Sensor::getValue(int _channel) {
 	if (isValueChannelValid(_channel) && !isValueStale(_channel)) {
-		return value[_channel].v;
+		return value[_channel].getValue();
 	}
 	return NAN;
 }
 
 bool Sensor::setValue(int _channel, float v) {
 	if (isValueChannelValid(_channel)) {
-		value[_channel].v = v;
+		value[_channel].setValue(v);
 		value[_channel].last_sample_time_ms = millis();
 		return true;
 	}
@@ -89,7 +133,7 @@ bool Sensor::setValue(int _channel, float v) {
 
 float Sensor::getRawValue(int _channel) {
 	if (isValueChannelValid(_channel) && !isRawValueStale(_channel)) {
-		return rawval[_channel].v;
+		return rawval[_channel].getValue();
 	}
 	return NAN;
 }
@@ -105,7 +149,7 @@ bool Sensor::isRawValueStale(int _channel) {
 
 bool Sensor::setRawValue(int _channel, float v) {
 	if (isValueChannelValid(_channel)) {
-		rawval[_channel].v = v;
+		rawval[_channel].setValue(v);
 		rawval[_channel].last_sample_time_ms = millis();
 		return true;
 	}
@@ -113,30 +157,30 @@ bool Sensor::setRawValue(int _channel, float v) {
 }
 
 void Sensor::printValues(void) {
-	Serial.print( F("Sensor: "));
+	Serial.print(F("Sensor: "));
 	if (getName().length() > 0) {
-		Serial.print( getName());
+		Serial.print(getName());
 	}
 	Serial.println("");
 	for (int i = 0; i < getSensorValueCount(); i++) {
 		if (value[i].enabled) {
-			Serial.print( F("   Val["));
-			Serial.print( i);
-			Serial.print( F(","));
-			Serial.print( value[i].name);
-			Serial.print( F("]="));
-			Serial.print( getValue(i));
+			Serial.print(F("   Val["));
+			Serial.print(i);
+			Serial.print(F(","));
+			Serial.print(value[i].name);
+			Serial.print(F("]="));
+			Serial.print(getValue(i));
 
-			Serial.print( F(", Age="));
+			Serial.print(F(", Age="));
 			Serial.println(getAge(i));
 
-			Serial.print( F("   Raw["));
-			Serial.print( i);
-			Serial.print( F(","));
-			Serial.print( value[i].name);
-			Serial.print( F("]="));
-			Serial.print( getRawValue(i));
-			Serial.print( F(", Age="));
+			Serial.print(F("   Raw["));
+			Serial.print(i);
+			Serial.print(F(","));
+			Serial.print(value[i].name);
+			Serial.print(F("]="));
+			Serial.print(getRawValue(i));
+			Serial.print(F(", Age="));
 			Serial.println(getRawAge(i));
 
 		}
@@ -187,32 +231,32 @@ bool Sensor::setCalEnable(int _channel, bool _b) {
 
 float Sensor::getCal(int _channel) {
 	if (isCalChannelValid(_channel)) {
-		return cal[_channel].v;
+		return cal[_channel].getValue();
 	}
 	return NAN;
 }
 
 bool Sensor::setCal(int _channel, float v) {
 	if (isCalChannelValid(_channel)) {
-		cal[_channel].v = v;
+		cal[_channel].setValue(v);
 		return true;
 	}
 	return false;
 }
 
 void Sensor::printCals(void) {
-	Serial.print( F("Sensor: "));
+	Serial.print(F("Sensor: "));
 	if (getName().length() > 0) {
-		Serial.print( getName());
+		Serial.print(getName());
 	}
 	Serial.println("");
 	for (int i = 0; i < getSensorCalCount(); i++) {
 		if (cal[i].enabled) {
-			Serial.print( F("   Cal["));
-			Serial.print( i);
-			Serial.print( F(","));
-			Serial.print( cal[i].name);
-			Serial.print( F("]="));
+			Serial.print(F("   Cal["));
+			Serial.print(i);
+			Serial.print(F(","));
+			Serial.print(cal[i].name);
+			Serial.print(F("]="));
 			Serial.println(getCal(i));
 		}
 	}

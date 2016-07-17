@@ -18,6 +18,8 @@ enum class uomType
 	: int {undefined = 0, farhenheit, celsius, rh, volts, level, LAST
 };
 
+// NOTE: Temperature is always stored in the db as Celsius. This includes the setValue calls.
+
 //-------------------------------------------------------------------
 class SensorPins {
 public:
@@ -38,18 +40,37 @@ public:
 
 //-------------------------------------------------------------------
 class SensorValue {
-public:
+private:
 	float v;
+	valueType type;
+	uomType uom;
+
+public:
 	bool enabled;
 	String name;
 	unsigned long last_sample_time_ms;
-	valueType type;
-	uomType uom;
+
 	~SensorValue() { /* nothing to destroy */
 	}
 	SensorValue()
-			: v(0), enabled(false), name(""), last_sample_time_ms(0), type(valueType::undefined),
-					uom(uomType::undefined) {
+			: v(0), type(valueType::undefined), uom(uomType::undefined), enabled(false), name(""),
+					last_sample_time_ms(0) {
+	}
+	uomType getUOM() {
+		return this->uom;
+	}
+	valueType getType() {
+		return this->type;
+	}
+	void setType(valueType t) {
+		type = t;
+	}
+	void setUOM(uomType u) {
+		uom = u;
+	}
+	float getValue();
+	void setValue(float _v) {
+		this->v = _v;
 	}
 };
 
@@ -83,6 +104,12 @@ public:
 	virtual bool acquire1(void) = 0;
 	virtual bool acquire2(void) = 0;
 	virtual String getsInfo(String eol) = 0;
+
+	// Types
+	void setType(int _channel, valueType t);
+	valueType getType(int _channel);
+	void setUOM(int _channel, uomType u);
+	uomType getUOM(int _channel);
 
 	// General
 	String getName(void) {

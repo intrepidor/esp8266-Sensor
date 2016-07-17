@@ -14,6 +14,7 @@
 #include "queue.h"
 #include "deviceinfo.h"
 #include "wdog.h"
+#include "util.h"
 
 extern String getThingspeakGET(void);
 extern String getTCPStatusString(uint8_t s);
@@ -21,13 +22,16 @@ extern String getTCPStatusString(uint8_t s);
 size_t thingspeak_update_counter = 0;
 size_t thingspeak_error_counter = 0;
 long thinkspeak_total_entries = 0; // this is filled in by the response from the REST update
+unsigned long last_thingspeak_update_time_ms = 0;
 
 String getsThingspeakInfo(String eol) {
+	unsigned long next_update = dinfo.getThingspeakUpdatePeriodMS()
+			- (millis() - last_thingspeak_update_time_ms);
 	String s("== Thingspeak Information ==" + eol);
 	s += "Enabled: " + dinfo.getThingspeakEnableString() + eol;
-	s += "Update Period[s]: " + String(dinfo.getThingspeakUpdatePeriodSeconds()) + " Queue.recur="
-			+ String(myQueue.getTimeInterval("thingspeak")) + " ms" + eol;
-	s += "Next Update: " + String(myQueue.getTimeTillRun("thingspeak")) + " millis()" + eol;
+	s += "Update Period[sec]: " + String(dinfo.getThingspeakUpdatePeriodSeconds()) + eol;
+	s += "Queue.recur[ms]" + String(myQueue.getTimeInterval("thingspeak")) + eol;
+	s += "Next Update[sec]: " + String(next_update / MS_PER_SECOND) + eol;
 	s += "URL: " + dinfo.getThingspeakURL() + " (future use)" + eol;
 	s += "Write Key: " + dinfo.getThingspeakApikey() + eol;
 	s += "Channel: " + String(dinfo.getThingspeakChannel()) + " (future use)" + eol;

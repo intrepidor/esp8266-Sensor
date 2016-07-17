@@ -26,6 +26,8 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	setCalName(TEMP_CAL_INDEX_TEMP_OFFSET, "Temperature Offset");
 	setValueEnable(TEMP_VALUE_INDEX_TEMPERATURE, true);
 	setValueName(TEMP_VALUE_INDEX_TEMPERATURE, "tempC");
+	setType(TEMP_VALUE_INDEX_TEMPERATURE, valueType::temperature);
+	setUOM(TEMP_VALUE_INDEX_TEMPERATURE, uomType::celsius);
 
 	// Channel 2 defaults -- assume not used
 	setCalEnable(TEMP_CAL_INDEX_HUMIDITY_SLOPE, false);
@@ -34,6 +36,8 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	setCalName(TEMP_CAL_INDEX_HUMIDITY_OFFSET, "not used");
 	setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, false);
 	setValueName(TEMP_VALUE_INDEX_HUMIDITY, "not used");
+	setType(TEMP_VALUE_INDEX_HUMIDITY, valueType::undefined);
+	setUOM(TEMP_VALUE_INDEX_HUMIDITY, uomType::undefined);
 
 	if (m == sensorModule::dht11 || m == sensorModule::dht22 || m == sensorModule::htu21d_si7102) {
 		setCalEnable(TEMP_CAL_INDEX_HUMIDITY_SLOPE, true);
@@ -42,6 +46,8 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 		setCalName(TEMP_CAL_INDEX_HUMIDITY_OFFSET, "Humidity Offset");
 		setValueEnable(TEMP_VALUE_INDEX_HUMIDITY, true);
 		setValueName(TEMP_VALUE_INDEX_HUMIDITY, "rH%");
+		setType(TEMP_VALUE_INDEX_HUMIDITY, valueType::humidity);
+		setUOM(TEMP_VALUE_INDEX_HUMIDITY, uomType::rh);
 	}
 
 	// The pins used to interact with the sensor

@@ -433,9 +433,6 @@ int ConfigurationChange(void) {
 				unsigned long l = static_cast<unsigned long>(::atol(varg.c_str()));
 				dinfo.setThingspeakUpdatePeriodSeconds(l);
 				debug.println(DebugLevel::DEBUG2, F(" ok tsupdateperiod"));
-				// Reschedule the thinkspeak task
-				l = dinfo.getThingspeakUpdatePeriodSeconds();
-				myQueue.scheduleChangeFunction("thingspeak", millis() + l * MS_PER_SECOND, l * MS_PER_SECOND);
 				found = true;
 			}
 			if (sarg == "apikey") {

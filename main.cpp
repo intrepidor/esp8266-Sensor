@@ -153,7 +153,7 @@ void setup(void) {
 // WARNING: Tasks must run minimally every 30 seconds to prevent software watchdog timer resets
 	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
 	myQueue.scheduleFunction(task_acquire, "acquire", 1000, 500);
-	myQueue.scheduleFunction(task_updatethingspeak, "thingspeak", 2000, dinfo.getThingspeakUpdatePeriodMS());
+	myQueue.scheduleFunction(task_updatethingspeak, "thingspeak", 2000, 1000); // 1 second resolution
 	myQueue.scheduleFunction(task_flashled, "led", 250, 100);
 	myQueue.scheduleFunction(task_serialport_menu, "menu", 2000, 500);
 	myQueue.scheduleFunction(task_webServer, "webserver", 3000, 10);
@@ -392,8 +392,7 @@ void printInfo(void) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 int task_readpir(unsigned long now) {
-//lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(taskname_pir)] = millis(); // kick the software watchdog
+	wdog_timer[static_cast<int>(taskname_pir)] = now; // kick the software watchdog
 	if (digitalRead(PIN_PIRSENSOR)) {
 		PIRcount++;
 	}
@@ -401,9 +400,8 @@ int task_readpir(unsigned long now) {
 }
 
 int task_acquire(unsigned long now) {
-//lint --e{715}  Ignore unused function arguments
 	static int next_acquire_number = 0;
-	wdog_timer[static_cast<int>(taskname_acquire)] = millis(); // kick the software watchdog
+	wdog_timer[static_cast<int>(taskname_acquire)] = now; // kick the software watchdog
 	const int MAX_ACQUIRES = ACQUIRES_PER_SENSOR * SENSOR_COUNT;
 
 	if (next_acquire_number < 0 || next_acquire_number > (MAX_ACQUIRES - 1)) {
@@ -470,19 +468,20 @@ int task_acquire(unsigned long now) {
 }
 
 int task_updatethingspeak(unsigned long now) {
-//lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(taskname_thingspeak)] = millis(); // kick the software watchdog
-	if (dinfo.getThingspeakEnable()) {
-		updateThingspeak();
+	wdog_timer[static_cast<int>(taskname_thingspeak)] = now; // kick the software watchdog
+	if (now > (last_thingspeak_update_time_ms + dinfo.getThingspeakUpdatePeriodMS())) {
+		last_thingspeak_update_time_ms = now;
+		if (dinfo.getThingspeakEnable()) {
+			updateThingspeak();
+		}
+		PIRcountLast = PIRcount;
+		PIRcount = 0; // reset counter for starting a new period
 	}
-	PIRcountLast = PIRcount;
-	PIRcount = 0; // reset counter for starting a new period
 	return 0;
 }
 
 int task_flashled(unsigned long now) {
-//lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(taskname_led)] = millis(); // kick the software watchdog
+	wdog_timer[static_cast<int>(taskname_led)] = now; // kick the software watchdog
 	static uint8_t current_state = 0;
 	if (current_state == 0) {
 		digitalWrite(BUILTIN_LED, BUILTIN_LED_ON);
@@ -525,8 +524,7 @@ void printExtendedMenu(void) {
 }
 
 int task_serialport_menu(unsigned long now) {
-//lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(taskname_menu)] = millis(); // kick the software watchdog
+	wdog_timer[static_cast<int>(taskname_menu)] = now; // kick the software watchdog
 	count++;
 	static bool need_new_heading = true;
 	static bool raw_need_new_heading = true;
@@ -579,9 +577,9 @@ int task_serialport_menu(unsigned long now) {
 								Serial.print(
 										padEndOfString(
 												String(
-														String(fixUOM(sensors[s]->getRawValue(v))) + "/"
-																+ String(fixUOM(sensors[s]->getValue(v)))),
-												12, ' ', true));
+														String(sensors[s]->getRawValue(v)) + "/"
+																+ String(sensors[s]->getValue(v))), 12, ' ',
+												true));
 							}
 						}
 					}
@@ -746,13 +744,11 @@ int task_serialport_menu(unsigned long now) {
 				Serial.println(getsSensorInfo(nl));
 				break;
 			case 'X':
-				Serial.println(F("Calling EspClass::reset() in 2 seconds ..."));
-				delay(2000);
+				Serial.println(F("Calling EspClass::reset()"));
 				ESP.reset();
 				break;
 			case 'Y':
-				Serial.println(F("Calling EspClass::restart() in 2 seconds ..."));
-				delay(2000);
+				Serial.println(F("Calling EspClass::restart()"));
 				ESP.restart();
 				break;
 			case 'W':
@@ -770,8 +766,7 @@ int task_serialport_menu(unsigned long now) {
 }
 
 int task_webServer(unsigned long now) {
-//lint --e{715}  Ignore unused function arguments
-	wdog_timer[static_cast<int>(taskname_webserver)] = millis();
+	wdog_timer[static_cast<int>(taskname_webserver)] = now; // kick the software watchdog
 	WebWorker();
 	return 0;
 }

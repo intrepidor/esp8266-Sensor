@@ -92,7 +92,6 @@ public:
 
 	void setRawTemperature(float v) {
 		setRawValue(TEMP_VALUE_INDEX_TEMPERATURE, v);
-
 	}
 
 	bool StoreTemperature(float t);
