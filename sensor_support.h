@@ -9,8 +9,8 @@
 #define SENSOR_SUPPORT_H_
 
 // FIXME move these to the .cpp file and replace occurrences with the getter function call.
-const int VALUE_COUNT = 2;
-const int CALIB_COUNT = 4;	// should be the same as MAX_ADJ
+const int SENSOR_VALUE_COUNT = 2;
+const int SENSOR_CALIB_COUNT = 4;	// should be the same as MAX_ADJ
 
 //-------------------------------------------------------------------
 enum class sensorModule {

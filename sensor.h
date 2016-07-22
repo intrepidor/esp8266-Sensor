@@ -49,14 +49,12 @@ public:
 	bool enabled;
 	String vname;
 	unsigned long last_sample_time_ms;
-	int thingspeak_field_number;
-	String thingspeak_field_name;
 
 	~SensorValue() { /* nothing to destroy */
 	}
 	SensorValue()
 			: v(0), type(valueType::undefined), uom(uomType::undefined), enabled(false), vname(""),
-					last_sample_time_ms(0), thingspeak_field_number(0), thingspeak_field_name("") {
+					last_sample_time_ms(0) {
 	}
 	uomType getUOM() {
 		return this->uom;
@@ -71,6 +69,9 @@ public:
 		uom = u;
 	}
 	float getValue();
+	float getValueWithoutUnitConversion() {
+		return this->v;
+	}
 	void setValue(float _v) {
 		this->v = _v;
 	}
@@ -80,9 +81,9 @@ public:
 class Sensor {
 private:
 	String sensorName;
-	SensorValue value[VALUE_COUNT];		// calibrated adjusted values
-	SensorValue rawval[VALUE_COUNT];	// raw values
-	SensorValue cal[CALIB_COUNT];
+	SensorValue value[SENSOR_VALUE_COUNT];		// calibrated adjusted values
+	SensorValue rawval[SENSOR_VALUE_COUNT];	// raw values
+	SensorValue cal[SENSOR_CALIB_COUNT];
 	sensorModule module;
 	SensorPins pins;
 	unsigned long time_till_stale_ms;
@@ -151,6 +152,7 @@ public:
 
 	// raw values
 	float getRawValue(int _channel);
+	float getRawValueWithoutUnitConversion(int _channel);
 	bool setRawValue(int _channel, float v);
 	bool isRawValueStale(int _channel);
 	unsigned long getRawAge(int channel) {
@@ -164,6 +166,7 @@ public:
 	bool getValueEnable(int channel);
 	bool setValueEnable(int channel, bool b);
 	float getValue(int channel);
+	float getValueWithoutUnitConversion(int channel);
 	bool setValue(int channel, float v);
 	bool isValueStale(int _channel);
 	unsigned long getAge(int channel) {

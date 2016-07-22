@@ -12,6 +12,7 @@
 #include <Arduino.h>
 #include "sensor.h"
 #include "util.h"
+#include "sensor_support.h"
 
 const uint32_t EEPROM_SIGNATURE = 0xA357; // This is a pattern used to detect if the EEPROM data is present
 
@@ -25,14 +26,24 @@ const unsigned long MIN_THINGSPEAK_UPDATE_PERIOD_MS = (20000); // 20 seconds
 // Device Class
 const int MAX_PORTS = 4;
 const int MAX_ADJ = 4;
-const int STRING_LENGTH = 20;
-const int URL_LENGTH = 120;
-const int CHANNEL_LENGTH = 20;
+const int STRING_LENGTH = 19; // 1 less than 4-byte boundary for terminating null
+const int URL_LENGTH = 119;	// 1 less than 4 byte boundary for terminating null
+const int FIELD_NAME_LENGTH = 29; // 1 less than 4 byte boundary for terminating null
+
+const int THINGSPEAK_CHANNEL_NAME = 29;
+const int THINGSPEAK_CHANNEL_DESC = 119;
+const int THINGSPEAK_EXTRA_FIELDS = 4;
+const int THINGSPEAK_PORT_FIELDS = MAX_PORTS * SENSOR_VALUE_COUNT;
 
 extern bool eeprom_is_dirty; // false whenever EEPROM and RAM are different.
 static bool isValidPort(int portnum);
 
-struct cport {
+struct ThingspeakField { // 30 bytes
+	char number;
+	char name[FIELD_NAME_LENGTH];
+};
+
+struct cport { // 40 bytes
 	char name[STRING_LENGTH + 1];
 	sensorModule mode;
 	double adj[MAX_ADJ];
@@ -42,14 +53,17 @@ class Device {
 private:
 	struct {
 		// Device
-		struct {
+		struct {	// 28 bytes
 			char name[STRING_LENGTH + 1];
 			int id;
 			bool use_fahrenheit_unit;
+			bool spare;
+			bool spare2;
+			bool spare3;
 		} device;
 
 		// Thingspeak
-		struct {
+		struct { // 169 bytes
 			unsigned long channel;
 			unsigned long time_between_updates_ms;
 			int status;
@@ -61,19 +75,28 @@ private:
 			char apikey[STRING_LENGTH + 1];
 			char url[URL_LENGTH + 1];
 			char ipaddr[16]; // nnn.nnn.nnn.nnn = 4*3+3(dots)+1(nul) = 16 chars; 15 for data, and 1 for terminating nul
+
 		} thingspeak;
 
-		// Ports
+		// These values get pushed to the Thingspeak website to describe the channel
+		//    and fields.
+		struct { // 510 bytes
+			char ChannelName[THINGSPEAK_CHANNEL_NAME + 1];
+			char ChannelDescription[THINGSPEAK_CHANNEL_DESC + 1];
+			ThingspeakField tsfield[THINGSPEAK_PORT_FIELDS + THINGSPEAK_EXTRA_FIELDS];
+		} thingspeakChannelSettings;
+
+		// Ports // 120 bytes
 		cport port[MAX_PORTS];
 
-		// Logging level
+		// Logging level // 4 bytes
 		int debuglevel;
 
-		// EEPROM
+		// EEPROM // 4 bytes
 		uint32_t end_of_eeprom_signature; // version of the configuration data format in the EEPROM
 		// put at the bottom so it moves around
 
-	} db;
+	} db; // estimate 838 bytes
 
 public:
 // Default Constructor

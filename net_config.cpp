@@ -353,8 +353,9 @@ void config(void) {
 
 // Current Values
 		for (int vindx = 0; vindx < getSensorValueCount(); vindx++) {
-			r += " raw/val" + String(i) + String(vindx) + "= " + sensors[i]->getRawValue(vindx) + "/"
-					+ sensors[i]->getValue(vindx) + String("  ");
+			r += " raw/val" + String(i) + String(vindx) + "= "
+					+ sensors[i]->getRawValueWithoutUnitConversion(vindx) + "/"
+					+ sensors[i]->getValueWithoutUnitConversion(vindx) + String("  ");
 		}
 
 // Done with Port content

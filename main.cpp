@@ -115,7 +115,7 @@ void setup(void) {
 	dinfo.init(); // this must be done before calling any other member functions
 
 // Start EEPROM and setup the Persisted Database
-	EEPROM.begin(512);
+	EEPROM.begin(1024);
 
 	/* The SDA pin is supposed to be high when not used. If during startup the pin is held low,
 	 * then erase the EEPROM.

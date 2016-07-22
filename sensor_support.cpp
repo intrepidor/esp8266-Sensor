@@ -9,11 +9,11 @@
 #include "sensor_support.h"
 
 int getSensorValueCount(void) {
-	return VALUE_COUNT;
+	return SENSOR_VALUE_COUNT;
 }
 
 int getSensorCalCount(void) {
-	return CALIB_COUNT;
+	return SENSOR_CALIB_COUNT;
 }
 
 String getSensorModuleName(sensorModule mode) {

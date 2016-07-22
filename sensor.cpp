@@ -68,7 +68,7 @@ String Sensor::getModuleName(void) {
 // Values
 //--------------------------------
 bool Sensor::isValueChannelValid(int _channel) {
-	if (_channel >= 0 && _channel < VALUE_COUNT) { // FIXME getSensorValueCount()) {
+	if (_channel >= 0 && _channel < SENSOR_VALUE_COUNT) { // FIXME getSensorValueCount()) {
 		return true;
 	}
 	debug.println(DebugLevel::ERROR, F("ERROR: isValueChannelValid() channel out of bounds"));
@@ -120,6 +120,13 @@ float Sensor::getValue(int _channel) {
 	return NAN;
 }
 
+float Sensor::getValueWithoutUnitConversion(int _channel) {
+	if (isValueChannelValid(_channel) && !isValueStale(_channel)) {
+		return value[_channel].getValueWithoutUnitConversion();
+	}
+	return NAN;
+}
+
 bool Sensor::setValue(int _channel, float v) {
 	if (isValueChannelValid(_channel)) {
 		value[_channel].setValue(v);
@@ -134,6 +141,12 @@ bool Sensor::setValue(int _channel, float v) {
 float Sensor::getRawValue(int _channel) {
 	if (isValueChannelValid(_channel) && !isRawValueStale(_channel)) {
 		return rawval[_channel].getValue();
+	}
+	return NAN;
+}
+float Sensor::getRawValueWithoutUnitConversion(int _channel) {
+	if (isValueChannelValid(_channel) && !isRawValueStale(_channel)) {
+		return rawval[_channel].getValueWithoutUnitConversion();
 	}
 	return NAN;
 }
