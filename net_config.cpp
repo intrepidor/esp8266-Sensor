@@ -65,17 +65,17 @@ ICACHE_FLASH_ATTR const char sHTTP_CSS[] = "<STYLE type=\"text/css\">"
 		"}"
 		".basebutton{"
 		"  font-family:\"Arial\";"
-		"  font-size:16px;"
+		"  font-size:15px;"
 		"  font-weight:bold;"
 		"  text-align:center;"
 		"  text-decoration:none;"
-		"  padding-left:10px;"
-		"  padding-right:10px;"
-		"  margin-left:4px;"
+		"  padding-left:5px;"
+		"  padding-right:5px;"
+		"  margin-left:2px;"
 		"  text-align:center;"
 		"  border:none;"
 		"  height:50px;"
-		"  width:80px;"
+		"  width:60px;"
 		"  display:flex;"
 		"  flex-direction:column;"
 		"  justify-content:center;"
@@ -147,7 +147,7 @@ ICACHE_FLASH_ATTR const char sHTTP_CSS[] = "<STYLE type=\"text/css\">"
 		"  display:inline-block;"
 		"  width:15px;"
 		"  height:15px;"
-		"  margin:-1px 4px 0 4px;"
+		"  margin:-1px 3px 0 3px;"
 		"  vertical-align:middle;"
 		"}"
 		".newradio{"
@@ -174,6 +174,13 @@ const char sHTTP_DIVSTART_CLOSE[] = "\">";
 //const char sHTTP_DIVBASE[] = "<div class=\"sensorblock\">";
 const char sHTTP_DIVEND[] = "</div>";
 
+//
+// ## Device Configuration Type -- used to determine which config web page is sending a response
+// ##   This is placed at the top and passes values back to the webserver. The webserver looks
+// ##   at the type returned so it knows how to process the rest of the page.
+const char sHTTP_CONFIG_TYPE[] = "<input type=\"text\" name=\"configtype\" hidden readonly value=\"";
+const char sHTTP_CONFIG_TYPE_DEVICE[] = "device\">";
+const char sHTTP_CONFIG_TYPE_THINGSPEAK[] = "thingspeak\">";
 //
 // ## Device Name
 const char sHTTP_DEVICE_NAME[] = ""
@@ -244,8 +251,8 @@ String getWebFooter(bool all) {
 	const String def(" defaultbutton");
 	wf += a + hre + lin + "\">Show Data" + sHTTP_AHREF_END;
 	wf += a + hre + lin + "/csv\">Show CSV" + sHTTP_AHREF_END;
-	wf += a + hre + lin + "/config\">Configure" + sHTTP_AHREF_END;
-	wf += a + hre + lin + "/tsconfig\">ThingSpeak" + sHTTP_AHREF_END;
+	wf += a + hre + lin + "/config\">Device Config" + sHTTP_AHREF_END;
+	wf += a + hre + lin + "/tsconfig\">Thing Speak" + sHTTP_AHREF_END;
 	wf += a + hre + lin + "/status\">Status" + sHTTP_AHREF_END;
 	wf += a + hre + lin + "/sensordebug\">Sensor Debug" + sHTTP_AHREF_END;
 	if (all) {
@@ -285,21 +292,22 @@ void config(void) {
 
 	// Device Name
 	r = sHTTP_DIVSTART + String("device") + sHTTP_DIVSTART_CLOSE;
+	r += sHTTP_CONFIG_TYPE + String(sHTTP_CONFIG_TYPE_DEVICE);
 	r += sHTTP_DEVICE_NAME + String(dinfo.getDeviceName()) + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_DEVICE_ID + String(dinfo.getDeviceID()) + sHTTP_ENDLABELQ;
 	r += sHTTP_DIVSTART + String("temp_units") + sHTTP_DIVSTART_CLOSE;
 	r += sHTTP_FARHEN_ENABLE + String(getCheckedStr(dinfo.isFahrenheit())) + "> Farhenheit Units<br>";
 	r += sHTTP_DIVEND;
 
-	// Thingspeak
-	r += sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
-	r += sHTTP_TS_ENABLE + String(dinfo.getThingspeakEnableStr()) + "> Thingspeak Enable<br>";
-	r += sHTTP_TS_PERIOD + String(dinfo.getThingspeakUpdatePeriodSeconds()) + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_TS_APIKEY + dinfo.getThingspeakApikey() + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_TS_URL + dinfo.getThingspeakURL() + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_TS_CHANNEL + String(dinfo.getThingspeakChannel()) + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_TS_IPADDR + dinfo.getThingspeakIpaddr() + sHTTP_ENDLABELQ + " Default=184.106.153.149";
-	r += sHTTP_DIVEND;
+//	// Thingspeak
+//	r += sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
+//	r += sHTTP_TS_ENABLE + String(dinfo.getThingspeakEnableStr()) + "> Thingspeak Enable<br>";
+//	r += sHTTP_TS_PERIOD + String(dinfo.getThingspeakUpdatePeriodSeconds()) + sHTTP_ENDLABELQ_BR;
+//	r += sHTTP_TS_APIKEY + dinfo.getThingspeakApikey() + sHTTP_ENDLABELQ_BR;
+//	r += sHTTP_TS_URL + dinfo.getThingspeakURL() + sHTTP_ENDLABELQ_BR;
+//	r += sHTTP_TS_CHANNEL + String(dinfo.getThingspeakChannel()) + sHTTP_ENDLABELQ_BR;
+//	r += sHTTP_TS_IPADDR + dinfo.getThingspeakIpaddr() + sHTTP_ENDLABELQ + " Default=184.106.153.149";
+//	r += sHTTP_DIVEND;
 	server.sendContent(r);
 
 	// Ports
@@ -401,6 +409,7 @@ void tsconfig(void) {
 
 	// Thingspeak
 	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
+	r += sHTTP_CONFIG_TYPE + String(sHTTP_CONFIG_TYPE_THINGSPEAK);
 	r += sHTTP_TS_ENABLE + String(dinfo.getThingspeakEnableStr()) + "> Thingspeak Enable<br>";
 	r += sHTTP_TS_PERIOD + String(dinfo.getThingspeakUpdatePeriodSeconds()) + sHTTP_ENDLABELQ_BR;
 	r += sHTTP_TS_APIKEY + dinfo.getThingspeakApikey() + sHTTP_ENDLABELQ_BR;
@@ -480,16 +489,36 @@ int ConfigurationChange(void) {
 
 	bool need_reboot = false;
 	bool taskclock_found = false;
+	bool ts_enable = false;
+	bool temp_farhen = false;
+	int which_form = 0;	// 0=unknown; 1=Device Config, 2=Thingspeak Config
 	if (server.args() > 0) {
 		bool found = false;
 		debug.println(DebugLevel::DEBUG2, "");
 		debug.println(DebugLevel::DEBUG2, F("##########################################################"));
-		dinfo.setThingspeakEnable(false);
-		dinfo.setFahrenheitUnit(false);
 		for (uint8_t i = 0; i < server.args(); i++) {
 			String sarg = server.argName(i);
 			String varg = server.arg(i);
 			debug.print(DebugLevel::DEBUG2, "NAME=" + sarg + ", VALUE=" + varg);
+			// Determine which configuration webpage by looking at the configtype value.
+			//   This is suppoosed to be at the top of the page so it's the first
+			//   value returned. Then page specific initialization code can be put here.
+			//   Run the page specific code and initializations.
+			if (sarg == String("configtype")) {
+				if (varg == "device") {
+					which_form = 1;
+					if (!ts_enable) {
+						dinfo.setFahrenheitUnit(false);
+					}
+				}
+				else if (varg == "thingspeak") {
+					which_form = 2;
+					if (!temp_farhen) {
+						dinfo.setThingspeakEnable(false);
+					}
+				}
+			}
+			// Process the rest of the webpage values
 			if (sarg == String("name")) {
 				dinfo.setDeviceName(varg);
 				debug.println(DebugLevel::DEBUG2, F(" ok name"));
@@ -504,11 +533,13 @@ int ConfigurationChange(void) {
 				dinfo.setThingspeakEnable(true);
 				debug.println(DebugLevel::DEBUG2, F(" ok ts_enable"));
 				found = true;
+				ts_enable = true;
 			}
 			if (sarg == String("temp_farhen")) {
 				dinfo.setFahrenheitUnit(true);
 				debug.println(DebugLevel::DEBUG2, F(" ok tempunitenable"));
 				found = true;
+				temp_farhen = true;
 			}
 			if (sarg == "tsupdateperiod") {
 				unsigned long l = static_cast<unsigned long>(::atol(varg.c_str()));
