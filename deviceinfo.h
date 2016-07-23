@@ -39,7 +39,7 @@ extern bool eeprom_is_dirty; // false whenever EEPROM and RAM are different.
 static bool isValidPort(int portnum);
 
 struct ThingspeakField { // 30 bytes
-	char number;
+	int number;
 	char name[FIELD_NAME_LENGTH];
 };
 
@@ -56,8 +56,8 @@ private:
 		struct {	// 28 bytes
 			char name[STRING_LENGTH + 1];
 			int id;
-			bool use_fahrenheit_unit;
-			bool spare;
+			bool fahrenheit_unit;
+			bool spare1;
 			bool spare2;
 			bool spare3;
 		} device;
@@ -80,7 +80,7 @@ private:
 
 		// These values get pushed to the Thingspeak website to describe the channel
 		//    and fields.
-		struct { // 510 bytes
+		struct { // 546 bytes
 			char ChannelName[THINGSPEAK_CHANNEL_NAME + 1];
 			char ChannelDescription[THINGSPEAK_CHANNEL_DESC + 1];
 			ThingspeakField tsfield[THINGSPEAK_PORT_FIELDS + THINGSPEAK_EXTRA_FIELDS];
@@ -115,6 +115,7 @@ public:
 		memset(&db, 0, sizeof(db));
 	}
 	void corruptConfigurationMemory(void); // this is used for force a return to factory defaults
+
 //--------------------------------------------------------
 	int getDebugLevel(void) {
 		return db.debuglevel;
@@ -122,6 +123,34 @@ public:
 	void setDebugLevel(int dlevel) {
 		db.debuglevel = dlevel;
 		eeprom_is_dirty = true;
+	}
+
+//--------------------------------------------------------
+// Thingspeak Channel Settings
+	String getTSChannelName() {
+		return String(this->db.thingspeakChannelSettings.ChannelName);
+	}
+	String getTSChannelDesc() {
+		return String(this->db.thingspeakChannelSettings.ChannelDescription);
+	}
+	void setTSChannelName(const char* s);
+	void setTSChannelDesc(const char* s);
+	String getTSFieldName(int index);
+	int getTSFieldNumber(int index);
+	void setTSFieldName(int index, String n);
+	void setTSFieldNumber(int index, int n);
+	int getTSFieldMax(void) {
+		return THINGSPEAK_PORT_FIELDS + THINGSPEAK_EXTRA_FIELDS;
+	}
+	int getTSFieldExtraMax(void) {
+		return THINGSPEAK_EXTRA_FIELDS;
+	}
+	int getTSFieldPortMax(void) {
+		return THINGSPEAK_PORT_FIELDS;
+	}
+	bool isValidTSFieldIndex(int _i) {
+		if (_i >= 0 && _i < getTSFieldMax()) return true;
+		return false;
 	}
 
 //--------------------------------------------------------
@@ -140,10 +169,28 @@ public:
 		this->db.device.id = newID;
 	}
 	void setFahrenheitUnit(bool true_for_fahrenheit) {
-		this->db.device.use_fahrenheit_unit = true_for_fahrenheit;
+		this->db.device.fahrenheit_unit = true_for_fahrenheit;
 	}
 	bool isFahrenheit(void) {
-		return this->db.device.use_fahrenheit_unit;
+		return this->db.device.fahrenheit_unit;
+	}
+	void setSpare1(bool b) {
+		this->db.device.spare1 = b;
+	}
+	bool isSpare1(void) {
+		return this->db.device.spare1;
+	}
+	void setSpare2(bool b) {
+		this->db.device.spare2 = b;
+	}
+	bool isSpare2(void) {
+		return this->db.device.spare2;
+	}
+	void setSpare3(bool b) {
+		this->db.device.spare3 = b;
+	}
+	bool isSpare3(void) {
+		return this->db.device.spare3;
 	}
 	void printInfo(void);
 //--------------------------------------------------------

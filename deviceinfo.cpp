@@ -37,12 +37,25 @@ void Device::writeDefaultsToDatabase(void) {
 	setDeviceName("");
 	setDeviceID(999);
 	setFahrenheitUnit(true);
+	setSpare1(false);
+	setSpare2(false);
+	setSpare3(false);
 	setThingspeakEnable(false);
 	setThingspeakUpdatePeriodMS (DEF_THINGSPEAK_UPDATE_PERIOD_MS); // once per minute
 	setThingspeakApikey("");
 	setThingspeakURL("http://api.thingspeak.com");
 	setThingspeakChannel(0);
 	setThingspeakIpaddr("184.106.153.149");
+	setTSChannelName("<Enter Channel Name>");
+	setTSChannelDesc("<Enter Channel Description>");
+	for (int i = 0; i < dinfo.getTSFieldExtraMax(); i++) {
+		setTSFieldNumber(i, 0);
+		setTSFieldName(i, "");
+	}
+	for (int i = 0; i < dinfo.getTSFieldPortMax(); i++) {
+		setTSFieldNumber(i, i + dinfo.getTSFieldExtraMax());
+		setTSFieldName(i, String("MyField" + String(i + dinfo.getTSFieldExtraMax())));
+	}
 	db.debuglevel = 0;
 	for (int i = 0; i < MAX_PORTS; i++) {
 		setPortName(i, "");
@@ -56,23 +69,37 @@ void Device::writeDefaultsToDatabase(void) {
 
 String Device::databaseToString(String eol) {
 	String s;
-	s = "config_version=" + String(db.end_of_eeprom_signature) + eol;
-	s += "debugLevel=" + DebugPrint::convertDebugLevelToString(static_cast<DebugLevel>(getDebugLevel()))
+	s = ".end_of_eeprom_signature=" + String(db.end_of_eeprom_signature) + eol;
+	s += ".debugLevel=" + DebugPrint::convertDebugLevelToString(static_cast<DebugLevel>(getDebugLevel()))
 			+ eol;
-	s += "device.name=" + String(getDeviceName()) + eol;
-	s += "device.id=" + String(getDeviceID()) + eol;
-	s += "thingspeak.status=" + String(getThingspeakStatus()) + eol;
-	s += "thingspeak.enable=" + getThingspeakEnableString() + eol;
-	s += "thingspeak.time_between_updates_sec=" + String(getThingspeakUpdatePeriodSeconds()) + " sec" + eol;
-	s += "TS_apikey=" + getThingspeakApikey() + eol;
-	s += "thingspeak.url=" + getThingspeakURL() + eol;
-	s += "thingspeak.channel=" + String(getThingspeakChannel()) + eol;
-	s += "thingspeak.ipaddr=" + getThingspeakIpaddr();
+	s += "== device ==" + eol;
+	s += ".name=" + String(getDeviceName()) + eol;
+	s += ".id=" + String(getDeviceID()) + eol;
+	s += ".fahrenheit_unit=" + String(isTrueStr(isFahrenheit())) + eol;
+	s += ".spare1=" + String(isTrueStr(isSpare1())) + eol;
+	s += ".spare2=" + String(isTrueStr(isSpare2())) + eol;
+	s += ".spare3=" + String(isTrueStr(isSpare3())) + eol;
+	s += "== thingspeak ==" + eol;
+	s += ".status=" + String(getThingspeakStatus()) + eol;
+	s += ".enable=" + getThingspeakEnableString() + eol;
+	s += ".time_between_updates_sec=" + String(getThingspeakUpdatePeriodSeconds()) + " sec" + eol;
+	s += ".apikey=" + getThingspeakApikey() + eol;
+	s += ".url=" + getThingspeakURL() + eol;
+	s += ".channel=" + String(getThingspeakChannel()) + eol;
+	s += ".ipaddr=" + getThingspeakIpaddr() + eol;
+	s += "== thingspeakChannelSettings ==" + eol;
+	s += ".ChannelName=" + getTSChannelName() + eol;
+	s += ".ChannelDesc=" + getTSChannelDesc() + eol;
+	for (int i = 0; i < getTSFieldMax(); i++) {
+		s += ".tsfield[" + String(i) + "].number=" + getTSFieldNumber(i) + ", .name=" + getTSFieldName(i)
+				+ eol;
+	}
+	s += "== cport ==";
 	for (int i = 0; i < getPortMax(); i++) {
-		s += eol + "port[" + String(i) + "].name=" + getPortName(i) + ", mode=" + String(getModeStr(i));
+		s += eol + "port[" + String(i) + "].name=" + getPortName(i) + ", .mode=" + String(getModeStr(i));
 //		s += String(", pin=") + String(db.port[i].pin); /// pin is not used
 		for (int k = 0; k < MAX_ADJ; k++) {
-			s += ", adj[" + String(k) + "]=";
+			s += ", .adj[" + String(k) + "]=";
 			s += String(getPortAdj(i, k), DECIMAL_PRECISION);
 		}
 	}
@@ -84,6 +111,60 @@ void Device::printInfo(void) {
 		Serial.println("Port#" + String(i) + ": " + getSensorModuleName(getPortMode(i)));
 	}
 	Serial.println("");
+}
+
+void Device::setTSChannelName(const char* s) {
+	if (s) {
+		memset(db.thingspeakChannelSettings.ChannelName, 0, sizeof(db.thingspeakChannelSettings.ChannelName));
+		strncpy(db.thingspeakChannelSettings.ChannelName, s,
+				sizeof(db.thingspeakChannelSettings.ChannelName) - 1);
+	}
+	else {
+		debug.print(DebugLevel::ERROR, nl);
+		debug.println(DebugLevel::ERROR, ("ERROR: setTSChannelName() - null value"));
+	}
+}
+
+void Device::setTSChannelDesc(const char* s) {
+	if (s) {
+		memset(db.thingspeakChannelSettings.ChannelDescription, 0,
+				sizeof(db.thingspeakChannelSettings.ChannelDescription));
+		strncpy(db.thingspeakChannelSettings.ChannelDescription, s,
+				sizeof(db.thingspeakChannelSettings.ChannelDescription) - 1);
+	}
+	else {
+		debug.print(DebugLevel::ERROR, nl);
+		debug.println(DebugLevel::ERROR, ("ERROR: setTSChannelDesc() - null value"));
+	}
+}
+
+int Device::getTSFieldNumber(int _i) {
+	if (isValidTSFieldIndex(_i)) {
+		return db.thingspeakChannelSettings.tsfield[_i].number;
+	}
+	return 0;
+}
+
+void Device::setTSFieldNumber(int _i, int n) {
+	if (isValidTSFieldIndex(_i)) {
+		db.thingspeakChannelSettings.tsfield[_i].number = n;
+	}
+}
+
+String Device::getTSFieldName(int _i) {
+	if (isValidTSFieldIndex(_i)) {
+		return String(db.thingspeakChannelSettings.tsfield[_i].name);
+	}
+	return String("");
+}
+
+void Device::setTSFieldName(int _i, String s) {
+	if (isValidTSFieldIndex(_i)) {
+		memset(db.thingspeakChannelSettings.tsfield[_i].name, 0,
+				sizeof(db.thingspeakChannelSettings.tsfield[_i].name));
+		strncpy(db.thingspeakChannelSettings.tsfield[_i].name, s.c_str(),
+				sizeof(db.thingspeakChannelSettings.tsfield[_i].name) - 1);
+	}
 }
 
 void Device::setcDeviceName(const char* newname) {

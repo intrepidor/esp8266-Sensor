@@ -140,8 +140,14 @@ ICACHE_FLASH_ATTR const char sHTTP_CSS[] = "<STYLE type=\"text/css\">"
 		".fieldmedium{"
 		"  width:170px;"
 		"}"
-		".fieldlong {"
+		".fieldlong{"
 		"  width:60%;"
+		"}"
+		".fieldmultiline{"
+		"  background-color:lightgray;"
+		"  color:darkgreen;"
+		"  margin-top:-2px;"
+		"  border-radius:2px;"
 		"}"
 		".newcheckbox{"
 		"  display:inline-block;"
@@ -171,9 +177,11 @@ const char sHTTP_END[] = "</body></html>";
 // ## Header
 const char sHTTP_DIVSTART[] = "<div class=\"base ";
 const char sHTTP_DIVSTART_CLOSE[] = "\">";
-//const char sHTTP_DIVBASE[] = "<div class=\"sensorblock\">";
 const char sHTTP_DIVEND[] = "</div>";
-
+// ## Input Fields
+const char sHTTP_INPUT_TEXT_LONG[] = "<input type=\"text\" class=\"field fieldlong\" name=\"";
+const char sHTTP_INPUT_TEXT_MEDIUM[] = "<input type=\"text\" class=\"field fieldmedium\" name=\"";
+const char sHTTP_INPUT_TEXT_SHORT[] = "<input type=\"text\" class=\"field fieldshort\" name=\"";
 //
 // ## Device Configuration Type -- used to determine which config web page is sending a response
 // ##   This is placed at the top and passes values back to the webserver. The webserver looks
@@ -197,13 +205,13 @@ const char sHTTP_DEVICE_ID[] = ""
 // <ENDLABELQ>
 
 const char sHTTP_FARHEN_ENABLE[] = ""
-		"<input type=\"checkbox\" name=\"temp_farhen\" class=\"newcheckbox\" value=\"tempunitsenable\" ";
+		"<input type=\"checkbox\" class=\"newcheckbox\" name=\"temp_farhen\" value=\"tempunitsenable\" ";
 // <print "checked" or blank>
 // <ENDLABEL>
 // ## Thingspeak
 
 const char sHTTP_TS_ENABLE[] = ""
-		"<input type=\"checkbox\" name=\"ts_enable\" class=\"newcheckbox\" value=\"tsenable\" ";
+		"<input type=\"checkbox\" class=\"newcheckbox\" name=\"ts_enable\" value=\"tsenable\" ";
 // <print "checked" or blank>
 // <ENDLABEL>
 
@@ -314,8 +322,9 @@ void config(void) {
 	for (int i = 0; i < dinfo.getPortMax(); i++) {
 		// Port Name
 		r = sHTTP_DIVSTART + String("port") + sHTTP_DIVSTART_CLOSE;
-		r += "<label>Port#" + String(i) + "<input type=\"text\" class=\"field fieldmedium\" name=\"port";
-		r += String(i) + sHTTP_CLOSE_AND_VALUE + dinfo.getPortName(i) + sHTTP_ENDLABELQ;
+		r += "<label>Port#" + String(i) + sHTTP_INPUT_TEXT_MEDIUM;
+		//"<input type=\"text\" class=\"field fieldmedium\" name=\"port";
+		r += "port" + String(i) + sHTTP_CLOSE_AND_VALUE + dinfo.getPortName(i) + sHTTP_ENDLABELQ;
 
 		// Port Mode - drop-down menu
 		r += "<br>Port Mode <select name=\"modemenu" + String(i) + "\">";
@@ -332,8 +341,8 @@ void config(void) {
 		// Port Adj Numeric Values
 		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
 			r += "<label>" + /*String(k)+*/dinfo.getPortAdjName(i, k);
-			r += " <input type=\"text\" class=\"field fieldshort\" name=\"adjport";
-			r += String(i) + String(k) + sHTTP_CLOSE_AND_VALUE
+			//r += " <input type=\"text\" class=\"field fieldshort\" name=\"";
+			r += String(sHTTP_INPUT_TEXT_SHORT) + "adjport" + String(i) + String(k) + sHTTP_CLOSE_AND_VALUE
 					+ String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION) + sHTTP_ENDLABELQ + "<br>";
 		}
 
@@ -420,32 +429,47 @@ void tsconfig(void) {
 	r += sHTTP_DIVEND;
 	server.sendContent(r);
 
-	// Fields
+	// Channel Settings
 	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
+	r = "<label>Channel Name: " + String(sHTTP_INPUT_TEXT_MEDIUM) + "chname\" value=\"";
+	r += dinfo.getTSChannelName() + sHTTP_ENDLABELQ_BR;
+	r += "<label>Desc: " + String(sHTTP_INPUT_TEXT_LONG) + "chdesc\" value=\"";
+	r += dinfo.getTSChannelDesc() + sHTTP_ENDLABELQ_BR;
+	r += sHTTP_DIVEND;
+	server.sendContent(r);
 
-	r += "<br>PIR <select name=\"pirmenu\">" + getfieldHTMLcode(1);
-	r += "<br>RSSI <select name=\"rssimenu\">" + getfieldHTMLcode(2);
-	r += "<br>Uptime <select name=\"uptimemenu\">" + getfieldHTMLcode(3);
+	// Device Special Fields
+	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
+	r += "<br>PIR <select name=\"pirmenu\">" + getfieldHTMLcode(dinfo.getTSFieldNumber(0));
+	r += "<br>RSSI <select name=\"rssimenu\">" + getfieldHTMLcode(dinfo.getTSFieldNumber(1));
+	r += "<br>Uptime <select name=\"uptimemenu\">" + getfieldHTMLcode(dinfo.getTSFieldNumber(2));
 	r += "<br>";
+	r += sHTTP_DIVEND;
+	server.sendContent(r);
 
+	// Port Fields
+	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
+	int fieldindex = dinfo.getTSFieldExtraMax();
 	for (int sensor = 0; sensor < SENSOR_COUNT; sensor++) {
-		r += "<br><b>Port " + String(sensor) + "</b><br>";
+		if (sensor > 0) r += "<br>";
+		r += "<b>Port " + String(sensor) + "</b><br>";
 		if (sensors[sensor]) {
 			for (int channel = 0; channel < getSensorValueCount(); channel++) {
 				r += "Channel " + String(channel) + ": ";
 				r += sensors[sensor]->getValueName(channel);
 				r += " <select name=\"sensormenu" + String(sensor) + String(channel) + "\">";
-				r += getfieldHTMLcode(0);
-				r += "<input type=\"text\" class=\"field fieldshort\" name=\"fieldname";
-				r += String(sensor) + String(channel);
-				r += "\" value=\"" + String("somename") + "\"><br>";
+				r += getfieldHTMLcode(dinfo.getTSFieldNumber(fieldindex + channel));
+				r += String(sHTTP_INPUT_TEXT_MEDIUM) + "fieldname";
+				r += String(dinfo.getTSFieldExtraMax() + channel);
+				r += "\" value=\"" + dinfo.getTSFieldName(fieldindex + channel) + "\"><br>";
 			}
 		}
+		fieldindex += 2;
 	}
 	r += sHTTP_DIVEND;
 	server.sendContent(r);
 
-	// Buttons and links then END of Page
+// Buttons and links then END of Page
 	r = getWebFooter(true) + "</form>" + sHTTP_END;
 	server.sendContent(r);
 }
