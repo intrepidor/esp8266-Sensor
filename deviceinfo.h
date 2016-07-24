@@ -73,6 +73,7 @@ private:
 			// 4 means "connection failure"
 			char enabled;
 			char apikey[STRING_LENGTH + 1];
+			char userapikey[STRING_LENGTH + 1];
 			char url[URL_LENGTH + 1];
 			char ipaddr[16]; // nnn.nnn.nnn.nnn = 4*3+3(dots)+1(nul) = 16 chars; 15 for data, and 1 for terminating nul
 
@@ -116,6 +117,9 @@ public:
 		memset(&db, 0, sizeof(db));
 	}
 	void corruptConfigurationMemory(void); // this is used for force a return to factory defaults
+	int getDatabaseSize(void) {
+		return sizeof(db);
+	}
 
 //--------------------------------------------------------
 	int getDebugLevel(void) {
@@ -256,7 +260,7 @@ public:
 	void setThingspeakUpdatePeriodSeconds(unsigned long new_periodsec);
 	void setThingspeakUpdatePeriodMS(unsigned long new_periodms);
 
-// API
+// Channel Write API Key
 	void setThingspeakApikey(const char* _apikey) {
 		if (_apikey) {
 			strncpy(this->db.thingspeak.apikey, _apikey, sizeof(db.thingspeak.apikey) - 1);
@@ -272,6 +276,23 @@ public:
 	}
 	const char* getcThingspeakApikey() const {
 		return db.thingspeak.apikey;
+	}
+// User API Key
+	void setThingspeakUserApikey(const char* _apikey) {
+		if (_apikey) {
+			strncpy(this->db.thingspeak.userapikey, _apikey, sizeof(db.thingspeak.userapikey) - 1);
+		}
+	}
+	void setThingspeakUserApikey(String _apikey) {
+		if (_apikey) {
+			strncpy(this->db.thingspeak.userapikey, _apikey.c_str(), sizeof(db.thingspeak.userapikey) - 1);
+		}
+	}
+	String getThingspeakUserApikey() const {
+		return String(db.thingspeak.userapikey);
+	}
+	String getcThingspeakUserApikey() const {
+		return db.thingspeak.userapikey;
 	}
 // URL
 	void setThingspeakURL(const char* _url) {
@@ -292,15 +313,9 @@ public:
 	void setThingspeakChannel(unsigned long _channel) {
 		db.thingspeak.channel = _channel;
 	}
-//	void setThingspeakChannel(String _channel) {
-//		setThingspeakChannel(_channel.c_str());
-//	}
 	unsigned long getThingspeakChannel() const {
 		return db.thingspeak.channel;
 	}
-//	const char* getcThingspeakChannel() const {
-//		return db.thingspeak.channel;
-//	}
 // IPADDR
 	void setThingspeakIpaddr(String _ipaddr) {
 		setThingspeakIpaddr(_ipaddr.c_str());

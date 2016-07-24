@@ -35,6 +35,7 @@ String getsThingspeakInfo(String eol) {
 	s += "Next Update[sec]: " + String(next_update / MS_PER_SECOND) + eol;
 	s += "URL: " + dinfo.getThingspeakURL() + " (future use)" + eol;
 	s += "Write Key: " + dinfo.getThingspeakApikey() + eol;
+	s += "User API Key: " + dinfo.getThingspeakUserApikey() + eol;
 	s += "Channel: " + String(dinfo.getThingspeakChannel()) + " (future use)" + eol;
 	s += "IP Address: " + dinfo.getThingspeakIpaddr() + eol;
 	s += "Updates: " + String(thingspeak_update_counter) + eol;
@@ -124,32 +125,9 @@ String getTCPStatusString(uint8_t s) {
 
 String getThingspeakGET(void) {
 	String getStr = "/update?api_key=" + dinfo.getThingspeakApikey();
-
-	getStr += "&field1=" + String(PIRcount); // The built-in PIR sensor is always field1
-// This code is written so the fields are static regardless of which sensor is used in
-//    which port, or how many ports are present, or how many values are enabled per
-//    a sensor. This is done so the Thingspeak channel configuration is not dependent
-//    on the configuration of the device. Since Thingspeak only permits 8 channels,
-//    and there are nine possible, 1 PIR + 2 per each of 4 sensors, the 4th sensor's
-//    second value will not be sent to Thingspeak.
-	int nextfield = 2;
-	for (int i = 0; i < SENSOR_COUNT && nextfield <= MAX_THINGSPEAK_FIELD_COUNT; i++) {
-		if (sensors[i]) {
-			for (int j = 0; j < getSensorValueCount() && nextfield <= MAX_THINGSPEAK_FIELD_COUNT; j++) {
-				getStr += "&field" + String(nextfield++) + "=";
-				if (sensors[i]->getValueEnable(j)) {
-					getStr += String(sensors[i]->getValue(j));
-				}
-				else {
-					getStr += "0";
-				}
-			}
-		}
-		else { // sensor not present; assume zero for the values
-			for (int k = 0; k < getSensorValueCount() && nextfield <= MAX_THINGSPEAK_FIELD_COUNT; k++) {
-				getStr += "&field" + String(nextfield++) + "=0";
-			}
-		}
+	for (int fld = 1; fld <= MAX_THINGSPEAK_FIELD_COUNT; fld++) {
+		int pos = getPositionByTSFieldNumber(fld);
+		getStr += "&field" + String(fld) + "=" + getValueByPosition(pos);
 	}
 	return getStr;
 }

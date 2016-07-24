@@ -15,7 +15,7 @@
 #include "thingspeak.h"
 
 extern int ConfigurationChange(void);
-extern String sHTML_INPUT(int size, String name, String value);
+extern String sHTML_INPUT(String header, int size, String name, String value, String footer);
 extern String getfieldHTMLcode(int selectedfield);
 extern String sHTML_TSFieldExtra_INPUT(int xfield_index);
 
@@ -170,13 +170,6 @@ ICACHE_FLASH_ATTR const char sHTTP_CSS[] = "<STYLE type=\"text/css\">"
 ICACHE_FLASH_ATTR const char sHTTP_START_BODY[] = "</head><body>";
 
 //////////////////////////////////////////////////////////////////////////////
-// Generic and reused statements
-//const char sHTTP_ENDLABEL_BR[] = "></label> <br>";
-const char sHTTP_ENDLABELQ_BR[] = "\"></label><br>";
-const char sHTTP_ENDLABELQ[] = "\"></label>";
-//const char sHTTP_ENDBRACEQ[] = "\">";
-const char sHTTP_CLOSE_AND_VALUE[] = "\"  value=\"";
-const char sHTTP_END[] = "</body></html>";
 // ## Header
 const char sHTTP_DIVSTART[] = "<div class=\"base ";
 const char sHTTP_DIVSTART_CLOSE[] = "\">";
@@ -192,63 +185,6 @@ const char sHTTP_INPUT_TEXT_SHORT[] = "<input type=\"text\" class=\"field fields
 const char sHTTP_CONFIG_TYPE[] = "<input type=\"text\" name=\"configtype\" hidden readonly value=\"";
 const char sHTTP_CONFIG_TYPE_DEVICE[] = "device\">";
 const char sHTTP_CONFIG_TYPE_THINGSPEAK[] = "thingspeak\">";
-//
-// ## Device Name
-const char sHTTP_DEVICE_NAME[] = ""
-		"<label>Device name: "
-		"<input type=\"text\" class=\"field fieldmedium\" name=\"name\" value=\"";
-// <print user assigned name>
-// <ENDLABELQ>
-//
-// ## Device ID
-const char sHTTP_DEVICE_ID[] = ""
-		"<label>Device ID: "
-		"<input type=\"text\" class=\"field fieldmedium\" name=\"deviceid\" value=\"";
-// <print user assigned name>
-// <ENDLABELQ>
-
-const char sHTTP_FARHEN_ENABLE[] = ""
-		"<input type=\"checkbox\" class=\"newcheckbox\" name=\"temp_farhen\" value=\"tempunitsenable\" ";
-// <print "checked" or blank>
-// <ENDLABEL>
-// ## Thingspeak
-
-const char sHTTP_TS_ENABLE[] = ""
-		"<input type=\"checkbox\" class=\"newcheckbox\" name=\"ts_enable\" value=\"tsenable\" ";
-// <print "checked" or blank>
-// <ENDLABEL>
-
-const char sHTTP_TS_URL[] = ""
-		"<label>URL (optional): "
-		"<input type=\"text\" class=\"field fieldlong\" name=\"tsurl\" value=\"";
-// print current url
-// <ENDLABELQ>
-
-const char sHTTP_TS_CHANNEL[] = ""
-		"<label>Channel (optional): "
-		"<input type=\"text\" class=\"field fieldshort\" name=\"tschannel\" value=\"";
-// print current channel
-// <ENDLABELQ>
-
-const char sHTTP_TS_PERIOD[] = ""
-		"<label>Update Period (sec): "
-		"<input type=\"text\" class=\"field fieldshort\" name=\"tsupdateperiod\" value=\"";
-// print current update period
-// <ENDLABELQ>
-
-const char sHTTP_TS_APIKEY[] = ""
-		"<label>API Write Key: "
-		"<input type=\"text\" class=\"field fieldmedium\" name=\"apikey\" value=\"";
-// print current apikey
-// <ENDLABELQ>
-
-const char sHTTP_TS_IPADDR[] =
-		"<label>IP address: <input type=\"text\" class=\"field fieldmedium\" name=\"ipaddr\" value=\"";
-// print current ipaddress
-// <ENDLABELQ>
-
-// Misc
-const char sHTTP_AHREF_END[] = "</a>";
 
 //-----------------------------------------------------------------------------------
 const char sHTTP_BUTTONS[] = "<div class=\"savediv\">"
@@ -260,15 +196,15 @@ String getWebFooter(bool all) {
 	const String hre(" hrefbutton");
 	const String reb(" rebootbutton");
 	const String def(" defaultbutton");
-	wf += a + hre + lin + "\">Show Data" + sHTTP_AHREF_END;
-	wf += a + hre + lin + "/csv\">Show CSV" + sHTTP_AHREF_END;
-	wf += a + hre + lin + "/config\">Device Config" + sHTTP_AHREF_END;
-	wf += a + hre + lin + "/tsconfig\">Thing Speak" + sHTTP_AHREF_END;
-	wf += a + hre + lin + "/status\">Status" + sHTTP_AHREF_END;
-	wf += a + hre + lin + "/sensordebug\">Sensor Debug" + sHTTP_AHREF_END;
+	wf += a + hre + lin + "\">Show Data</a>";
+	wf += a + hre + lin + "/csv\">Show CSV</a>";
+	wf += a + hre + lin + "/config\">Device Config</a>";
+	wf += a + hre + lin + "/tsconfig\">Thing Speak</a>";
+	wf += a + hre + lin + "/status\">Status</a>";
+	wf += a + hre + lin + "/sensordebug\">Sensor Debug</a>";
 	if (all) {
-		wf += a + def + lin + "/factory_settings\">Factory Settings" + sHTTP_AHREF_END;
-		wf += a + reb + lin + "/reboot\">Reboot" + sHTTP_AHREF_END;
+		wf += a + def + lin + "/factory_settings\">Factory Settings</a>";
+		wf += a + reb + lin + "/reboot\">Reboot</a>";
 		wf += sHTTP_BUTTONS;
 	}
 	wf += sHTTP_DIVEND;
@@ -276,8 +212,8 @@ String getWebFooter(bool all) {
 }
 
 //-----------------------------------------------------------------------------------
-String sHTML_INPUT(int size, String name, String value) {
-	String s("");
+String sHTML_INPUT(String header, int size, String name, String value, String footer) {
+	String s("<label>" + header);
 	switch (size) {
 		case 0:
 			s += sHTTP_INPUT_TEXT_SHORT;
@@ -290,7 +226,7 @@ String sHTML_INPUT(int size, String name, String value) {
 			s += sHTTP_INPUT_TEXT_LONG;
 			break;
 	}
-	s += name + "\" value=\"" + value + "\"><br>";
+	s += name + "\" value=\"" + value + "\">" + footer + "</label><br>";
 	return s;
 }
 
@@ -323,21 +259,12 @@ void config(void) {
 	// Device Name
 	r = sHTTP_DIVSTART + String("device") + sHTTP_DIVSTART_CLOSE;
 	r += sHTTP_CONFIG_TYPE + String(sHTTP_CONFIG_TYPE_DEVICE);
-	r += sHTTP_DEVICE_NAME + String(dinfo.getDeviceName()) + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_DEVICE_ID + String(dinfo.getDeviceID()) + sHTTP_ENDLABELQ;
+	r += sHTML_INPUT("Device Name: ", 1, "name", String(dinfo.getDeviceName()), "");
+	r += sHTML_INPUT("Device ID: ", 1, "deviceid", String(dinfo.getDeviceID()), "");
 	r += sHTTP_DIVSTART + String("temp_units") + sHTTP_DIVSTART_CLOSE;
-	r += sHTTP_FARHEN_ENABLE + String(getCheckedStr(dinfo.isFahrenheit())) + "> Farhenheit Units<br>";
+	r += "<input type=\"checkbox\" class=\"newcheckbox\" name=\"temp_farhen\" value=\"tempunitsenable\" "
+			+ String(getCheckedStr(dinfo.isFahrenheit())) + "> Farhenheit Units<br>";
 	r += sHTTP_DIVEND;
-
-//	// Thingspeak
-//	r += sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
-//	r += sHTTP_TS_ENABLE + String(dinfo.getThingspeakEnableStr()) + "> Thingspeak Enable<br>";
-//	r += sHTTP_TS_PERIOD + String(dinfo.getThingspeakUpdatePeriodSeconds()) + sHTTP_ENDLABELQ_BR;
-//	r += sHTTP_TS_APIKEY + dinfo.getThingspeakApikey() + sHTTP_ENDLABELQ_BR;
-//	r += sHTTP_TS_URL + dinfo.getThingspeakURL() + sHTTP_ENDLABELQ_BR;
-//	r += sHTTP_TS_CHANNEL + String(dinfo.getThingspeakChannel()) + sHTTP_ENDLABELQ_BR;
-//	r += sHTTP_TS_IPADDR + dinfo.getThingspeakIpaddr() + sHTTP_ENDLABELQ + " Default=184.106.153.149";
-//	r += sHTTP_DIVEND;
 	server.sendContent(r);
 
 	// Ports
@@ -345,8 +272,7 @@ void config(void) {
 		// Port Name
 		r = sHTTP_DIVSTART + String("port") + sHTTP_DIVSTART_CLOSE;
 		r += "<label>Port#" + String(i) + sHTTP_INPUT_TEXT_MEDIUM;
-		//"<input type=\"text\" class=\"field fieldmedium\" name=\"port";
-		r += "port" + String(i) + sHTTP_CLOSE_AND_VALUE + dinfo.getPortName(i) + sHTTP_ENDLABELQ;
+		r += "port" + String(i) + "\"  value=\"" + dinfo.getPortName(i) + "\"></label>";
 
 		// Port Mode - drop-down menu
 		r += "<br>Port Mode <select name=\"modemenu" + String(i) + "\">";
@@ -363,9 +289,8 @@ void config(void) {
 		// Port Adj Numeric Values
 		for (int k = 0; k < dinfo.getPortAdjMax(); k++) {
 			r += "<label>" + /*String(k)+*/dinfo.getPortAdjName(i, k);
-			//r += " <input type=\"text\" class=\"field fieldshort\" name=\"";
-			r += String(sHTTP_INPUT_TEXT_SHORT) + "adjport" + String(i) + String(k) + sHTTP_CLOSE_AND_VALUE
-					+ String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION) + sHTTP_ENDLABELQ + "<br>";
+			r += String(sHTTP_INPUT_TEXT_SHORT) + "adjport" + String(i) + String(k) + "\"  value=\""
+					+ String(dinfo.getPortAdj(i, k), DECIMAL_PRECISION) + "\"></label><br>";
 		}
 
 //		// Port Mode - radio buttons
@@ -373,7 +298,7 @@ void config(void) {
 //		//lint -e{26,785} suppress since lint doesn't understand C++11
 //		for (int j = 0; j < static_cast<int>(sensorModule::END); j++) {
 //			r += "<input type=\"radio\" class=\"newradio\" name=\"radport";
-//			r += String(i) + sHTTP_CLOSE_AND_VALUE;
+//			r += String(i) + "\"  value=\"";
 //			r += String(sensorList[static_cast<int>(j)].name);
 //			r += "\" ";
 //			if (dinfo.getPortMode(i) == static_cast<sensorModule>(j)) {
@@ -397,7 +322,7 @@ void config(void) {
 	}
 
 // Buttons and links then END of Page
-	r = getWebFooter(true) + "</form>" + sHTTP_END;
+	r = getWebFooter(true) + "</form></body></html>";
 	server.sendContent(r);
 }
 
@@ -465,30 +390,31 @@ void tsconfig(void) {
 	// Thingspeak
 	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
 	r += sHTTP_CONFIG_TYPE + String(sHTTP_CONFIG_TYPE_THINGSPEAK);
-	r += sHTTP_TS_ENABLE + String(dinfo.getThingspeakEnableStr()) + "> Thingspeak Enable<br>";
-	r += sHTTP_TS_PERIOD + String(dinfo.getThingspeakUpdatePeriodSeconds()) + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_TS_APIKEY + dinfo.getThingspeakApikey() + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_TS_URL + dinfo.getThingspeakURL() + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_TS_CHANNEL + String(dinfo.getThingspeakChannel()) + sHTTP_ENDLABELQ_BR;
-	r += sHTTP_TS_IPADDR + dinfo.getThingspeakIpaddr() + sHTTP_ENDLABELQ + " Default=184.106.153.149";
+	r += "<input type=\"checkbox\" class=\"newcheckbox\" name=\"ts_enable\" value=\"tsenable\" "
+			+ String(dinfo.getThingspeakEnableStr()) + "> Thingspeak Enable<br>";
+	r += sHTML_INPUT("Update Period (sec): ", 0, "tsupdateperiod",
+			String(dinfo.getThingspeakUpdatePeriodSeconds()), "");
+	r += sHTML_INPUT("API Write Key: ", 1, "apikey", dinfo.getThingspeakApikey(), "");
+	r += sHTML_INPUT("User API Key: ", 1, "userapikey", dinfo.getThingspeakUserApikey(), "");
+	r += sHTML_INPUT("URL (optional): ", 2, "tsurl", dinfo.getThingspeakURL(), "");
+	r += sHTML_INPUT("Channel: ", 1, "tschannel", String(dinfo.getThingspeakChannel()), "");
+	r += sHTML_INPUT("IP Address: ", 1, "ipaddr", dinfo.getThingspeakIpaddr(), "Default=184.106.153.149");
 	r += sHTTP_DIVEND;
 	server.sendContent(r);
 
 	// Channel Settings
 	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
-	r += "<label>Channel Name: " + String(sHTTP_INPUT_TEXT_MEDIUM) + "chname\" value=\"";
-	r += dinfo.getTSChannelName() + sHTTP_ENDLABELQ_BR;
-	r += "<label>Desc: " + String(sHTTP_INPUT_TEXT_LONG) + "chdesc\" value=\"";
-	r += dinfo.getTSChannelDesc() + sHTTP_ENDLABELQ_BR;
+	r += sHTML_INPUT("Channel Name: ", 1, "chname", dinfo.getTSChannelName(), "");
+	r += sHTML_INPUT("Desc: ", 2, "chdesc", dinfo.getTSChannelDesc(), "");
 	r += sHTTP_DIVEND;
 	server.sendContent(r);
 
 	// Device Special Fields
 	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
 	r += "<label>Non-Sensor Parameters</label>";
-	r += "<br>PIR " + sHTML_TSFieldExtra_INPUT(0);
-	r += "<br>RSSI " + sHTML_TSFieldExtra_INPUT(1);
-	r += "<br>Uptime " + sHTML_TSFieldExtra_INPUT(2);
+	r += "<br>PIR   [/min]" + sHTML_TSFieldExtra_INPUT(0);
+	r += "<br>RSSI   [dBm]" + sHTML_TSFieldExtra_INPUT(1);
+	r += "<br>Uptime [min]" + sHTML_TSFieldExtra_INPUT(2);
 	r += "<br>";
 	r += sHTTP_DIVEND;
 	server.sendContent(r);
@@ -512,7 +438,7 @@ void tsconfig(void) {
 	server.sendContent(r);
 
 // Buttons and links then END of Page
-	r = getWebFooter(true) + "</form>" + sHTTP_END;
+	r = getWebFooter(true) + "</form></body></html>";
 	server.sendContent(r);
 }
 
@@ -603,6 +529,11 @@ int ConfigurationChange(void) {
 			if (sarg == "apikey") {
 				dinfo.setThingspeakApikey(varg);
 				debug.println(DebugLevel::HTTPGET, F(" ok apikey"));
+				found = true;
+			}
+			if (sarg == "userapikey") {
+				dinfo.setThingspeakUserApikey(varg);
+				debug.println(DebugLevel::HTTPGET, F(" ok userapikey"));
 				found = true;
 			}
 			if (sarg == "ipaddr") {

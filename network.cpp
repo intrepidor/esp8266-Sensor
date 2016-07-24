@@ -140,7 +140,7 @@ void WebInit(void) {
 				}
 			}
 		}
-		response += "<br>" + getWebFooter(false) + sHTTP_END;
+		response += "<br>" + getWebFooter(false) + "</body></html>";
 		server.sendContent(response);
 	});
 	kickAllWatchdogs();

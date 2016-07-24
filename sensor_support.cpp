@@ -10,6 +10,7 @@
 #include "network.h"
 #include "thingspeak.h"
 #include "deviceinfo.h"
+#include "util.h"
 #include "sensor_support.h"
 
 int getSensorValueCount(void) {
@@ -93,7 +94,7 @@ float getValueByPosition(int _pos) {
 		case 9:
 			return static_cast<float>(WiFi.RSSI());
 		case 10:
-			return static_cast<float>(millis());
+			return static_cast<float>(millis() / MS_PER_MINUTE);
 		default:
 			return NAN;
 	}

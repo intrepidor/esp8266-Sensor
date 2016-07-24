@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <EEPROM.h>
 #include <Esp.h>
 #include <Ticker.h>
@@ -115,7 +114,7 @@ void setup(void) {
 	dinfo.init(); // this must be done before calling any other member functions
 
 // Start EEPROM and setup the Persisted Database
-	EEPROM.begin(1024);
+	EEPROM.begin(1536);
 
 	/* The SDA pin is supposed to be high when not used. If during startup the pin is held low,
 	 * then erase the EEPROM.
@@ -388,7 +387,6 @@ void printInfo(void) {
 	Serial.println(getsThingspeakInfo(nl));
 	Serial.println(F("== Port Information =="));
 	dinfo.printInfo();
-	Serial.println(getsThingspeakChannelInfo(nl));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -496,9 +494,10 @@ int task_flashled(unsigned long now) {
 }
 
 void printMenu(void) {
-	Serial.println(F("MENU ----------------------"));
+	Serial.println(F("MENU ------------------------------"));
 	Serial.println(F("?  show this menu"));
 	Serial.println(F("i  show High-level configuration"));
+	Serial.println(F("t  show Thingspeak Channel Settings"));
 	Serial.println(F("c  show calibration values"));
 	Serial.println(F("m  show measured values"));
 	Serial.println(F("r  show chart of values (raw)"));
@@ -509,7 +508,7 @@ void printMenu(void) {
 }
 
 void printExtendedMenu(void) {
-	Serial.println(F("MENU EXTENDED -------------"));
+	Serial.println(F("MENU EXTENDED ---------------------"));
 	Serial.println(F("E  show data structure in EEPROM"));
 	Serial.println(F("M  show data structure in RAM"));
 	Serial.println(F("C  write defaults to configuration memory"));
@@ -547,6 +546,9 @@ int task_serialport_menu(unsigned long now) {
 				break;
 			case 'i':
 				printInfo();
+				break;
+			case 't':
+				Serial.println(getsThingspeakChannelInfo(nl));
 				break;
 			case 'r':
 				// Display the heading
@@ -675,10 +677,10 @@ int task_serialport_menu(unsigned long now) {
 				Serial.print(F("Vcc:\t\t\t"));
 				Serial.println(String(ESP.getVcc()));
 
-				Serial.print(F("FreeHeap:\t\t"));
+				Serial.print(F("FreeHeap:\t\t0x"));
 				Serial.println(ESP.getFreeHeap(), HEX);
 
-				Serial.print(F("ChipId:\t\t\t"));
+				Serial.print(F("ChipId:\t\t\t0x"));
 				Serial.println(ESP.getChipId(), HEX);
 
 				Serial.print(F("SdkVersion:\t\t"));
@@ -693,13 +695,13 @@ int task_serialport_menu(unsigned long now) {
 				Serial.print(F("CpuFreqMHz:\t\t"));
 				Serial.println(String(ESP.getCpuFreqMHz()));
 
-				Serial.print(F("FlashChipId:\t\t"));
+				Serial.print(F("FlashChipId:\t\t0x"));
 				Serial.println(ESP.getFlashChipId(), HEX);
 
-				Serial.print(F("FlashChipRealSize[Mbit]:"));
+				Serial.print(F("FlashChipRealSize[Mbit]:0x"));
 				Serial.println(ESP.getFlashChipRealSize(), HEX);
 
-				Serial.print(F("FlashChipSize [MBit]:\t"));
+				Serial.print(F("FlashChipSize [MBit]:\t0x"));
 				Serial.println(ESP.getFlashChipSize(), HEX);
 
 				Serial.print(F("FlashChipSpeed [Hz]:\t"));
@@ -724,14 +726,17 @@ int task_serialport_menu(unsigned long now) {
 						Serial.println(F("Unknown"));
 						break;
 				}
-				Serial.print(F("FlashChipSizeByChipId:\t"));
+				Serial.print(F("FlashChipSizeByChipId:\t0x"));
 				Serial.println(ESP.getFlashChipSizeByChipId(), HEX);
 
-				Serial.print(F("SketchSize [Bytes]:\t"));
+				Serial.print(F("SketchSize [Bytes]:\t0x"));
 				Serial.println(ESP.getSketchSize(), HEX);
 
-				Serial.print(F("FreeSketchSpace [Bytes]:"));
+				Serial.print(F("FreeSketchSpace [Bytes]:0x"));
 				Serial.println(ESP.getFreeSketchSpace(), HEX);
+
+				Serial.print(F("sizeof(dinfo) [Bytes]:\t0x"));
+				Serial.println(dinfo.getDatabaseSize(), HEX);
 
 				Serial.println("");
 				break;

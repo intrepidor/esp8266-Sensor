@@ -87,6 +87,7 @@ String Device::databaseToString(String eol) {
 	s += ".enable=" + getThingspeakEnableString() + eol;
 	s += ".time_between_updates_sec=" + String(getThingspeakUpdatePeriodSeconds()) + " sec" + eol;
 	s += ".apikey=" + getThingspeakApikey() + eol;
+	s += ".userapikey=" + getThingspeakUserApikey() + eol;
 	s += ".url=" + getThingspeakURL() + eol;
 	s += ".channel=" + String(getThingspeakChannel()) + eol;
 	s += ".ipaddr=" + getThingspeakIpaddr() + eol;
