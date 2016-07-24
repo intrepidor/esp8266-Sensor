@@ -43,6 +43,42 @@ String getsThingspeakInfo(String eol) {
 	return s;
 }
 
+String getsThingspeakChannelInfo(String eol) {
+	String s("== Thingspeak Channel Info ==" + eol);
+	int fld = 0;
+	bool fields[MAX_THINGSPEAK_FIELD_COUNT] = { 0 };
+	s += "Channel Name: " + dinfo.getTSChannelName() + eol;
+	s += "Channel Desc: " + dinfo.getTSChannelDesc() + eol;
+	s += "Extra Fields: " + String(dinfo.getTSFieldExtraMax()) + eol;
+	for (int i = 0; i < dinfo.getTSFieldExtraMax(); i++) {
+		fld = dinfo.getTSFieldExtraNumber(i);
+		if (fld < 1) fld = 1;
+		s += "  " + getNameByPosition(i + dinfo.getTSFieldPortMax()) + "= field" + String(fld);
+		if (fields[fld - 1]) {
+			s += " IGNORED AS DUPLICATE";
+		}
+		fields[fld - 1] = true;
+		s += eol;
+	}
+	s += "Port Fields: " + String(dinfo.getTSFieldPortMax()) + eol;
+	for (int i = 0; i < dinfo.getTSFieldPortMax(); i++) {
+		fld = dinfo.getTSFieldPortNumber(i);
+		if (fld < 1) fld = 1; // this avoid buffer overrun, but also creates a potential bug
+		s += "  " + getNameByPosition(i) + "= field" + String(fld);
+		if (fields[fld - 1]) {
+			s += " IGNORED AS DUPLICATE";
+		}
+		fields[fld - 1] = true;
+		s += eol;
+	}
+	s += "== Field Mapping to Position == " + eol;
+	for (fld = 1; fld <= MAX_THINGSPEAK_FIELD_COUNT; fld++) {
+		int _pos = getPositionByTSFieldNumber(fld);
+		s += "  Field" + String(fld) + " = Position" + _pos + ", " + getNameByPosition(_pos) + eol;
+	}
+	return s;
+}
+
 String getTCPStatusString(uint8_t s) {
 	String r = String("");
 	switch (s) {
@@ -121,7 +157,7 @@ String getThingspeakGET(void) {
 void updateThingspeak(void) {
 	WiFiClient client;
 
-	// Create the connection
+// Create the connection
 	kickExternalWatchdog();
 	if (!client.connect(dinfo.getThingspeakIpaddr_c(), 80)) {
 		Serial.println(

@@ -83,8 +83,8 @@ private:
 		struct { // 546 bytes
 			char name[THINGSPEAK_CHANNEL_NAME + 1];
 			char desc[THINGSPEAK_CHANNEL_DESC + 1];
-			ThingspeakField fieldPort[THINGSPEAK_PORT_FIELDS];
-			ThingspeakField fieldExtra[THINGSPEAK_EXTRA_FIELDS];
+			ThingspeakField fieldPort[THINGSPEAK_PORT_FIELDS]; // Positions 0 .. 7
+			ThingspeakField fieldExtra[THINGSPEAK_EXTRA_FIELDS]; // Positions 8 .. 11
 		} thingspeakChannelSettings;
 
 		// Ports // 120 bytes

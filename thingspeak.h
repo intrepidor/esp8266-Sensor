@@ -17,5 +17,6 @@ extern unsigned long last_thingspeak_update_time_ms;
 
 extern String getsThingspeakInfo(String eol);
 extern void updateThingspeak(void);
+extern String getsThingspeakChannelInfo(String eol);
 
 #endif /* THINGSPEAK_H_ */

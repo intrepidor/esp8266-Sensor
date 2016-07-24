@@ -644,7 +644,7 @@ int ConfigurationChange(void) {
 					if (varg.length() > 5) {
 						char f = varg.c_str()[5]; // get the field number as a character
 						fn = static_cast<int>(f) - static_cast<int>('0'); // convert field number to integer
-						if (fn > 0 && fn <= 8 /* fields are 1 through 8*/) {
+						if (fn > 0 && fn <= MAX_THINGSPEAK_FIELD_COUNT) {
 							debug.println(DebugLevel::HTTPGET,
 									" ok, fieldExtra[" + String(n) + "].number set to " + String(fn));
 						}
@@ -695,7 +695,7 @@ int ConfigurationChange(void) {
 					if (varg.length() > 5) {
 						char f = varg.c_str()[5]; // get the field number as a character
 						fn = static_cast<int>(f) - static_cast<int>('0'); // convert field number to integer
-						if (fn > 0 && fn <= 8 /* fields are 1 through 8*/) {
+						if (fn > 0 && fn <= MAX_THINGSPEAK_FIELD_COUNT) {
 							debug.println(DebugLevel::HTTPGET,
 									" ok, fieldPort[" + String(n) + "].number set to " + String(fn));
 						}

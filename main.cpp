@@ -32,7 +32,7 @@ extern void ConfigurePorts(void);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.11 Allan Inda 2016July23");
+String ProgramInfo("Environment Sensor v0.12 Allan Inda 2016July24");
 
 // Other
 long count = 0;
@@ -388,6 +388,7 @@ void printInfo(void) {
 	Serial.println(getsThingspeakInfo(nl));
 	Serial.println(F("== Port Information =="));
 	dinfo.printInfo();
+	Serial.println(getsThingspeakChannelInfo(nl));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////

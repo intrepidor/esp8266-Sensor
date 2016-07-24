@@ -150,6 +150,7 @@ void WebInit(void) {
 		String response("<h2>Show Status</h2><div style=\"width:99%\">");
 		response += getsDeviceInfo("<br>");
 		response += getsThingspeakInfo("<br>");
+		response += getsThingspeakChannelInfo("<br>");
 		response += "== Database ==<br>"+dinfo.databaseToString("<br>") +"</div>" + getWebFooter(false);
 		server.sendContent(response);
 	});
