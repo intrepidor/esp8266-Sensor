@@ -123,6 +123,15 @@ String getTCPStatusString(uint8_t s) {
 	return r;
 }
 
+/* --------------------------------------------------------------------------------
+ * Push the Channel Settings to the Thingspeak Server
+ */
+void ThingspeakPushChannelSettings(void) {
+}
+
+/* --------------------------------------------------------------------------------
+ * Update the Thingspeak channel feed
+ */
 String getThingspeakGET(void) {
 	String getStr = "/update?api_key=" + dinfo.getThingspeakApikey();
 	for (int fld = 1; fld <= MAX_THINGSPEAK_FIELD_COUNT; fld++) {

@@ -189,14 +189,15 @@ const char sHTTP_CONFIG_TYPE_THINGSPEAK[] = "thingspeak\">";
 //-----------------------------------------------------------------------------------
 const char sHTTP_BUTTONS[] = "<div class=\"savediv\">"
 		"<input type=\"submit\" class=\"basebutton savebutton\" name=\"submit\" value=\"SAVE\"></div>";
-String getWebFooter(bool all) {
+String getWebFooter(bool all, bool ts) {
 	String wf("<div>");
 	String lin("\" href=\"http://" + localIPstr());
 	const String a("<a class=\"basebutton");
 	const String hre(" hrefbutton");
 	const String reb(" rebootbutton");
 	const String def(" defaultbutton");
-	wf += a + hre + lin + "\">Show Data</a>";
+	wf += a + hre + lin + "\">Main Menu</a>";
+	wf += a + hre + lin + "/showdata\">Show Data</a>";
 	wf += a + hre + lin + "/csv\">Show CSV</a>";
 	wf += a + hre + lin + "/config\">Device Config</a>";
 	wf += a + hre + lin + "/tsconfig\">Thing Speak</a>";
@@ -204,6 +205,9 @@ String getWebFooter(bool all) {
 	wf += a + hre + lin + "/sensordebug\">Sensor Debug</a>";
 	if (all) {
 		wf += a + def + lin + "/factory_settings\">Factory Settings</a>";
+		if (ts) {
+			wf += a + def + lin + "/pushtschannelsettings\">Send to TS</a>";
+		}
 		wf += a + reb + lin + "/reboot\">Reboot</a>";
 		wf += sHTTP_BUTTONS;
 	}
@@ -322,7 +326,7 @@ void config(void) {
 	}
 
 // Buttons and links then END of Page
-	r = getWebFooter(true) + "</form></body></html>";
+	r = getWebFooter(true, false) + "</form></body></html>";
 	server.sendContent(r);
 }
 
@@ -438,7 +442,7 @@ void tsconfig(void) {
 	server.sendContent(r);
 
 // Buttons and links then END of Page
-	r = getWebFooter(true) + "</form></body></html>";
+	r = getWebFooter(true, true) + "</form></body></html>";
 	server.sendContent(r);
 }
 

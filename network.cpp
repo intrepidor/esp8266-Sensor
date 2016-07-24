@@ -116,6 +116,14 @@ void WebInit(void) {
 	server.on("/", []() {
 		String response("");
 		sendHTML_Header(true);
+		response += "<h2>Main Menu</h2>";
+		response += "<br>" + getWebFooter(true, true) + "</body></html>";
+		server.sendContent(response);
+	});
+
+	server.on("/showdata", []() {
+		String response("");
+		sendHTML_Header(true);
 		response += "<h2>Show Data</h2>";
 		response += "Count=" + String(count);
 		response += "<br>PIR=" + String(PIRcount);
@@ -140,27 +148,28 @@ void WebInit(void) {
 				}
 			}
 		}
-		response += "<br>" + getWebFooter(false) + "</body></html>";
+		response += "<br>" + getWebFooter(false, false) + "</body></html>";
 		server.sendContent(response);
 	});
 	kickAllWatchdogs();
 
-	server.on("/status", []() {
-		sendHTML_Header(true);
-		String response("<h2>Show Status</h2><div style=\"width:99%\">");
-		response += getsDeviceInfo("<br>");
-		response += getsThingspeakInfo("<br>");
-		response += getsThingspeakChannelInfo("<br>");
-		response += "== Database ==<br>"+dinfo.databaseToString("<br>") +"</div>" + getWebFooter(false);
-		server.sendContent(response);
-	});
+	server.on("/status",
+			[]() {
+				sendHTML_Header(true);
+				String response("<h2>Show Status</h2><div style=\"width:99%\">");
+				response += getsDeviceInfo("<br>");
+				response += getsThingspeakInfo("<br>");
+				response += getsThingspeakChannelInfo("<br>");
+				response += "== Database ==<br>"+dinfo.databaseToString("<br>") +"</div>" + getWebFooter(false, false);
+				server.sendContent(response);
+			});
 	kickAllWatchdogs();
 
 	server.on("/sensordebug", []() {
 		sendHTML_Header(true);
 		String response("<h2>Sensor Debug</h2><div style=\"width:99%\">");
 		response += getsSensorInfo("<br>");
-		response += "</div>" + getWebFooter(false);
+		response += "</div>" + getWebFooter(false, false);
 		server.sendContent(response);
 	});
 	kickAllWatchdogs();
@@ -200,6 +209,7 @@ void WebInit(void) {
 	server.on("/factory_settings", _WriteDefaultsToDatabase);
 	server.on("/erase_eeprom", _EraseEEPROM);
 	server.on("/tsconfig", tsconfig);
+	server.on("/pushtschannelsettings", ThingspeakPushChannelSettings);
 	server.on("/reboot", ESPreset);
 
 	kickAllWatchdogs();

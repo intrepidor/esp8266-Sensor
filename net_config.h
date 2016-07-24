@@ -6,7 +6,7 @@ extern const char sHTTP_DIVEND[];
 
 extern void config(void);
 extern void tsconfig(void);
-extern String getWebFooter(bool all);
+extern String getWebFooter(bool all, bool ts);
 extern void sendHTML_Header(bool sendCSS);
 
 #endif //NET_CONFIG_H
