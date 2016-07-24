@@ -196,7 +196,7 @@ void WebInit(void) {
 
 	server.on(uri_v.c_str(), sendValue);
 	server.on("/config", config);
-	server.on("/default_configuration", _WriteDefaultsToDatabase);
+	server.on("/factory_settings", _WriteDefaultsToDatabase);
 	server.on("/erase_eeprom", _EraseEEPROM);
 	server.on("/tsconfig", tsconfig);
 	server.on("/reboot", ESPreset);

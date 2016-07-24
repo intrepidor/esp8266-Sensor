@@ -15,6 +15,9 @@
 #include "thingspeak.h"
 
 extern int ConfigurationChange(void);
+extern String sHTML_INPUT(int size, String name, String value);
+extern String getfieldHTMLcode(int selectedfield);
+extern String sHTML_TSFieldExtra_INPUT(int xfield_index);
 
 //////////////////////////////////////////////////////////////////////////////
 // ICACHE_FLASH_ATTR strings
@@ -264,12 +267,31 @@ String getWebFooter(bool all) {
 	wf += a + hre + lin + "/status\">Status" + sHTTP_AHREF_END;
 	wf += a + hre + lin + "/sensordebug\">Sensor Debug" + sHTTP_AHREF_END;
 	if (all) {
-		wf += a + def + lin + "/default_configuration\">Factory Defaults" + sHTTP_AHREF_END;
+		wf += a + def + lin + "/factory_settings\">Factory Settings" + sHTTP_AHREF_END;
 		wf += a + reb + lin + "/reboot\">Reboot" + sHTTP_AHREF_END;
 		wf += sHTTP_BUTTONS;
 	}
 	wf += sHTTP_DIVEND;
 	return wf;
+}
+
+//-----------------------------------------------------------------------------------
+String sHTML_INPUT(int size, String name, String value) {
+	String s("");
+	switch (size) {
+		case 0:
+			s += sHTTP_INPUT_TEXT_SHORT;
+			break;
+		case 1:
+			s += sHTTP_INPUT_TEXT_MEDIUM;
+			break;
+		default:
+		case 2:
+			s += sHTTP_INPUT_TEXT_LONG;
+			break;
+	}
+	s += name + "\" value=\"" + value + "\"><br>";
+	return s;
 }
 
 //-----------------------------------------------------------------------------------
@@ -379,6 +401,7 @@ void config(void) {
 	server.sendContent(r);
 }
 
+//-----------------------------------------------------------------------------------
 String getfieldHTMLcode(int selectedfield) {
 	String s("");
 	for (int field = 0; field <= MAX_THINGSPEAK_FIELD_COUNT; field++) {
@@ -402,6 +425,28 @@ String getfieldHTMLcode(int selectedfield) {
 		s += "</option>";
 	}
 	s += "</select>";
+	return s;
+}
+
+String sHTML_TSFieldExtra_INPUT(int xfield_index) {
+	String s("<select name=\"xfldmenu");
+	s += String(xfield_index) + "\">";
+	s += getfieldHTMLcode(dinfo.getTSFieldExtraNumber(xfield_index));
+
+	s += sHTTP_INPUT_TEXT_MEDIUM;
+	s += "xfldname" + String(xfield_index) + "\" value=\"";
+	s += dinfo.getTSFieldExtraName(xfield_index) + "\">";
+	return s;
+}
+
+String sHTML_TSFieldPort_INPUT(int xfield_index) {
+	String s("<select name=\"pfldmenu");
+	s += String(xfield_index) + "\">";
+	s += getfieldHTMLcode(dinfo.getTSFieldPortNumber(xfield_index));
+
+	s += sHTTP_INPUT_TEXT_MEDIUM;
+	s += "pfldname" + String(xfield_index) + "\" value=\"";
+	s += dinfo.getTSFieldPortName(xfield_index) + "\">";
 	return s;
 }
 
@@ -431,7 +476,7 @@ void tsconfig(void) {
 
 	// Channel Settings
 	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
-	r = "<label>Channel Name: " + String(sHTTP_INPUT_TEXT_MEDIUM) + "chname\" value=\"";
+	r += "<label>Channel Name: " + String(sHTTP_INPUT_TEXT_MEDIUM) + "chname\" value=\"";
 	r += dinfo.getTSChannelName() + sHTTP_ENDLABELQ_BR;
 	r += "<label>Desc: " + String(sHTTP_INPUT_TEXT_LONG) + "chdesc\" value=\"";
 	r += dinfo.getTSChannelDesc() + sHTTP_ENDLABELQ_BR;
@@ -440,28 +485,25 @@ void tsconfig(void) {
 
 	// Device Special Fields
 	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
-	r += "<br>PIR <select name=\"pirmenu\">" + getfieldHTMLcode(dinfo.getTSFieldNumber(0));
-	r += "<br>RSSI <select name=\"rssimenu\">" + getfieldHTMLcode(dinfo.getTSFieldNumber(1));
-	r += "<br>Uptime <select name=\"uptimemenu\">" + getfieldHTMLcode(dinfo.getTSFieldNumber(2));
+	r += "<label>Non-Sensor Parameters</label>";
+	r += "<br>PIR " + sHTML_TSFieldExtra_INPUT(0);
+	r += "<br>RSSI " + sHTML_TSFieldExtra_INPUT(1);
+	r += "<br>Uptime " + sHTML_TSFieldExtra_INPUT(2);
 	r += "<br>";
 	r += sHTTP_DIVEND;
 	server.sendContent(r);
 
 	// Port Fields
 	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
-	int fieldindex = dinfo.getTSFieldExtraMax();
+	int fieldindex = 0;
 	for (int sensor = 0; sensor < SENSOR_COUNT; sensor++) {
-		if (sensor > 0) r += "<br>";
 		r += "<b>Port " + String(sensor) + "</b><br>";
 		if (sensors[sensor]) {
 			for (int channel = 0; channel < getSensorValueCount(); channel++) {
 				r += "Channel " + String(channel) + ": ";
 				r += sensors[sensor]->getValueName(channel);
-				r += " <select name=\"sensormenu" + String(sensor) + String(channel) + "\">";
-				r += getfieldHTMLcode(dinfo.getTSFieldNumber(fieldindex + channel));
-				r += String(sHTTP_INPUT_TEXT_MEDIUM) + "fieldname";
-				r += String(dinfo.getTSFieldExtraMax() + channel);
-				r += "\" value=\"" + dinfo.getTSFieldName(fieldindex + channel) + "\"><br>";
+				r += sHTML_TSFieldPort_INPUT(fieldindex + channel);
+				r += "<br>";
 			}
 		}
 		fieldindex += 2;
@@ -519,12 +561,12 @@ int ConfigurationChange(void) {
 	int which_form = 0;	// 0=unknown; 1=Device Config, 2=Thingspeak Config
 	if (server.args() > 0) {
 		bool found = false;
-		debug.println(DebugLevel::DEBUG2, "");
-		debug.println(DebugLevel::DEBUG2, F("##########################################################"));
+		debug.println(DebugLevel::HTTPGET, "");
+		debug.println(DebugLevel::HTTPGET, F("##########################################################"));
 		for (uint8_t i = 0; i < server.args(); i++) {
 			String sarg = server.argName(i);
 			String varg = server.arg(i);
-			debug.print(DebugLevel::DEBUG2, "NAME=" + sarg + ", VALUE=" + varg);
+			debug.print(DebugLevel::HTTPGET, "NAME=" + sarg + ", VALUE=" + varg);
 			// Determine which configuration webpage by looking at the configtype value.
 			//   This is suppoosed to be at the top of the page so it's the first
 			//   value returned. Then page specific initialization code can be put here.
@@ -543,74 +585,195 @@ int ConfigurationChange(void) {
 					}
 				}
 			}
-			// Process the rest of the webpage values
-			if (sarg == String("name")) {
-				dinfo.setDeviceName(varg);
-				debug.println(DebugLevel::DEBUG2, F(" ok name"));
-				found = true;
-			}
-			if (sarg == String("deviceid")) {
-				dinfo.setDeviceID(atoi(varg.c_str()));
-				debug.println(DebugLevel::DEBUG2, F(" ok deviceid"));
-				found = true;
-			}
+			// --------------------------------------------------------
+			// Thingspeak Configuration -- Panel 1
+			// --------------------------------------------------------
 			if (sarg == String("ts_enable")) {
 				dinfo.setThingspeakEnable(true);
-				debug.println(DebugLevel::DEBUG2, F(" ok ts_enable"));
+				debug.println(DebugLevel::HTTPGET, F(" ok ts_enable"));
 				found = true;
 				ts_enable = true;
-			}
-			if (sarg == String("temp_farhen")) {
-				dinfo.setFahrenheitUnit(true);
-				debug.println(DebugLevel::DEBUG2, F(" ok tempunitenable"));
-				found = true;
-				temp_farhen = true;
 			}
 			if (sarg == "tsupdateperiod") {
 				unsigned long l = static_cast<unsigned long>(::atol(varg.c_str()));
 				dinfo.setThingspeakUpdatePeriodSeconds(l);
-				debug.println(DebugLevel::DEBUG2, F(" ok tsupdateperiod"));
+				debug.println(DebugLevel::HTTPGET, F(" ok tsupdateperiod"));
 				found = true;
 			}
 			if (sarg == "apikey") {
 				dinfo.setThingspeakApikey(varg);
-				debug.println(DebugLevel::DEBUG2, F(" ok apikey"));
+				debug.println(DebugLevel::HTTPGET, F(" ok apikey"));
 				found = true;
 			}
 			if (sarg == "ipaddr") {
 				dinfo.setThingspeakIpaddr(varg);
-				debug.println(DebugLevel::DEBUG2, F(" ok ipaddr"));
+				debug.println(DebugLevel::HTTPGET, F(" ok ipaddr"));
 				found = true;
 			}
 			if (sarg == "tsurl") {
 				dinfo.setThingspeakURL(varg);
-				debug.println(DebugLevel::DEBUG2, F(" ok tsurl"));
+				debug.println(DebugLevel::HTTPGET, F(" ok tsurl"));
 				found = true;
 			}
 			if (sarg == "tschannel") {
 				unsigned long l = static_cast<unsigned long>(::atol(varg.c_str()));
 				dinfo.setThingspeakChannel(l);
-				debug.println(DebugLevel::DEBUG2, F(" ok tschannel"));
+				debug.println(DebugLevel::HTTPGET, F(" ok tschannel"));
 				found = true;
+			}
+			// --------------------------------------------------------
+			// Thingspeak Configuration -- Channel Settings
+			// --------------------------------------------------------
+			if (sarg == "chname") {
+				dinfo.setTSChannelName(varg.c_str());
+				debug.println(DebugLevel::HTTPGET, F(" ok chname"));
+				found = true;
+			}
+			if (sarg == "chdesc") {
+				dinfo.setTSChannelDesc(varg.c_str());
+				debug.println(DebugLevel::HTTPGET, F(" ok chdesc"));
+				found = true;
+			}
+			if (strncmp(sarg.c_str(), "xfldmenu", 8) == 0) {
+				found = true;
+				char c = sarg.c_str()[8]; // get the menu number
+				int fn = 0;
+				int n = static_cast<int>(c) - static_cast<int>('0'); // convert menu number to integer
+				debug.print(DebugLevel::HTTPGET, ", n=" + String(n));
+				if (n >= 0 && n < dinfo.getTSFieldExtraMax()) {
+					if (varg.length() > 5) {
+						char f = varg.c_str()[5]; // get the field number as a character
+						fn = static_cast<int>(f) - static_cast<int>('0'); // convert field number to integer
+						if (fn > 0 && fn <= 8 /* fields are 1 through 8*/) {
+							debug.println(DebugLevel::HTTPGET,
+									" ok, fieldExtra[" + String(n) + "].number set to " + String(fn));
+						}
+						else {
+							fn = 0;
+							debug.println(DebugLevel::HTTPGET,
+									" ok, fieldExtra[" + String(n) + "].number cleared");
+						}
+					}
+					dinfo.setTSFieldExtraNumber(n, fn);
+				}
+				else {
+					debug.println(DebugLevel::HTTPGET,
+							nl + "ERROR: Bug - Invalid ExtraField #(" + String(n) + "," + String(c)
+									+ ") found in ConfigurationChange() - " + sarg);
+				}
+			}
+			if (strncmp(sarg.c_str(), "xfldname", 8) == 0) {
+				found = true;
+				char c = sarg.c_str()[8];
+				int n = static_cast<int>(c) - static_cast<int>('0');
+				debug.print(DebugLevel::HTTPGET, F(", n="));
+				debug.print(DebugLevel::HTTPGET, n);
+				if (n >= 0 && n < dinfo.getTSFieldExtraMax()) {
+					if (varg.length() > 0) {
+						dinfo.setTSFieldExtraName(n, varg);
+						debug.println(DebugLevel::HTTPGET,
+								" ok, fieldExtra[" + String(n) + "].name set to " + varg);
+					}
+					else {
+						dinfo.setTSFieldExtraName(n, "");
+						debug.println(DebugLevel::HTTPGET, F(" ok - cleared"));
+					}
+				}
+				else {
+					debug.println(DebugLevel::HTTPGET,
+							nl + "ERROR: Bug - Invalid ExtraField #(" + String(n) + "," + String(c)
+									+ ") found in ConfigurationChange() - " + sarg);
+				}
+			}
+			if (strncmp(sarg.c_str(), "pfldmenu", 8) == 0) {
+				found = true;
+				char c = sarg.c_str()[8]; // get the menu number
+				int fn = 0;
+				int n = static_cast<int>(c) - static_cast<int>('0'); // convert menu number to integer
+				debug.print(DebugLevel::HTTPGET, ", n=" + String(n));
+				if (n >= 0 && n < dinfo.getTSFieldPortMax()) {
+					if (varg.length() > 5) {
+						char f = varg.c_str()[5]; // get the field number as a character
+						fn = static_cast<int>(f) - static_cast<int>('0'); // convert field number to integer
+						if (fn > 0 && fn <= 8 /* fields are 1 through 8*/) {
+							debug.println(DebugLevel::HTTPGET,
+									" ok, fieldPort[" + String(n) + "].number set to " + String(fn));
+						}
+						else {
+							fn = 0;
+							debug.println(DebugLevel::HTTPGET,
+									" ok, fieldPort[" + String(n) + "].number cleared");
+						}
+					}
+					dinfo.setTSFieldPortNumber(n, fn);
+				}
+				else {
+					debug.println(DebugLevel::HTTPGET,
+							nl + "ERROR: Bug - Invalid PortField #(" + String(n) + "," + String(c)
+									+ ") found in ConfigurationChange() - " + sarg);
+				}
+			}
+			if (strncmp(sarg.c_str(), "pfldname", 8) == 0) {
+				found = true;
+				char c = sarg.c_str()[8];
+				int n = static_cast<int>(c) - static_cast<int>('0');
+				debug.print(DebugLevel::HTTPGET, F(", n="));
+				debug.print(DebugLevel::HTTPGET, n);
+				if (n >= 0 && n < dinfo.getTSFieldPortMax()) {
+					if (varg.length() > 0) {
+						dinfo.setTSFieldPortName(n, varg);
+						debug.println(DebugLevel::HTTPGET,
+								" ok, fieldPort[" + String(n) + "].name set to " + varg);
+					}
+					else {
+						dinfo.setTSFieldPortName(n, "");
+						debug.println(DebugLevel::HTTPGET, F(" ok - cleared"));
+					}
+				}
+				else {
+					debug.println(DebugLevel::HTTPGET,
+							nl + "ERROR: Bug - Invalid PortField #(" + String(n) + "," + String(c)
+									+ ") found in ConfigurationChange() - " + sarg);
+				}
+			}
+			// --------------------------------------------------------
+			// Device Configuration
+			// --------------------------------------------------------
+			if (sarg == String("name")) {
+				dinfo.setDeviceName(varg);
+				debug.println(DebugLevel::HTTPGET, F(" ok name"));
+				found = true;
+			}
+			if (sarg == String("deviceid")) {
+				dinfo.setDeviceID(atoi(varg.c_str()));
+				debug.println(DebugLevel::HTTPGET, F(" ok deviceid"));
+				found = true;
+			}
+
+			if (sarg == String("temp_farhen")) {
+				dinfo.setFahrenheitUnit(true);
+				debug.println(DebugLevel::HTTPGET, F(" ok tempunitenable"));
+				found = true;
+				temp_farhen = true;
 			}
 			if (strncmp(sarg.c_str(), "port", 4) == 0) {
 				found = true;
 				char c = sarg.c_str()[4];
 				int n = static_cast<int>(c) - static_cast<int>('0');
-				debug.print(DebugLevel::DEBUG2, F(", n="));
-				debug.print(DebugLevel::DEBUG2, n);
+				debug.print(DebugLevel::HTTPGET, F(", n="));
+				debug.print(DebugLevel::HTTPGET, n);
 				if (n >= 0 && n < dinfo.getPortMax()) {
 					if (varg.length() > 0) {
 						dinfo.setPortName(n, varg);
-						debug.print(DebugLevel::DEBUG2, " ok, port[" + String(n) + "].name set to " + varg);
+						debug.print(DebugLevel::HTTPGET, " ok, port[" + String(n) + "].name set to " + varg);
 					}
 					else {
 						dinfo.setPortName(n, "");
-						debug.println(DebugLevel::DEBUG2, F(" ok - cleared"));
+						debug.println(DebugLevel::HTTPGET, F(" ok - cleared"));
 					}
 				}
 				else {
-					debug.println(DebugLevel::DEBUG2,
+					debug.println(DebugLevel::HTTPGET,
 							nl + "ERROR: Bug - Invalid port #(" + String(n) + "," + String(c)
 									+ ") found in ConfigurationChange() - " + sarg);
 				}
@@ -620,8 +783,8 @@ int ConfigurationChange(void) {
 				found = true;
 				char c1 = sarg.c_str()[8];
 				int n1 = static_cast<int>(c1) - static_cast<int>('0');
-				debug.print(DebugLevel::DEBUG2, ", n1=");
-				debug.print(DebugLevel::DEBUG2, n1);
+				debug.print(DebugLevel::HTTPGET, ", n1=");
+				debug.print(DebugLevel::HTTPGET, n1);
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					bool found1 = false;
 					if (varg.length() > 0) {
@@ -646,36 +809,36 @@ int ConfigurationChange(void) {
 									dinfo.setPortMode(n1, newmode);
 									need_reboot = true;
 								}
-								debug.print(DebugLevel::DEBUG2, nl + "Info: Setting mode to ");
-								debug.print(DebugLevel::DEBUG2, static_cast<int>(sensorList[j].id));
-								debug.print(DebugLevel::DEBUG2, F("("));
-								debug.print(DebugLevel::DEBUG2, sensorList[j].name);
-								debug.print(DebugLevel::DEBUG2, F("), Reboot needed: "));
+								debug.print(DebugLevel::HTTPGET, nl + "Info: Setting mode to ");
+								debug.print(DebugLevel::HTTPGET, static_cast<int>(sensorList[j].id));
+								debug.print(DebugLevel::HTTPGET, F("("));
+								debug.print(DebugLevel::HTTPGET, sensorList[j].name);
+								debug.print(DebugLevel::HTTPGET, F("), Reboot needed: "));
 								if (need_reboot) {
-									debug.println(DebugLevel::DEBUG2, "yes");
+									debug.println(DebugLevel::HTTPGET, "yes");
 								}
 								else {
-									debug.println(DebugLevel::DEBUG2, "no");
+									debug.println(DebugLevel::HTTPGET, "no");
 								}
 								found1 = true;
 								break;
 							}
 						}
 						if (!found1) {
-							debug.println(DebugLevel::DEBUG2, nl + "ERROR: unable to map mode: " + varg);
+							debug.println(DebugLevel::HTTPGET, nl + "ERROR: unable to map mode: " + varg);
 						}
 					}
 					else {
-						debug.print(DebugLevel::DEBUG2, nl + "ERROR: Invalid varg mode: (" + varg);
-						debug.println(DebugLevel::DEBUG2, ") found in ConfigurationChange() - " + sarg);
+						debug.print(DebugLevel::HTTPGET, nl + "ERROR: Invalid varg mode: (" + varg);
+						debug.println(DebugLevel::HTTPGET, ") found in ConfigurationChange() - " + sarg);
 					}
 				}
 				else {
-					debug.print(DebugLevel::DEBUG2, nl + "ERROR:Invalid port #(");
-					debug.print(DebugLevel::DEBUG2, n1);
-					debug.print(DebugLevel::DEBUG2, ",");
-					debug.print(DebugLevel::DEBUG2, c1);
-					debug.println(DebugLevel::DEBUG2, ") found in ConfigurationChange() - " + sarg);
+					debug.print(DebugLevel::HTTPGET, nl + "ERROR:Invalid port #(");
+					debug.print(DebugLevel::HTTPGET, n1);
+					debug.print(DebugLevel::HTTPGET, ",");
+					debug.print(DebugLevel::HTTPGET, c1);
+					debug.println(DebugLevel::HTTPGET, ") found in ConfigurationChange() - " + sarg);
 				}
 			}
 
@@ -685,21 +848,21 @@ int ConfigurationChange(void) {
 				char c2 = sarg.c_str()[8];
 				int n1 = static_cast<int>(c1) - static_cast<int>('0');
 				int n2 = static_cast<int>(c2) - static_cast<int>('0');
-				debug.print(DebugLevel::DEBUG2, ", n1=" + String(n1));
-				debug.print(DebugLevel::DEBUG2, ", n2=" + String(n2));
+				debug.print(DebugLevel::HTTPGET, ", n1=" + String(n1));
+				debug.print(DebugLevel::HTTPGET, ", n2=" + String(n2));
 				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 					double d = 0;
 					if (varg.length() > 0) {
-						debug.println(DebugLevel::DEBUG2, F(" ok, set"));
+						debug.println(DebugLevel::HTTPGET, F(" ok, set"));
 						d = ::atof(varg.c_str());
 					}
 					else {
-						debug.println(DebugLevel::DEBUG2, F(" ok, cleared"));
+						debug.println(DebugLevel::HTTPGET, F(" ok, cleared"));
 					}
 					dinfo.setPortAdj(n1, n2, d);
 				}
 				else {
-					debug.println(DebugLevel::DEBUG2,
+					debug.println(DebugLevel::HTTPGET,
 							nl + "ERROR: Bug - Invalid port #(" + String(n1) + "," + String(c1)
 									+ ") found in ConfigurationChange() - " + sarg);
 				}
@@ -709,8 +872,8 @@ int ConfigurationChange(void) {
 //				found = true;
 //				char c1 = sarg.c_str()[7];
 //				int n1 = static_cast<int>(c1) - static_cast<int>('0');
-//				debug.print(DebugLevel::DEBUG2, ", n1=");
-//				debug.print(DebugLevel::DEBUG2, n1);
+//				debug.print(DebugLevel::HTTPGET, ", n1=");
+//				debug.print(DebugLevel::HTTPGET, n1);
 //				if (n1 >= 0 && n1 < dinfo.getPortMax()) {
 //					bool found1 = false;
 //					if (varg.length() > 0) {
@@ -722,55 +885,55 @@ int ConfigurationChange(void) {
 //									dinfo.setPortMode(n1, sensorList[j].id);
 //									need_reboot = true;
 //								}
-//								debug.print(DebugLevel::DEBUG2, nl + "Info: Setting mode to ");
-//								debug.print(DebugLevel::DEBUG2, static_cast<int>(sensorList[j].id));
-//								debug.print(DebugLevel::DEBUG2, F("("));
-//								debug.print(DebugLevel::DEBUG2, sensorList[j].name);
-//								debug.print(DebugLevel::DEBUG2, F("), Reboot needed: "));
+//								debug.print(DebugLevel::HTTPGET, nl + "Info: Setting mode to ");
+//								debug.print(DebugLevel::HTTPGET, static_cast<int>(sensorList[j].id));
+//								debug.print(DebugLevel::HTTPGET, F("("));
+//								debug.print(DebugLevel::HTTPGET, sensorList[j].name);
+//								debug.print(DebugLevel::HTTPGET, F("), Reboot needed: "));
 //								if (need_reboot) {
-//									debug.println(DebugLevel::DEBUG2, "yes");
+//									debug.println(DebugLevel::HTTPGET, "yes");
 //								}
 //								else {
-//									debug.println(DebugLevel::DEBUG2, "no");
+//									debug.println(DebugLevel::HTTPGET, "no");
 //								}
 //								found1 = true;
 //								break;
 //							}
 //						}
 //						if (!found1) {
-//							debug.println(DebugLevel::DEBUG2, nl + "ERROR: unable to map mode: " + varg);
+//							debug.println(DebugLevel::HTTPGET, nl + "ERROR: unable to map mode: " + varg);
 //						}
 //					}
 //					else {
-//						debug.print(DebugLevel::DEBUG2, nl + "ERROR: Invalid varg mode: (" + varg);
-//						debug.println(DebugLevel::DEBUG2, ") found in ConfigurationChange() - " + sarg);
+//						debug.print(DebugLevel::HTTPGET, nl + "ERROR: Invalid varg mode: (" + varg);
+//						debug.println(DebugLevel::HTTPGET, ") found in ConfigurationChange() - " + sarg);
 //					}
 //				}
 //				else {
-//					debug.print(DebugLevel::DEBUG2, nl + "ERROR:Invalid port #(");
-//					debug.print(DebugLevel::DEBUG2, n1);
-//					debug.print(DebugLevel::DEBUG2, ",");
-//					debug.print(DebugLevel::DEBUG2, c1);
-//					debug.println(DebugLevel::DEBUG2, ") found in ConfigurationChange() - " + sarg);
+//					debug.print(DebugLevel::HTTPGET, nl + "ERROR:Invalid port #(");
+//					debug.print(DebugLevel::HTTPGET, n1);
+//					debug.print(DebugLevel::HTTPGET, ",");
+//					debug.print(DebugLevel::HTTPGET, c1);
+//					debug.println(DebugLevel::HTTPGET, ") found in ConfigurationChange() - " + sarg);
 //				}
 //			}
 
 			if (sarg == "reboot") {
-				debug.println(DebugLevel::DEBUG2, F(", reboot button pressed"));
+				debug.println(DebugLevel::HTTPGET, F(", reboot button pressed"));
 				found = true;
 				// do the action
 				ESP.reset();
 			}
 
 			if (sarg == "status") {
-				debug.println(DebugLevel::DEBUG2, F(", status button pressed"));
+				debug.println(DebugLevel::HTTPGET, F(", status button pressed"));
 				found = true;
 				// do the action
 				server.send(200, "text/plain", dinfo.databaseToString(",\n"));
 			}
 
 			if (!found) {
-				debug.println(DebugLevel::DEBUG2, "");
+				debug.println(DebugLevel::HTTPGET, "");
 			}
 			found = false;
 		}
@@ -780,7 +943,7 @@ int ConfigurationChange(void) {
 			ESP.reset();
 		}
 
-		// Regardless if the calibration data changed or not, recopy it into the Sensors
+// Regardless if the calibration data changed or not, recopy it into the Sensors
 		CopyCalibrationDataToSensors();
 	}
 	return server.args();

@@ -24,7 +24,10 @@ bool DebugPrint::validateDebugLevel(void) {
 
 bool DebugPrint::isDebugLevel(DebugLevel dlevel) {
 	if (dlevel == debuglevel || dlevel == DebugLevel::ALWAYS) return true;
-	if (dlevel == DebugLevel::TIMINGS) return false;
+	if (dlevel == DebugLevel::TIMINGS) return false; // these must match exactly by if (dlevel == debuglevel)
+	if (dlevel == DebugLevel::HTTPGET) return false; // these must match exactly by if (dlevel == debuglevel)
+	// If not the special cases of ALWAYS, TIMINGS, or HTTPGET, then determine
+	//    if the result is true based on the relative value of dlevel.
 	if (static_cast<int>(debuglevel) >= static_cast<int>(dlevel)) return true;
 	return false;
 }
@@ -56,6 +59,9 @@ String DebugPrint::convertDebugLevelToString(DebugLevel dl) {
 			break;
 		case DebugLevel::DEBUG2:
 			return String("DEBUG2");
+			break;
+		case DebugLevel::HTTPGET:
+			return String("HTTPGET");
 			break;
 		case DebugLevel::END:
 		default:

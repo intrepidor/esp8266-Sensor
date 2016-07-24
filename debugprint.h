@@ -16,7 +16,7 @@ extern String nl;
 
 enum class DebugLevel
 	: int {
-		ALWAYS = 0, INFO, ERROR, DEBUG, DEBUG2, TIMINGS, END
+		ALWAYS = 0, INFO, ERROR, DEBUG, DEBUG2, TIMINGS, HTTPGET, END
 };
 
 class DebugPrint {

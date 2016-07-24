@@ -81,9 +81,10 @@ private:
 		// These values get pushed to the Thingspeak website to describe the channel
 		//    and fields.
 		struct { // 546 bytes
-			char ChannelName[THINGSPEAK_CHANNEL_NAME + 1];
-			char ChannelDescription[THINGSPEAK_CHANNEL_DESC + 1];
-			ThingspeakField tsfield[THINGSPEAK_PORT_FIELDS + THINGSPEAK_EXTRA_FIELDS];
+			char name[THINGSPEAK_CHANNEL_NAME + 1];
+			char desc[THINGSPEAK_CHANNEL_DESC + 1];
+			ThingspeakField fieldPort[THINGSPEAK_PORT_FIELDS];
+			ThingspeakField fieldExtra[THINGSPEAK_EXTRA_FIELDS];
 		} thingspeakChannelSettings;
 
 		// Ports // 120 bytes
@@ -128,28 +129,43 @@ public:
 //--------------------------------------------------------
 // Thingspeak Channel Settings
 	String getTSChannelName() {
-		return String(this->db.thingspeakChannelSettings.ChannelName);
+		return String(this->db.thingspeakChannelSettings.name);
 	}
 	String getTSChannelDesc() {
-		return String(this->db.thingspeakChannelSettings.ChannelDescription);
+		return String(this->db.thingspeakChannelSettings.desc);
 	}
 	void setTSChannelName(const char* s);
 	void setTSChannelDesc(const char* s);
-	String getTSFieldName(int index);
-	int getTSFieldNumber(int index);
-	void setTSFieldName(int index, String n);
-	void setTSFieldNumber(int index, int n);
-	int getTSFieldMax(void) {
-		return THINGSPEAK_PORT_FIELDS + THINGSPEAK_EXTRA_FIELDS;
-	}
-	int getTSFieldExtraMax(void) {
-		return THINGSPEAK_EXTRA_FIELDS;
-	}
+
+//--------------------------------------------------------
+// Thingspeak Port Fields
+	String getTSFieldPortName(int index);
+	void setTSFieldPortName(int index, String n);
+
+	int getTSFieldPortNumber(int index);
+	void setTSFieldPortNumber(int index, int n);
+
 	int getTSFieldPortMax(void) {
 		return THINGSPEAK_PORT_FIELDS;
 	}
-	bool isValidTSFieldIndex(int _i) {
-		if (_i >= 0 && _i < getTSFieldMax()) return true;
+	bool isValidTSFieldPortIndex(int _i) {
+		if (_i >= 0 && _i < getTSFieldPortMax()) return true;
+		return false;
+	}
+
+//--------------------------------------------------------
+// Thingspeak Extra Fields
+	String getTSFieldExtraName(int index);
+	void setTSFieldExtraName(int index, String n);
+
+	int getTSFieldExtraNumber(int index);
+	void setTSFieldExtraNumber(int index, int n);
+
+	int getTSFieldExtraMax(void) {
+		return THINGSPEAK_EXTRA_FIELDS;
+	}
+	bool isValidTSFieldExtraIndex(int _i) {
+		if (_i >= 0 && _i < getTSFieldPortMax()) return true;
 		return false;
 	}
 

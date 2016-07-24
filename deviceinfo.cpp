@@ -11,6 +11,7 @@
 #include "debugprint.h"
 #include "sensor.h"
 
+//-------------------------------------------------------------------------------------------------
 void Device::setThingspeakUpdatePeriodMS(unsigned long new_periodms) {
 	if (new_periodms < MIN_THINGSPEAK_UPDATE_PERIOD_MS) {
 		db.thingspeak.time_between_updates_ms = MIN_THINGSPEAK_UPDATE_PERIOD_MS; // fastest possible per thingspeak rules
@@ -27,10 +28,12 @@ void Device::setThingspeakUpdatePeriodSeconds(unsigned long new_periodsec) {
 	setThingspeakUpdatePeriodMS(new_periodsec * MS_PER_SECOND);
 }
 
+//-------------------------------------------------------------------------------------------------
 void Device::corruptConfigurationMemory(void) {
 	db.end_of_eeprom_signature = 0;
 }
 
+//-------------------------------------------------------------------------------------------------
 void Device::writeDefaultsToDatabase(void) {
 	eraseDatabase();
 	db.end_of_eeprom_signature = EEPROM_SIGNATURE; // special code used to detect if configuration structure exists
@@ -48,13 +51,13 @@ void Device::writeDefaultsToDatabase(void) {
 	setThingspeakIpaddr("184.106.153.149");
 	setTSChannelName("<Enter Channel Name>");
 	setTSChannelDesc("<Enter Channel Description>");
-	for (int i = 0; i < dinfo.getTSFieldExtraMax(); i++) {
-		setTSFieldNumber(i, 0);
-		setTSFieldName(i, "");
-	}
 	for (int i = 0; i < dinfo.getTSFieldPortMax(); i++) {
-		setTSFieldNumber(i, i + dinfo.getTSFieldExtraMax());
-		setTSFieldName(i, String("MyField" + String(i + dinfo.getTSFieldExtraMax())));
+		setTSFieldPortNumber(i, i + 1);
+		setTSFieldPortName(i, String("MyField" + String(i + 1)));
+	}
+	for (int i = 0; i < dinfo.getTSFieldExtraMax(); i++) {
+		setTSFieldExtraNumber(i, 0);
+		setTSFieldExtraName(i, String("Extra" + String(i + 1)));
 	}
 	db.debuglevel = 0;
 	for (int i = 0; i < MAX_PORTS; i++) {
@@ -90,9 +93,13 @@ String Device::databaseToString(String eol) {
 	s += "== thingspeakChannelSettings ==" + eol;
 	s += ".ChannelName=" + getTSChannelName() + eol;
 	s += ".ChannelDesc=" + getTSChannelDesc() + eol;
-	for (int i = 0; i < getTSFieldMax(); i++) {
-		s += ".tsfield[" + String(i) + "].number=" + getTSFieldNumber(i) + ", .name=" + getTSFieldName(i)
-				+ eol;
+	for (int i = 0; i < getTSFieldPortMax(); i++) {
+		s += ".fieldPort[" + String(i) + "].number=" + getTSFieldPortNumber(i) + ", .name="
+				+ getTSFieldPortName(i) + eol;
+	}
+	for (int i = 0; i < getTSFieldExtraMax(); i++) {
+		s += ".fieldExtra[" + String(i) + "].number=" + getTSFieldExtraNumber(i) + ", .name="
+				+ getTSFieldExtraName(i) + eol;
 	}
 	s += "== cport ==";
 	for (int i = 0; i < getPortMax(); i++) {
@@ -113,11 +120,11 @@ void Device::printInfo(void) {
 	Serial.println("");
 }
 
+//-------------------------------------------------------------------------------------------------
 void Device::setTSChannelName(const char* s) {
 	if (s) {
-		memset(db.thingspeakChannelSettings.ChannelName, 0, sizeof(db.thingspeakChannelSettings.ChannelName));
-		strncpy(db.thingspeakChannelSettings.ChannelName, s,
-				sizeof(db.thingspeakChannelSettings.ChannelName) - 1);
+		memset(db.thingspeakChannelSettings.name, 0, sizeof(db.thingspeakChannelSettings.name));
+		strncpy(db.thingspeakChannelSettings.name, s, sizeof(db.thingspeakChannelSettings.name) - 1);
 	}
 	else {
 		debug.print(DebugLevel::ERROR, nl);
@@ -127,10 +134,8 @@ void Device::setTSChannelName(const char* s) {
 
 void Device::setTSChannelDesc(const char* s) {
 	if (s) {
-		memset(db.thingspeakChannelSettings.ChannelDescription, 0,
-				sizeof(db.thingspeakChannelSettings.ChannelDescription));
-		strncpy(db.thingspeakChannelSettings.ChannelDescription, s,
-				sizeof(db.thingspeakChannelSettings.ChannelDescription) - 1);
+		memset(db.thingspeakChannelSettings.desc, 0, sizeof(db.thingspeakChannelSettings.desc));
+		strncpy(db.thingspeakChannelSettings.desc, s, sizeof(db.thingspeakChannelSettings.desc) - 1);
 	}
 	else {
 		debug.print(DebugLevel::ERROR, nl);
@@ -138,35 +143,67 @@ void Device::setTSChannelDesc(const char* s) {
 	}
 }
 
-int Device::getTSFieldNumber(int _i) {
-	if (isValidTSFieldIndex(_i)) {
-		return db.thingspeakChannelSettings.tsfield[_i].number;
+//-------------------------------------------------------------------------------------------------
+int Device::getTSFieldPortNumber(int _i) {
+	if (isValidTSFieldPortIndex(_i)) {
+		return db.thingspeakChannelSettings.fieldPort[_i].number;
 	}
 	return 0;
 }
 
-void Device::setTSFieldNumber(int _i, int n) {
-	if (isValidTSFieldIndex(_i)) {
-		db.thingspeakChannelSettings.tsfield[_i].number = n;
+void Device::setTSFieldPortNumber(int _i, int n) {
+	if (isValidTSFieldPortIndex(_i)) {
+		db.thingspeakChannelSettings.fieldPort[_i].number = n;
 	}
 }
 
-String Device::getTSFieldName(int _i) {
-	if (isValidTSFieldIndex(_i)) {
-		return String(db.thingspeakChannelSettings.tsfield[_i].name);
+String Device::getTSFieldPortName(int _i) {
+	if (isValidTSFieldPortIndex(_i)) {
+		return String(db.thingspeakChannelSettings.fieldPort[_i].name);
 	}
 	return String("");
 }
 
-void Device::setTSFieldName(int _i, String s) {
-	if (isValidTSFieldIndex(_i)) {
-		memset(db.thingspeakChannelSettings.tsfield[_i].name, 0,
-				sizeof(db.thingspeakChannelSettings.tsfield[_i].name));
-		strncpy(db.thingspeakChannelSettings.tsfield[_i].name, s.c_str(),
-				sizeof(db.thingspeakChannelSettings.tsfield[_i].name) - 1);
+void Device::setTSFieldPortName(int _i, String s) {
+	if (isValidTSFieldPortIndex(_i)) {
+		memset(db.thingspeakChannelSettings.fieldPort[_i].name, 0,
+				sizeof(db.thingspeakChannelSettings.fieldPort[_i].name));
+		strncpy(db.thingspeakChannelSettings.fieldPort[_i].name, s.c_str(),
+				sizeof(db.thingspeakChannelSettings.fieldPort[_i].name) - 1);
 	}
 }
 
+//-------------------------------------------------------------------------------------------------
+int Device::getTSFieldExtraNumber(int _i) {
+	if (isValidTSFieldExtraIndex(_i)) {
+		return db.thingspeakChannelSettings.fieldExtra[_i].number;
+	}
+	return 0;
+}
+
+void Device::setTSFieldExtraNumber(int _i, int n) {
+	if (isValidTSFieldExtraIndex(_i)) {
+		db.thingspeakChannelSettings.fieldExtra[_i].number = n;
+	}
+}
+
+String Device::getTSFieldExtraName(int _i) {
+	if (isValidTSFieldExtraIndex(_i)) {
+		return String(db.thingspeakChannelSettings.fieldExtra[_i].name);
+	}
+	return String("");
+}
+
+void Device::setTSFieldExtraName(int _i, String s) {
+	if (isValidTSFieldExtraIndex(_i)) {
+		memset(db.thingspeakChannelSettings.fieldExtra[_i].name, 0,
+				sizeof(db.thingspeakChannelSettings.fieldExtra[_i].name));
+		strncpy(db.thingspeakChannelSettings.fieldExtra[_i].name, s.c_str(),
+				sizeof(db.thingspeakChannelSettings.fieldExtra[_i].name) - 1);
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
 void Device::setcDeviceName(const char* newname) {
 	if (newname) {
 		memset(db.device.name, 0, sizeof(db.device.name));
@@ -178,15 +215,16 @@ void Device::setcDeviceName(const char* newname) {
 	}
 }
 
-static bool isValidPort(int portnum) {
-	if (portnum >= 0 && portnum < MAX_PORTS) return true;
-	return false;
-}
-
 const char* PROGMEM
 Device::getThingspeakEnableStr() {
 	if (db.thingspeak.enabled) return "checked";
 	return " ";
+}
+
+//-------------------------------------------------------------------------------------------------
+static bool isValidPort(int portnum) {
+	if (portnum >= 0 && portnum < MAX_PORTS) return true;
+	return false;
 }
 
 sensorModule Device::getPortMode(int portnum) {
