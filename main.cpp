@@ -195,7 +195,7 @@ void ConfigurePorts(void) {
 // Loop through each of the ports
 	for (int portNumber = 0; portNumber < dinfo.getPortMax(); portNumber++) {
 		// Get the pins used for this port
-		debug.println(DebugLevel::DEBUG2, "portNumber=" + String(portNumber));
+		debug.println(DebugLevel::TIMINGS, "portNumber=" + String(portNumber));
 		switch (portNumber) {
 			case 0: // port#0
 				p.digital = DIGITAL_PIN_1;
@@ -503,6 +503,7 @@ void printMenu(void) {
 	Serial.println(F("r  show chart of values (raw)"));
 	Serial.println(F("s  show chart of values"));
 	Serial.println(F("w  show web URLs"));
+	Serial.println(F("p  push Thingspeak Channel Settings"));
 	Serial.println(F("z  Extended menu"));
 	Serial.println("");
 }
@@ -549,6 +550,9 @@ int task_serialport_menu(unsigned long now) {
 				break;
 			case 't':
 				Serial.println(getsThingspeakChannelInfo(nl));
+				break;
+			case 'p':
+				ThingspeakPushChannelSettings();
 				break;
 			case 'r':
 				// Display the heading

@@ -76,6 +76,45 @@ String padEndOfString(String str, unsigned int desired_length, char pad_characte
 	return s;
 }
 
+String repeatString(String str, int number_of_repeats) {
+	String s("");
+	int i = number_of_repeats;
+	while (i > 0) {
+		s += str;
+		i--;
+	}
+	return s;
+}
+
+String indentString(String str, int indentamount) {
+	String s("");
+	if (str) {
+		if (indentamount > 0) {
+			s = repeatString(" ", 5);
+			unsigned int i = 0;
+			unsigned int n = 0;
+			int _indx = 0;
+			while (i < str.length()) {
+				_indx = str.indexOf("\r\n", i);		// find the next CRLF
+				if (_indx < 0) {
+					/* _indx should never is less than 0. If it is, then there must
+					 * be some bug. Abort the indent and return the original string.
+					 */
+					return str;
+				}
+				n = static_cast<unsigned int>(_indx);
+				s += str.substring(i, n + 2);	// extract the portion up and including the CRLF
+				s += repeatString(" ", 5);		// add indent (after the CRLF)
+				i = n + 2;			// move the index to the character just after the CRLF and keep looking
+			}
+		}
+		else {
+			s = str;
+		}
+	}
+	return s;
+}
+
 String memoryToHex(const char* addr, int _len, HexDirection dir) {
 	String s("");
 	if (_len > 0 && _len <= 256) {

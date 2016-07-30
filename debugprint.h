@@ -16,17 +16,41 @@ extern String nl;
 
 enum class DebugLevel
 	: int {
-		ALWAYS = 0, INFO, ERROR, DEBUG, DEBUG2, TIMINGS, HTTPGET, END
+		/* Log statements with ALWAYS print regardless of the debugLevel setting
+		 */
+		ALWAYS = 0,
+		/* INFO, ERROR, DEBUG are relative levels, whereas DEBUG is the highest
+		 * and prints all three, ERROR is second and prints INFO and ERROR, and
+		 * INFO prints only INFO. ALWAYS will print for any of the three.
+		 */
+		INFO = 1, ERROR = 3, DEBUG = 7,
+		/* The following levels only print if the DebugPrint statement is set
+		 *  exactly to that level. This also means that INFO, ERROR and DEBUG
+		 *  do not print.
+		 */
+		EEPROM = 8,		// interactions with the EEPROM
+	TIMINGS = 16,	// Sensor Acquisition timings
+	HTTPPUT = 32,	// Thingspeak PUT
+	HTTPGET = 64,	// Thingspeak GET
+	WEBPAGEPROCESSING = 128, // processing of configuration web pages
+	// END is not a level
+	END
 };
 
 class DebugPrint {
 private:
 	DebugLevel debuglevel;
+	static bool getBitwiseAND(DebugLevel a, DebugLevel b);
+	bool validateDebugLevel(void);
 
 public:
 	DebugPrint()
 			: debuglevel(DebugLevel::ERROR) {
 	}
+
+	static String convertDebugLevelToString(DebugLevel dl);
+	static DebugLevel getBitwiseOR(DebugLevel a, DebugLevel b);
+
 	DebugLevel getDebugLevel(void) {
 		return debuglevel;
 	}
@@ -35,13 +59,14 @@ public:
 		eeprom_is_dirty = true;
 		validateDebugLevel();
 	}
-	bool validateDebugLevel(void);
-	static String convertDebugLevelToString(DebugLevel dl);
+
 	bool isDebugLevel(DebugLevel dlevel);
 	DebugLevel incrementDebugLevel(void);
+
 	String getDebugLevelString(void) {
 		return convertDebugLevelToString(debuglevel);
 	}
+
 	void println(DebugLevel dlevel, const __FlashStringHelper *); // printing strings in Flash
 	void println(DebugLevel dlevel, const String &s);
 	void println(DebugLevel dlevel, const char[]);

@@ -22,52 +22,75 @@ bool DebugPrint::validateDebugLevel(void) {
 	return eeprom_is_dirty;
 }
 
-bool DebugPrint::isDebugLevel(DebugLevel dlevel) {
-	if (dlevel == debuglevel || dlevel == DebugLevel::ALWAYS) return true;
-	if (dlevel == DebugLevel::TIMINGS) return false; // these must match exactly by if (dlevel == debuglevel)
-	if (dlevel == DebugLevel::HTTPGET) return false; // these must match exactly by if (dlevel == debuglevel)
-	// If not the special cases of ALWAYS, TIMINGS, or HTTPGET, then determine
-	//    if the result is true based on the relative value of dlevel.
-	if (static_cast<int>(debuglevel) >= static_cast<int>(dlevel)) return true;
+bool DebugPrint::getBitwiseAND(DebugLevel dlevel, DebugLevel b) {
+	// return true if all the bits of 'b' are set in 'dlevel'
+	if ((static_cast<int>(dlevel) & static_cast<int>(b)) == static_cast<int>(b)) {
+		return true;
+	}
 	return false;
 }
 
+DebugLevel DebugPrint::getBitwiseOR(DebugLevel a, DebugLevel b) {
+	int ored = static_cast<int>(a) | static_cast<int>(b);
+	return static_cast<DebugLevel>(ored);
+}
+
+bool DebugPrint::isDebugLevel(DebugLevel dlevel) {
+	if (dlevel == DebugLevel::ALWAYS) return true;
+	return getBitwiseAND(dlevel, debuglevel);
+}
+
 DebugLevel DebugPrint::incrementDebugLevel(void) {
-	int newd = static_cast<int>(debuglevel) + 1;
-	debuglevel = static_cast<DebugLevel>(newd);
+	switch (debuglevel) {
+		case DebugLevel::ALWAYS:
+			debuglevel = DebugLevel::INFO;
+			break;
+		case DebugLevel::INFO:
+			debuglevel = DebugLevel::ERROR;
+			break;
+		case DebugLevel::ERROR:
+			debuglevel = DebugLevel::DEBUG;
+			break;
+		case DebugLevel::DEBUG:
+			debuglevel = DebugLevel::EEPROM;
+			break;
+		case DebugLevel::EEPROM:
+			debuglevel = DebugLevel::TIMINGS;
+			break;
+		case DebugLevel::TIMINGS:
+			debuglevel = DebugLevel::HTTPPUT;
+			break;
+		case DebugLevel::HTTPPUT:
+			debuglevel = DebugLevel::HTTPGET;
+			break;
+		case DebugLevel::HTTPGET:
+			debuglevel = DebugLevel::WEBPAGEPROCESSING;
+			break;
+		case DebugLevel::WEBPAGEPROCESSING:
+		case DebugLevel::END:
+		default:
+			debuglevel = DebugLevel::ALWAYS;
+			break;
+	}
 	eeprom_is_dirty = true;
 	validateDebugLevel();
 	return debuglevel;
 }
 
 String DebugPrint::convertDebugLevelToString(DebugLevel dl) {
-	switch (dl) {
-		case DebugLevel::ALWAYS:
-			return String("ALWAYS");
-			break;
-		case DebugLevel::INFO:
-			return String("INFO");
-			break;
-		case DebugLevel::ERROR:
-			return String("ERROR");
-			break;
-		case DebugLevel::DEBUG:
-			return String("DEBUG");
-			break;
-		case DebugLevel::TIMINGS:
-			return String("TIMINGS");
-			break;
-		case DebugLevel::DEBUG2:
-			return String("DEBUG2");
-			break;
-		case DebugLevel::HTTPGET:
-			return String("HTTPGET");
-			break;
-		case DebugLevel::END:
-		default:
-			break;
-	}
-	return ("UNKNOWN");
+	String r("");
+	if (dl == DebugLevel::ALWAYS) r += String("ALWAYS");
+	if (getBitwiseAND(dl, DebugLevel::INFO)) r += String(" INFO");
+	if (getBitwiseAND(dl, DebugLevel::ERROR)) r += String(" ERROR");
+	if (getBitwiseAND(dl, DebugLevel::DEBUG)) r += String(" DEBUG");
+	if (getBitwiseAND(dl, DebugLevel::EEPROM)) r += String(" EEPROM");
+	if (getBitwiseAND(dl, DebugLevel::TIMINGS)) r += String(" TIMINGS");
+	if (getBitwiseAND(dl, DebugLevel::HTTPGET)) r += String(" HTTPGET");
+	if (getBitwiseAND(dl, DebugLevel::HTTPPUT)) r += String(" HTTPPUT");
+	if (getBitwiseAND(dl, DebugLevel::WEBPAGEPROCESSING)) r += String(" WEBPAGEPROCESSING");
+	if (r.length() < 1) r += "UNKNOWN";
+	r += " (" + String(static_cast<int>(dl)) + ")";
+	return r;
 }
 
 void DebugPrint::println(DebugLevel dlevel, const String &s) {

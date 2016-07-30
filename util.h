@@ -33,5 +33,7 @@ extern void yield_us(unsigned long time_duration_to_yield_us);
 extern String localIPstr(void);
 extern String GPIO2Arduino(uint8_t gpio_pin_number);
 extern String padEndOfString(String str, unsigned int desired_length, char pad_character, bool trim = false);
+extern String indentString(String str, int indentamount);
+extern String repeatString(String str, int count);
 
 #endif /* UTIL_H_ */
