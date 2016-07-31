@@ -145,6 +145,7 @@ String ThingspeakPushChannelSettings(String eol, bool show_everything) {
 	putStr += "Accept: */*\r\n";
 	putStr += "Content-Length: " + String(data.length()) + "\r\n";
 	putStr += "Content-Type: application/x-www-form-urlencoded\r\n";
+	putStr += "Connection: close\r\n";
 	putStr += "\r\n" + data;
 
 	// Open a connection to the destination server
