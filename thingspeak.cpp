@@ -125,59 +125,96 @@ String getTCPStatusString(uint8_t s) {
 /* --------------------------------------------------------------------------------
  * Push the Channel Settings to the Thingspeak Server
  */
-void ThingspeakPushChannelSettings(void) {
+String ThingspeakPushChannelSettings(String eol, bool show_everything) {
 	WiFiClient client;
+	String s("");
 
-	// NOTE strings sent in the data portion must be URL encodedrun
-
+	// Create the data payload. It must be URL Encoded
 	String data("api_key=" + dinfo.getThingspeakUserApikey());
-	data += "&name=" + dinfo.getTSChannelName();
+	data += "&name=" + getURLEncode(dinfo.getTSChannelName());
+	data += "&description=" + getURLEncode(dinfo.getTSChannelDesc());
+	data += "&field1=" + getURLEncode("myfield1");
+	for (int fld = 1; fld <= MAX_THINGSPEAK_FIELD_COUNT; fld++) {
+		int _pos = getPositionByTSFieldNumber(fld);
+		data += "&field" + String(fld) + "=" + getURLEncode(getNameByPosition(_pos));
+	}
 
-	String putStr = "PUT /channels/" + String(dinfo.getThingspeakChannel()) + " HTTP/1.1\r\n";
+	// Create the HTTP Request
+	String putStr = "PUT /channels/" + String(dinfo.getThingspeakChannel()) + ".json HTTP/1.1\r\n";
 	putStr += "Host: " + dinfo.getThingspeakURL() + "\r\n";
 	putStr += "Accept: */*\r\n";
 	putStr += "Content-Length: " + String(data.length()) + "\r\n";
 	putStr += "Content-Type: application/x-www-form-urlencoded\r\n";
-	putStr += "\r\n" + data; // + "\r\n";
+	putStr += "\r\n" + data;
+
+	// Open a connection to the destination server
+	s += eol + "  Connecting to Thingspeak at " + dinfo.getThingspeakIpaddr() + " ..." + eol;
 
 	kickExternalWatchdog();
-	Serial.println(
-			nl + "ThingspeakPushChannelSettings(): Connecting to " + dinfo.getThingspeakIpaddr() + ": ");
-	if (!client.connect(dinfo.getThingspeakIpaddr_c(), 80)) {
-		Serial.println(getTCPStatusString(client.status()) + " : FAILED");
+	int connectstate = client.connect(dinfo.getThingspeakIpaddr_c(), 80);
+	kickExternalWatchdog();
+
+	s += "  Connection " + getTCPStatusString(client.status()) + ", ";
+	if (!connectstate) {
+		s += "FAILED" + eol;
 		thingspeak_error_counter++;
 	}
 	else {
-		kickExternalWatchdog();
-		Serial.println(getTCPStatusString(client.status()) + " : Success");
+		s += "SUCCESS" + eol;
 
-		// Send the command
-		debug.print(DebugLevel::HTTPPUT, "Sending <<<<" + nl + indentString(putStr, 5) + nl + ">>>>");
+		// Send the request
+		if (show_everything || debug.isDebugLevel(DebugLevel::HTTPPUT)) {
+			s += eol + "This is the Request ... " + eol;
+			s += "<<<<" + eol + indentString(putStr + nl, 5) + eol + ">>>>" + eol;
+		}
+
 		yield();
 		kickExternalWatchdog();
 		size_t r = client.println(putStr); // this takes about 1 second (no watchdogs during this time)
 		kickExternalWatchdog();
 		yield();
 
-		// Tell server this is the end of sending
+		// Tell server we are finished sending
 		r += client.println("Host: " + dinfo.getThingspeakURL());
 		r += client.println("Connection: close");
 		r += client.println();
-		debug.print(DebugLevel::HTTPPUT, " " + String(r) + " bytes sent\r\n");
+		if (show_everything || debug.isDebugLevel(DebugLevel::HTTPPUT)) {
+			s += "  " + String(r) + " bytes sent" + eol;
+		}
 
-		// Read the response
+		// Read the response from the server
+		bool read_response = false;
 		if (r == 0) {
-			Serial.println("  Send FAILED");
+			s += "  Send FAILED" + eol;
+			read_response = true;
 		}
 		else if (client.available()) {
-			String response = client.readString();
-			debug.print(DebugLevel::HTTPPUT, "Response <<<<" + nl + indentString(response, 5) + nl + ">>>>");
-			Serial.println("  Send SUCCESS");
+			s += "  Send SUCCESS" + eol;
+			read_response = true;
 		}
 		else {
-			Serial.println("Error: Client not available\n");
+			s += "  Send FAILED - Client not available" + eol;
+		}
+		s += eol;
+
+		if (read_response) {
+			String response = client.readString();
+			if (show_everything || debug.isDebugLevel(DebugLevel::HTTPPUT)) {
+				s += "This is the Response ..." + eol;
+				s += "<<<<" + eol + indentString(response, 5) + eol + ">>>>" + eol;
+			}
+
+			int responsecode = response.indexOf(String(HTTP_SUCCESS));
+			s += eol + HTTP_SUCCESS;
+			if (responsecode >= 0) {
+				s += " found in response - SUCCESS!" + eol;
+			}
+			else {
+				s += " Not found in response - FAILURE" + eol;
+			}
 		}
 	}
+	return s;
 }
 
 /* --------------------------------------------------------------------------------
@@ -205,10 +242,10 @@ void updateThingspeak(void) {
 				nl + "updateThingspeak(): Connecting to " + dinfo.getThingspeakIpaddr() + ": "
 						+ getTCPStatusString(client.status()) + " : Success");
 
-		// Create the command
+// Create the command
 		String getStr = "GET " + gStr + "HTTP/1.1";
 
-		// Send the command
+// Send the command
 		debug.println(DebugLevel::HTTPGET, "Sending -> " + getStr);
 		yield();
 		kickExternalWatchdog();
@@ -219,7 +256,7 @@ void updateThingspeak(void) {
 		r += client.println("Connection: close");
 		r += client.println();
 
-		// Read the response
+// Read the response
 		debug.println(DebugLevel::HTTPGET, "        -> " + String(r) + " bytes sent");
 
 		if (r == 0) {

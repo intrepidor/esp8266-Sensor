@@ -78,7 +78,6 @@ void WebInit(void) {
 	Serial.println("Connected to " + WiFi.SSID());
 	Serial.print(F("IP address: "));
 	Serial.println(WiFi.localIP());
-	kickAllWatchdogs();
 
 	uint8_t available_networks = static_cast<uint8_t>(WiFi.scanNetworks());
 	for (uint8_t network = 0; network < available_networks; network++) {
@@ -87,12 +86,10 @@ void WebInit(void) {
 			Serial.println("RSSI: " + String(rssi) + " dBm");
 		}
 	}
-	kickAllWatchdogs();
 
 	if (MDNS.begin("esp8266")) {
 		Serial.println(F("mDNS started"));
 	}
-	kickAllWatchdogs();
 
 	// Configure webserver
 	server.onNotFound([] () {
@@ -111,7 +108,6 @@ void WebInit(void) {
 		message += "\n" + WebPrintInfo("\n");
 		server.send(404, "text/plain", message);
 	});
-	kickAllWatchdogs();
 
 	server.on("/", []() {
 		String response("");
@@ -151,7 +147,6 @@ void WebInit(void) {
 		response += "<br>" + getWebFooter(false, false) + "</body></html>";
 		server.sendContent(response);
 	});
-	kickAllWatchdogs();
 
 	server.on("/status",
 			[]() {
@@ -163,7 +158,6 @@ void WebInit(void) {
 				response += "== Database ==<br>"+dinfo.databaseToString("<br>") +"</div>" + getWebFooter(false, false);
 				server.sendContent(response);
 			});
-	kickAllWatchdogs();
 
 	server.on("/sensordebug", []() {
 		sendHTML_Header(true);
@@ -172,7 +166,6 @@ void WebInit(void) {
 		response += "</div>" + getWebFooter(false, false);
 		server.sendContent(response);
 	});
-	kickAllWatchdogs();
 
 	server.on("/csv", []() {
 		String response("count=");
@@ -202,14 +195,20 @@ void WebInit(void) {
 		response += "ts=" + String(dinfo.getThingspeakStatus()) + ",";
 		server.send(200, "text/plain", response);
 	});
-	kickAllWatchdogs();
+
+	server.on("/pushtschannelsettings", []() {
+		sendHTML_Header(true);
+		String response("<h2>Push Channel Settings to Thingspeak</h2><div style=\"width:99%\">");
+		response += HTMLifyNewlines(ThingspeakPushChannelSettings("<br>", true));
+		response += "</div>" + getWebFooter(false, false);
+		server.sendContent(response);
+	});
 
 	server.on(uri_v.c_str(), sendValue);
 	server.on("/config", config);
 	server.on("/factory_settings", _WriteDefaultsToDatabase);
 	server.on("/erase_eeprom", _EraseEEPROM);
 	server.on("/tsconfig", tsconfig);
-	server.on("/pushtschannelsettings", ThingspeakPushChannelSettings);
 	server.on("/reboot", ESPreset);
 
 	kickAllWatchdogs();

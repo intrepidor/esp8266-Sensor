@@ -31,7 +31,7 @@ extern void ConfigurePorts(void);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.12 Allan Inda 2016July24");
+String ProgramInfo("Environment Sensor v0.15 Allan Inda 2016July30");
 
 // Other
 long count = 0;
@@ -167,7 +167,7 @@ void setup(void) {
 // Start the task scheduler
 	setStartupComplete(); // tell the watchdog the long startup is done and to use normal watchdog timeouts
 	kickAllSoftwareWatchdogs();
-	Serial.println("Startup complete");
+	Serial.println("Startup complete" + nl);
 	bool pol = false;
 	for (;;) {
 		softwareWatchdog(); // must call minimally every 1.6s to avoid the external watchdog reseting the ESP8266
@@ -552,7 +552,8 @@ int task_serialport_menu(unsigned long now) {
 				Serial.println(getsThingspeakChannelInfo(nl));
 				break;
 			case 'p':
-				ThingspeakPushChannelSettings();
+				Serial.println("--- Push Thingspeak Channel Settings to Server");
+				Serial.println(ThingspeakPushChannelSettings(nl, false));
 				break;
 			case 'r':
 				// Display the heading

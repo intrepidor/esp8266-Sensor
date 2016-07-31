@@ -12,11 +12,11 @@ String nl("\r\n");
 
 bool DebugPrint::validateDebugLevel(void) {
 	if (debuglevel >= DebugLevel::END) {
-		debuglevel = DebugLevel::ALWAYS;
+		debuglevel = DebugLevel::OFF;
 		eeprom_is_dirty = true;
 	}
-	if (debuglevel < DebugLevel::ALWAYS) {
-		debuglevel = DebugLevel::ALWAYS;
+	if (debuglevel < DebugLevel::OFF) {
+		debuglevel = DebugLevel::OFF;
 		eeprom_is_dirty = true;
 	}
 	return eeprom_is_dirty;
@@ -36,13 +36,13 @@ DebugLevel DebugPrint::getBitwiseOR(DebugLevel a, DebugLevel b) {
 }
 
 bool DebugPrint::isDebugLevel(DebugLevel dlevel) {
-	if (dlevel == DebugLevel::ALWAYS) return true;
+	if (debuglevel == DebugLevel::OFF) return false;
 	return getBitwiseAND(dlevel, debuglevel);
 }
 
 DebugLevel DebugPrint::incrementDebugLevel(void) {
 	switch (debuglevel) {
-		case DebugLevel::ALWAYS:
+		case DebugLevel::OFF:
 			debuglevel = DebugLevel::INFO;
 			break;
 		case DebugLevel::INFO:
@@ -69,7 +69,7 @@ DebugLevel DebugPrint::incrementDebugLevel(void) {
 		case DebugLevel::WEBPAGEPROCESSING:
 		case DebugLevel::END:
 		default:
-			debuglevel = DebugLevel::ALWAYS;
+			debuglevel = DebugLevel::OFF;
 			break;
 	}
 	eeprom_is_dirty = true;
@@ -79,7 +79,7 @@ DebugLevel DebugPrint::incrementDebugLevel(void) {
 
 String DebugPrint::convertDebugLevelToString(DebugLevel dl) {
 	String r("");
-	if (dl == DebugLevel::ALWAYS) r += String("ALWAYS");
+	if (dl == DebugLevel::OFF) r += String("OFF");
 	if (getBitwiseAND(dl, DebugLevel::INFO)) r += String(" INFO");
 	if (getBitwiseAND(dl, DebugLevel::ERROR)) r += String(" ERROR");
 	if (getBitwiseAND(dl, DebugLevel::DEBUG)) r += String(" DEBUG");

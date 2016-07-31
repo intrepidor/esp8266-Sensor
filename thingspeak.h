@@ -8,6 +8,8 @@
 #ifndef THINGSPEAK_H_
 #define THINGSPEAK_H_
 
+const char HTTP_SUCCESS[] = "HTTP/1.1 200 OK";
+
 int const MAX_THINGSPEAK_FIELD_COUNT = 8; // Thingspeak only accept 8 fields
 
 extern size_t thingspeak_update_counter;
@@ -18,6 +20,6 @@ extern unsigned long last_thingspeak_update_time_ms;
 extern String getsThingspeakInfo(String eol);
 extern void updateThingspeak(void);
 extern String getsThingspeakChannelInfo(String eol);
-extern void ThingspeakPushChannelSettings(void);
+extern String ThingspeakPushChannelSettings(String eol, bool show_everything);
 
 #endif /* THINGSPEAK_H_ */

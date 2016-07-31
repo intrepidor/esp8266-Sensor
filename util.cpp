@@ -76,6 +76,37 @@ String padEndOfString(String str, unsigned int desired_length, char pad_characte
 	return s;
 }
 
+String getURLEncode(String str) {
+	return getURLEncode(str.c_str());
+}
+
+String HTMLifyNewlines(String str) {
+	str.replace("\r\n", "<br>");
+	str.replace("\r", "<br>");
+	return "<pre>" + str + "</pre>";
+}
+
+String getURLEncode(const char* msg) {
+// http://www.icosaedro.it/apache/urlencode.c
+	const char* hex = "0123456789ABCDEF";
+	String encodedMsg = "";
+	if (msg) {
+		while (*msg != '\0') {
+			if (('a' <= *msg && *msg <= 'z') || ('A' <= *msg && *msg <= 'Z')
+					|| ('0' <= *msg && *msg <= '9')) {
+				encodedMsg += *msg;
+			}
+			else {
+				encodedMsg += '%';
+				encodedMsg += hex[*msg >> 4];
+				encodedMsg += hex[*msg & 15];
+			}
+			msg++;
+		}
+	}
+	return encodedMsg;
+}
+
 String repeatString(String str, int number_of_repeats) {
 	String s("");
 	int i = number_of_repeats;
@@ -96,22 +127,27 @@ String indentString(String str, int indentamount) {
 			int _indx = 0;
 			while (i < str.length()) {
 				_indx = str.indexOf("\r\n", i);		// find the next CRLF
-				if (_indx < 0) {
-					/* _indx should never is less than 0. If it is, then there must
-					 * be some bug. Abort the indent and return the original string.
-					 */
-					return str;
+				if (_indx >= 0) {
+					n = static_cast<unsigned int>(_indx);
+					s += str.substring(i, n + 2);	// extract the portion up and including the CRLF
+					s += repeatString(" ", 5);		// add indent (after the CRLF)
+					i = n + 2;		// move the index to the character just after the CRLF and keep looking
 				}
-				n = static_cast<unsigned int>(_indx);
-				s += str.substring(i, n + 2);	// extract the portion up and including the CRLF
-				s += repeatString(" ", 5);		// add indent (after the CRLF)
-				i = n + 2;			// move the index to the character just after the CRLF and keep looking
+				else {
+					return str; // Should not be <0. Something might be wrong. Return the original string.
+				}
 			}
 		}
 		else {
 			s = str;
 		}
 	}
+	/* As a basic check to see if something might have gone wrong, make sure
+	 * the resultant string not less then the input string. Indenting should
+	 * make the resultant string larger. An error must have occurred if it's
+	 * smaller. Return the original string in case of potential errors.
+	 */
+	if (s.length() < str.length()) return str;
 	return s;
 }
 

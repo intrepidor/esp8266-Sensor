@@ -16,12 +16,12 @@ extern String nl;
 
 enum class DebugLevel
 	: int {
-		/* Log statements with ALWAYS print regardless of the debugLevel setting
+		/* Log statements with OFF don't print anything.
 		 */
-		ALWAYS = 0,
+		OFF = 0,
 		/* INFO, ERROR, DEBUG are relative levels, whereas DEBUG is the highest
 		 * and prints all three, ERROR is second and prints INFO and ERROR, and
-		 * INFO prints only INFO. ALWAYS will print for any of the three.
+		 * INFO prints only INFO.
 		 */
 		INFO = 1, ERROR = 3, DEBUG = 7,
 		/* The following levels only print if the DebugPrint statement is set
