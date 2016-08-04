@@ -10,6 +10,7 @@
 #include "main.h"
 #include "debugprint.h"
 #include "sensor.h"
+#include "thingspeak.h"
 
 //-------------------------------------------------------------------------------------------------
 void Device::setThingspeakUpdatePeriodMS(unsigned long new_periodms) {
@@ -204,6 +205,78 @@ void Device::setTSFieldExtraName(int _i, String s) {
 	}
 }
 
+//============================================================================
+/* Position	Sensor					DeviceInfo Database
+ *     0	Port 0, channel 0		db.thingspeakChannelSettings.fieldPort[0]
+ *     1	Port 0, channel 1		db.thingspeakChannelSettings.fieldPort[1]
+ *     2	Port 1, channel 0		db.thingspeakChannelSettings.fieldPort[2]
+ *     3	Port 1, channel 1		db.thingspeakChannelSettings.fieldPort[3]
+ *     4	Port 2, channel 0		db.thingspeakChannelSettings.fieldPort[4]
+ *     5	Port 2, channel 1		db.thingspeakChannelSettings.fieldPort[5]
+ *     6	Port 3, channel 0		db.thingspeakChannelSettings.fieldPort[6]
+ *     7	Port 3, channel 1		db.thingspeakChannelSettings.fieldPort[7]
+ *     8	PIR						db.thingspeakChannelSettings.fieldExtra[0]
+ *     9	RSSI					db.thingspeakChannelSettings.fieldExtra[1]
+ *    10	Uptime					db.thingspeakChannelSettings.fieldExtra[2]
+ *    11	Spare					db.thingspeakChannelSettings.fieldExtra[3]
+ */
+//============================================================================
+//-------------------------------------------------------------------------------------------------
+String Device::getNameByPosition(int _pos) {
+	if (_pos < 0) {
+		;
+	}
+	else if (_pos < getTSFieldPortMax()) {
+		return getTSFieldPortName(_pos);
+	}
+	else {
+		int ext = _pos - getTSFieldPortMax();
+		if (ext >= 0 && ext < getTSFieldExtraMax()) {
+			return getTSFieldExtraName(ext);
+		}
+	}
+	return String("notset");
+}
+
+//----------------------------------------------------------------------
+/* Field numbers correspond to those of Thingspeak, field1 to field8,
+ * which are numbers 1 to 8. Convert field number to Position. The first
+ * Position found starting with fieldExtra[] will be returned. So if
+ * the field number is used for multiple fieldPort/FieldExtra, then only
+ * the first one found is considered.
+ */
+int Device::getPositionByTSFieldNumber(int fld) {
+	int pm = dinfo.getTSFieldPortMax();
+	if (fld > 0 && fld <= MAX_THINGSPEAK_FIELD_COUNT) {
+		// Look for assignment to field<fld>
+		for (int e = 0; e < dinfo.getTSFieldExtraMax(); e++) {
+			if (fld == dinfo.getTSFieldExtraNumber(e)) return (e + pm);
+		}
+		for (int p = 0; p < pm; p++) {
+			if (fld == dinfo.getTSFieldPortNumber(p)) return p;
+		}
+	}
+	return 0;
+}
+
+bool Device::isFieldUsed(int fld) {
+// Description: Returns true if the Thingspeak field (1..8) is assigned to something.
+// Algorithm: Loop through all the ports and Extra and see if the field is assigned to anything.
+	if (getPositionByTSFieldNumber(fld) == 0) return false;
+	return true;
+}
+
+//----------------------------------------------------------------------
+int Device::getFieldByPosition(int _pos) {
+	if (_pos < 10) {
+		return dinfo.getTSFieldExtraNumber(_pos - dinfo.getTSFieldPortMax());
+	}
+	else if (_pos < dinfo.getTSFieldPortMax()) {
+		return dinfo.getTSFieldPortNumber(_pos);
+	}
+	return 0;
+}
+
 //-------------------------------------------------------------------------------------------------
 void Device::setcDeviceName(const char* newname) {
 	if (newname) {
@@ -216,8 +289,7 @@ void Device::setcDeviceName(const char* newname) {
 	}
 }
 
-const char* PROGMEM
-Device::getThingspeakEnableStr() {
+const char* Device::getThingspeakEnableStr() {
 	if (db.thingspeak.enabled) return "checked";
 	return " ";
 }

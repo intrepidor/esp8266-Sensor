@@ -174,6 +174,20 @@ public:
 	}
 
 //--------------------------------------------------------
+// Thingspeak Position
+// Position is a number 0 to N where N equals the sum of
+//    getTSFieldExtraMax() and getTSFieldPortMax();
+//
+	String getNameByPosition(int _pos);
+	int getPositionByTSFieldNumber(int fld);
+	int getFieldByPosition(int _pos);
+
+//--------------------------------------------------------
+// Thingspeak Fields (field1, field2, ... field 8
+//
+	bool isFieldUsed(int fld);
+
+//--------------------------------------------------------
 // Device Name and ID
 	const char* getDeviceName(void) const {
 		return this->db.device.name;

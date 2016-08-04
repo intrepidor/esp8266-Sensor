@@ -53,7 +53,7 @@ String getsThingspeakChannelInfo(String eol) {
 	for (int i = 0; i < dinfo.getTSFieldExtraMax(); i++) {
 		fld = dinfo.getTSFieldExtraNumber(i);
 		if (fld < 1) fld = 1;
-		s += "  " + getNameByPosition(i + dinfo.getTSFieldPortMax()) + "= field" + String(fld);
+		s += "  " + getDescriptionByPosition(i + dinfo.getTSFieldPortMax()) + "= field" + String(fld);
 		if (fields[fld - 1]) {
 			s += " IGNORED AS DUPLICATE";
 		}
@@ -64,7 +64,7 @@ String getsThingspeakChannelInfo(String eol) {
 	for (int i = 0; i < dinfo.getTSFieldPortMax(); i++) {
 		fld = dinfo.getTSFieldPortNumber(i);
 		if (fld < 1) fld = 1; // this avoid buffer overrun, but also creates a potential bug
-		s += "  " + getNameByPosition(i) + "= field" + String(fld);
+		s += "  " + getDescriptionByPosition(i) + "= field" + String(fld);
 		if (fields[fld - 1]) {
 			s += " IGNORED AS DUPLICATE";
 		}
@@ -73,8 +73,16 @@ String getsThingspeakChannelInfo(String eol) {
 	}
 	s += "== Field Mapping to Position == " + eol;
 	for (fld = 1; fld <= MAX_THINGSPEAK_FIELD_COUNT; fld++) {
-		int _pos = getPositionByTSFieldNumber(fld);
-		s += "  Field" + String(fld) + " = Position" + _pos + ", " + getNameByPosition(_pos) + eol;
+		int _pos = dinfo.getPositionByTSFieldNumber(fld);
+		s += "  Field" + String(fld) + " = Position" + _pos + ", " + getDescriptionByPosition(_pos);
+		s += ", " + dinfo.getNameByPosition(_pos) + ", ";
+		if (dinfo.isFieldUsed(fld)) {
+			s += "used";
+		}
+		else {
+			s += "not used";
+		}
+		s += eol;
 	}
 	return s;
 }
@@ -135,8 +143,15 @@ String ThingspeakPushChannelSettings(String eol, bool show_everything) {
 	data += "&description=" + getURLEncode(dinfo.getTSChannelDesc());
 	data += "&field1=" + getURLEncode("myfield1");
 	for (int fld = 1; fld <= MAX_THINGSPEAK_FIELD_COUNT; fld++) {
-		int _pos = getPositionByTSFieldNumber(fld);
-		data += "&field" + String(fld) + "=" + getURLEncode(getNameByPosition(_pos));
+		int _pos = dinfo.getPositionByTSFieldNumber(fld);
+		data += "&field" + String(fld) + "=";
+		// skip unused fields
+		if (dinfo.isFieldUsed(fld)) {
+			data += getURLEncode(dinfo.getNameByPosition(_pos));
+		}
+		else {
+			data += "";
+		}
 	}
 
 	// Create the HTTP Request
@@ -157,11 +172,11 @@ String ThingspeakPushChannelSettings(String eol, bool show_everything) {
 
 	s += "  Connection " + getTCPStatusString(client.status()) + ", ";
 	if (!connectstate) {
-		s += "FAILED" + eol;
+		s += "FAILED." + eol;
 		thingspeak_error_counter++;
 	}
 	else {
-		s += "SUCCESS" + eol;
+		s += "SUCCESS." + eol;
 
 		// Send the request
 		if (show_everything || debug.isDebugLevel(DebugLevel::HTTPPUT)) {
@@ -186,15 +201,15 @@ String ThingspeakPushChannelSettings(String eol, bool show_everything) {
 		// Read the response from the server
 		bool read_response = false;
 		if (r == 0) {
-			s += "  Send FAILED" + eol;
+			s += "  Send FAILED." + eol;
 			read_response = true;
 		}
 		else if (client.available()) {
-			s += "  Send SUCCESS" + eol;
+			s += "  Send SUCCESS." + eol;
 			read_response = true;
 		}
 		else {
-			s += "  Send FAILED - Client not available" + eol;
+			s += "  Send FAILED - Client not available." + eol;
 		}
 		s += eol;
 
@@ -225,7 +240,7 @@ void updateThingspeak(void) {
 	WiFiClient client;
 	String gStr = "/update?api_key=" + dinfo.getThingspeakApikey();
 	for (int fld = 1; fld <= MAX_THINGSPEAK_FIELD_COUNT; fld++) {
-		int pos = getPositionByTSFieldNumber(fld);
+		int pos = dinfo.getPositionByTSFieldNumber(fld);
 		gStr += "&field" + String(fld) + "=" + getValueByPosition(pos);
 	}
 
