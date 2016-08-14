@@ -14,6 +14,8 @@
 #include "deviceinfo.h"
 #include "debugprint.h"
 
+#define USE_DEBUG_PRINT
+
 #ifndef ARDUINO_ARCH_ESP8266
 #define ARDUINO_ARCH_ESP8266
 #endif
@@ -27,9 +29,19 @@ extern const int SENSOR_COUNT;
 extern Sensor* sensors[];
 
 extern Device dinfo;
-extern DebugPrint debug;
 extern Queue myQueue;
 
+extern DebugPrint debug;
+#ifdef USE_DEBUG_PRINT
+#define DEBUGPRINT(a, b) debug.print(a, b)
+#define DEBUGPRINTLN(a, b) debug.println(a, b)
+const bool DEBUGPRINT_ENABLED = true;
+#else
+#define DEBUGPRINT
+#define DEBUGPRINTLN
+const bool DEBUGPRINT_ENABLED = false;
+#endif
+////////////////
 extern const uint8_t PIN_SOFTRESET;
 extern const uint8_t PIN_BUILTIN_LED;
 extern const uint8_t PIN_PIRSENSOR;

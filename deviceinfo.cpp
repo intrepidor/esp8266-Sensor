@@ -47,18 +47,31 @@ void Device::writeDefaultsToDatabase(void) {
 	setThingspeakEnable(false);
 	setThingspeakUpdatePeriodMS (DEF_THINGSPEAK_UPDATE_PERIOD_MS); // once per minute
 	setThingspeakApikey("");
-	setThingspeakURL("http://api.thingspeak.com");
+	setThingspeakURL("api.thingspeak.com");
 	setThingspeakChannel(0);
 	setThingspeakIpaddr("184.106.153.149");
-	setTSChannelName("<Enter Channel Name>");
-	setTSChannelDesc("<Enter Channel Description>");
+	setTSChannelName("MyChannel");
+	setTSChannelDesc("MyDescription");
 	for (int i = 0; i < dinfo.getTSFieldPortMax(); i++) {
 		setTSFieldPortNumber(i, i + 1);
-		setTSFieldPortName(i, String("MyField" + String(i + 1)));
+		setTSFieldPortName(i, String("nothing"));
 	}
 	for (int i = 0; i < dinfo.getTSFieldExtraMax(); i++) {
 		setTSFieldExtraNumber(i, 0);
-		setTSFieldExtraName(i, String("Extra" + String(i + 1)));
+		switch (i) {
+			case 0:
+				setTSFieldPortName(i, String("PIR [/min]"));
+				break;
+			case 1:
+				setTSFieldPortName(i, String("RSSI [dBm]"));
+				break;
+			case 2:
+				setTSFieldPortName(i, String("Uptime [min]"));
+				break;
+			default:
+				setTSFieldPortName(i, String("nothing"));
+				break;
+		}
 	}
 	db.debuglevel = 0;
 	for (int i = 0; i < MAX_PORTS; i++) {
@@ -117,7 +130,7 @@ String Device::databaseToString(String eol) {
 
 void Device::printInfo(void) {
 	for (int i = 0; i < getPortMax(); i++) {
-		Serial.println("Port#" + String(i) + ": " + getSensorModuleName(getPortMode(i)));
+		Serial.println("Port #" + String(i + 1) + ": " + getSensorModuleName(getPortMode(i)));
 	}
 	Serial.println("");
 }
@@ -129,8 +142,8 @@ void Device::setTSChannelName(const char* s) {
 		strncpy(db.thingspeakChannelSettings.name, s, sizeof(db.thingspeakChannelSettings.name) - 1);
 	}
 	else {
-		debug.print(DebugLevel::ERROR, nl);
-		debug.println(DebugLevel::ERROR, ("ERROR: setTSChannelName() - null value"));
+		DEBUGPRINT(DebugLevel::ERROR, nl);
+		DEBUGPRINTLN(DebugLevel::ERROR, ("ERROR: setTSChannelName() - null value"));
 	}
 }
 
@@ -140,8 +153,8 @@ void Device::setTSChannelDesc(const char* s) {
 		strncpy(db.thingspeakChannelSettings.desc, s, sizeof(db.thingspeakChannelSettings.desc) - 1);
 	}
 	else {
-		debug.print(DebugLevel::ERROR, nl);
-		debug.println(DebugLevel::ERROR, ("ERROR: setTSChannelDesc() - null value"));
+		DEBUGPRINT(DebugLevel::ERROR, nl);
+		DEBUGPRINTLN(DebugLevel::ERROR, ("ERROR: setTSChannelDesc() - null value"));
 	}
 }
 
@@ -235,7 +248,7 @@ String Device::getNameByPosition(int _pos) {
 			return getTSFieldExtraName(ext);
 		}
 	}
-	return String("notset");
+	return String("not set");
 }
 
 //----------------------------------------------------------------------
@@ -244,8 +257,9 @@ String Device::getNameByPosition(int _pos) {
  * Position found starting with fieldExtra[] will be returned. So if
  * the field number is used for multiple fieldPort/FieldExtra, then only
  * the first one found is considered.
+ * Returns -1 on error
  */
-int Device::getPositionByTSFieldNumber(int fld) {
+int Device::getPositionByTSField18Number(int fld /* 1 .. 8 */) {
 	int pm = dinfo.getTSFieldPortMax();
 	if (fld > 0 && fld <= MAX_THINGSPEAK_FIELD_COUNT) {
 		// Look for assignment to field<fld>
@@ -256,13 +270,13 @@ int Device::getPositionByTSFieldNumber(int fld) {
 			if (fld == dinfo.getTSFieldPortNumber(p)) return p;
 		}
 	}
-	return 0;
+	return -1;
 }
 
-bool Device::isFieldUsed(int fld) {
+bool Device::isTSField18Used(int fld /* 1 .. 8 */) {
 // Description: Returns true if the Thingspeak field (1..8) is assigned to something.
 // Algorithm: Loop through all the ports and Extra and see if the field is assigned to anything.
-	if (getPositionByTSFieldNumber(fld) == 0) return false;
+	if (getPositionByTSField18Number(fld) < 0) return false;
 	return true;
 }
 
@@ -284,8 +298,8 @@ void Device::setcDeviceName(const char* newname) {
 		strncpy(db.device.name, newname, sizeof(db.device.name) - 1);
 	}
 	else {
-		debug.print(DebugLevel::ERROR, nl);
-		debug.println(DebugLevel::ERROR, ("ERROR: setcDeviceName() - null value"));
+		DEBUGPRINT(DebugLevel::ERROR, nl);
+		DEBUGPRINTLN(DebugLevel::ERROR, ("ERROR: setcDeviceName() - null value"));
 	}
 }
 
@@ -313,7 +327,7 @@ void Device::setPortMode(int portnum, sensorModule _mode) {
 		db.port[portnum].mode = _mode;
 	}
 	else {
-		debug.println(DebugLevel::ERROR, ("ERROR: Device::setPortMode() - invalid port"));
+		DEBUGPRINTLN(DebugLevel::ERROR, ("ERROR: Device::setPortMode() - invalid port"));
 	}
 }
 
@@ -326,11 +340,11 @@ String Device::getModeStr(int portnum) {
 			s = String(String(m) + ":" + String(sensorList[m].name));
 		}
 		else {
-			debug.print(DebugLevel::ERROR, ("ERROR: Device::getModeStr() - invalid mode"));
+			DEBUGPRINT(DebugLevel::ERROR, ("ERROR: Device::getModeStr() - invalid mode"));
 		}
 	}
 	else {
-		debug.println(DebugLevel::ERROR, ("ERROR: Device::getModeStr() - invalid port"));
+		DEBUGPRINTLN(DebugLevel::ERROR, ("ERROR: Device::getModeStr() - invalid port"));
 	}
 	return s;
 }
@@ -340,7 +354,7 @@ void Device::setPortName(int portnum, String _n) {
 		strncpy(db.port[portnum].name, _n.c_str(), sizeof(db.port[portnum].name) - 1);
 	}
 	else {
-		debug.println(DebugLevel::ERROR, ("ERROR: Device::setPortName() - invalid port"));
+		DEBUGPRINTLN(DebugLevel::ERROR, ("ERROR: Device::setPortName() - invalid port"));
 	}
 }
 
@@ -349,7 +363,7 @@ String Device::getPortName(int portnum) {
 		return this->db.port[portnum].name;
 	}
 	else {
-		debug.println(DebugLevel::ERROR, ("ERROR: Device::getPortName() - invalid port"));
+		DEBUGPRINTLN(DebugLevel::ERROR, ("ERROR: Device::getPortName() - invalid port"));
 	}
 	return String("undefined");
 }
@@ -361,11 +375,11 @@ double Device::getPortAdj(int portnum, int adjnum) {
 			return this->db.port[portnum].adj[adjnum];
 		}
 		else {
-			debug.println(DebugLevel::ERROR, ("ERROR: Device::getPortAdj() - invalid adj index"));
+			DEBUGPRINTLN(DebugLevel::ERROR, ("ERROR: Device::getPortAdj() - invalid adj index"));
 		}
 	}
 	else {
-		debug.println(DebugLevel::ERROR, ("ERROR: Device::getPortAdj() - invalid port"));
+		DEBUGPRINTLN(DebugLevel::ERROR, ("ERROR: Device::getPortAdj() - invalid port"));
 	}
 	return 0.0;
 }
@@ -376,11 +390,11 @@ void Device::setPortAdj(int portnum, int adjnum, double v) {
 			db.port[portnum].adj[adjnum] = v;
 		}
 		else {
-			debug.println(DebugLevel::ERROR, ("ERROR: Device::setPortAdj() - invalid adj index"));
+			DEBUGPRINTLN(DebugLevel::ERROR, ("ERROR: Device::setPortAdj() - invalid adj index"));
 		}
 	}
 	else {
-		debug.println(DebugLevel::ERROR, ("ERROR: Device::setPortAdj() - invalid port"));
+		DEBUGPRINTLN(DebugLevel::ERROR, ("ERROR: Device::setPortAdj() - invalid port"));
 	}
 }
 

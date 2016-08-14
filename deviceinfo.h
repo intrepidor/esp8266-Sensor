@@ -179,13 +179,13 @@ public:
 //    getTSFieldExtraMax() and getTSFieldPortMax();
 //
 	String getNameByPosition(int _pos);
-	int getPositionByTSFieldNumber(int fld);
+	int getPositionByTSField18Number(int fld);
 	int getFieldByPosition(int _pos);
 
 //--------------------------------------------------------
 // Thingspeak Fields (field1, field2, ... field 8
 //
-	bool isFieldUsed(int fld);
+	bool isTSField18Used(int fld);
 
 //--------------------------------------------------------
 // Device Name and ID

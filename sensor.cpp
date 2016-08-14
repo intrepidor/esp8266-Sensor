@@ -71,7 +71,7 @@ bool Sensor::isValueChannelValid(int _channel) {
 	if (_channel >= 0 && _channel < SENSOR_VALUE_COUNT) { // FIXME getSensorValueCount()) {
 		return true;
 	}
-	debug.println(DebugLevel::ERROR, F("ERROR: isValueChannelValid() channel out of bounds"));
+	DEBUGPRINTLN(DebugLevel::ERROR, F("ERROR: isValueChannelValid() channel out of bounds"));
 	return false;
 }
 
@@ -208,7 +208,7 @@ bool Sensor::isCalChannelValid(int _channel) {
 	if (_channel >= 0 && _channel < getSensorCalCount()) {
 		return true;
 	}
-	debug.println(DebugLevel::ERROR, F("ERROR: isCalChannelValid() channel out of bounds"));
+	DEBUGPRINTLN(DebugLevel::ERROR, F("ERROR: isCalChannelValid() channel out of bounds"));
 	return false;
 }
 

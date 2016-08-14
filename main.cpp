@@ -195,7 +195,7 @@ void ConfigurePorts(void) {
 // Loop through each of the ports
 	for (int portNumber = 0; portNumber < dinfo.getPortMax(); portNumber++) {
 		// Get the pins used for this port
-		debug.println(DebugLevel::TIMINGS, "portNumber=" + String(portNumber));
+		DEBUGPRINTLN(DebugLevel::TIMINGS, "portNumber=" + String(portNumber));
 		switch (portNumber) {
 			case 0: // port#0
 				p.digital = DIGITAL_PIN_1;
@@ -222,8 +222,8 @@ void ConfigurePorts(void) {
 				p.scl = I2C_SCL_PIN;
 				break;
 			default:
-				debug.print(DebugLevel::ERROR, F("ERROR: ConfigurePorts() - port number out of range -"));
-				debug.println(DebugLevel::ERROR, portNumber);
+				DEBUGPRINT(DebugLevel::ERROR, F("ERROR: ConfigurePorts() - port number out of range -"));
+				DEBUGPRINTLN(DebugLevel::ERROR, portNumber);
 				break;
 		}
 
@@ -237,7 +237,7 @@ void ConfigurePorts(void) {
 				strncpy(name, sensorList[static_cast<int>(portType)].name, 19);
 				name[19] = 0;
 				// found the setting
-				debug.println(DebugLevel::INFO,
+				DEBUGPRINTLN(DebugLevel::INFO,
 						"Configuring Port#" + String(portNumber) + ", name= " + String(name) + ", type="
 								+ getSensorModuleName(static_cast<sensorModule>(portType)));
 				//lint -e{30, 142} suppress error due to lint not understanding enum classes
@@ -327,8 +327,8 @@ void ConfigurePorts(void) {
 					} // switch (portType)
 				} // if (portNumber...)
 				else {
-					debug.print(DebugLevel::ERROR, F("ERROR: ConfigurePort() - portNumber out of range - "));
-					debug.println(DebugLevel::ERROR, portNumber);
+					DEBUGPRINT(DebugLevel::ERROR, F("ERROR: ConfigurePort() - portNumber out of range - "));
+					DEBUGPRINTLN(DebugLevel::ERROR, portNumber);
 				}
 			} // if (portMode ...)
 		} // for (portType ...)
@@ -429,34 +429,34 @@ int task_acquire(unsigned long now) {
 	if (next_acquire_number >= 0) {
 		switch (subtask_number) {
 			case 0:
-				debug.print(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(sensor_number));
-				debug.println(DebugLevel::TIMINGS, F("]->acquire_setup START"));
+				DEBUGPRINT(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(sensor_number));
+				DEBUGPRINTLN(DebugLevel::TIMINGS, F("]->acquire_setup START"));
 				sensors[sensor_number]->acquire_setup(); //lint !e661
 				_then = millis();
 				_dur = _then - _now;
-				debug.print(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensor_number));
-				debug.print(DebugLevel::TIMINGS, F("]->acquire_setup DONE \t\ttime="));
-				debug.println(DebugLevel::TIMINGS, _dur);
+				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensor_number));
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire_setup DONE \t\ttime="));
+				DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
 				break;
 			case 1:
-				debug.print(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(sensor_number));
-				debug.println(DebugLevel::TIMINGS, F("]->acquire1 START"));
+				DEBUGPRINT(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(sensor_number));
+				DEBUGPRINTLN(DebugLevel::TIMINGS, F("]->acquire1 START"));
 				sensors[sensor_number]->acquire1(); //lint !e661
 				_then = millis();
 				_dur = _then - _now;
-				debug.print(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensor_number));
-				debug.print(DebugLevel::TIMINGS, F("]->acquire1 DONE \t\ttime="));
-				debug.println(DebugLevel::TIMINGS, _dur);
+				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensor_number));
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire1 DONE \t\ttime="));
+				DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
 				break;
 			case 2:
-				debug.print(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(sensor_number));
-				debug.println(DebugLevel::TIMINGS, F("]->acquire2 START"));
+				DEBUGPRINT(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(sensor_number));
+				DEBUGPRINTLN(DebugLevel::TIMINGS, F("]->acquire2 START"));
 				sensors[sensor_number]->acquire2(); //lint !e661
 				_then = millis();
 				_dur = _then - _now;
-				debug.print(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensor_number));
-				debug.print(DebugLevel::TIMINGS, F("]->acquire2 DONE \t\ttime="));
-				debug.println(DebugLevel::TIMINGS, _dur);
+				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensor_number));
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire2 DONE \t\ttime="));
+				DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
 				break;
 			default:
 				break;
@@ -519,8 +519,10 @@ void printExtendedMenu(void) {
 	Serial.println(F("X  EspClass::reset()"));
 	Serial.println(F("Y  EspClass::restart()"));
 	Serial.println(F("W  Test Watchdog (block here forever)"));
-	Serial.print("D  [" + debug.getDebugLevelString());
-	Serial.println(F("] Debug level for logging to serial port"));
+	if (DEBUGPRINT_ENABLED) {
+		Serial.print("D  [" + debug.getDebugLevelString());
+		Serial.println(F("] Debug level for logging to serial port"));
+	}
 	Serial.println("");
 }
 
@@ -658,9 +660,14 @@ int task_serialport_menu(unsigned long now) {
 				Serial.println(F("Database written to EEPROM."));
 				break;
 			case 'D':
-				dinfo.setDebugLevel(static_cast<int>(debug.incrementDebugLevel()));
-				Serial.println("Debug Level set to: " + debug.getDebugLevelString());
-				if (eeprom_is_dirty) dinfo.saveDatabaseToEEPROM();
+				if (DEBUGPRINT_ENABLED) {
+					dinfo.setDebugLevel(static_cast<int>(debug.incrementDebugLevel()));
+					Serial.println("Debug Level set to: " + debug.getDebugLevelString());
+					if (eeprom_is_dirty) dinfo.saveDatabaseToEEPROM();
+				}
+				else {
+					Serial.println(F("Debug statements not in binary"));
+				}
 				break;
 			case 'E': // Read the EEPROM into the RAM data structure, then dump the contents
 				Serial.print(nl);

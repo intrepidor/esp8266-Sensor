@@ -140,7 +140,7 @@ String TemperatureSensor::getsInfo(String eol) {
 }
 
 bool TemperatureSensor::acquire_setup(void) {
-	debug.println(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(digital_pin));
+	DEBUGPRINTLN(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(digital_pin));
 	pinMode(digital_pin, INPUT);
 	sensorModule m = getModule();
 	if (m == sensorModule::ds18b20) {

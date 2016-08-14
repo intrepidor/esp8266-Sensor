@@ -19,8 +19,8 @@ void Device::restoreDatabaseFromEEPROM(void) {
 		*(pp + addr) = EEPROM.read(static_cast<int>(addr));
 	}
 	eeprom_is_dirty = false;
-	debug.println(DebugLevel::EEPROM, nl);
-	debug.println(DebugLevel::EEPROM, F("Data copied from EEPROM into RAM data structure"));
+	DEBUGPRINTLN(DebugLevel::EEPROM, nl);
+	DEBUGPRINTLN(DebugLevel::EEPROM, F("Data copied from EEPROM into RAM data structure"));
 	// Look for the EEPROM signature. Failure to find this means the EEPROM data was
 	//    never stored, such as the case with a freshly programmed micro.
 	if (dinfo.db.end_of_eeprom_signature != EEPROM_SIGNATURE) {
@@ -39,15 +39,15 @@ bool Device::saveDatabaseToEEPROM(void) {
 	}
 
 	if (EEPROM.commit()) {
-		debug.println(DebugLevel::EEPROM, nl);
-		debug.println(DebugLevel::EEPROM, F("Write from RAM data structure to EEPROM ok."));
+		DEBUGPRINTLN(DebugLevel::EEPROM, nl);
+		DEBUGPRINTLN(DebugLevel::EEPROM, F("Write from RAM data structure to EEPROM ok."));
 		restoreDatabaseFromEEPROM();
 		eeprom_is_dirty = false;
 		return true;
 	}
 	else {
-		debug.println(DebugLevel::ERROR, nl);
-		debug.println(DebugLevel::ERROR, F("ERROR: Write to EEPROM failed!"));
+		DEBUGPRINTLN(DebugLevel::ERROR, nl);
+		DEBUGPRINTLN(DebugLevel::ERROR, F("ERROR: Write to EEPROM failed!"));
 		return false; // signal error
 	}
 }
@@ -58,15 +58,15 @@ bool Device::eraseEEPROM(void) {
 	}
 
 	if (EEPROM.commit()) {
-		debug.println(DebugLevel::DEBUG, nl);
-		debug.println(DebugLevel::DEBUG, F("EEPROM Cleared."));
+		DEBUGPRINTLN(DebugLevel::DEBUG, nl);
+		DEBUGPRINTLN(DebugLevel::DEBUG, F("EEPROM Cleared."));
 		restoreDatabaseFromEEPROM();
 		eeprom_is_dirty = true;
 		return true;
 	}
 	else {
-		debug.println(DebugLevel::ERROR, nl);
-		debug.println(DebugLevel::ERROR, F("ERROR: EEPROM Clear failed."));
+		DEBUGPRINTLN(DebugLevel::ERROR, nl);
+		DEBUGPRINTLN(DebugLevel::ERROR, F("ERROR: EEPROM Clear failed."));
 		return false; // signal error
 	}
 	return false;

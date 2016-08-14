@@ -76,16 +76,16 @@ bool GenericSensor::acquire_setup(void) {
 	}
 	else {
 		if (getModule() == sensorModule::analog || getModule() == sensorModule::analog_digital) {
-			debug.println(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(analog_pin));
+			DEBUGPRINTLN(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(analog_pin));
 			started = true;
 		}
 		if (getModule() == sensorModule::digital || getModule() == sensorModule::analog_digital) {
-			debug.println(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(digital_pin));
+			DEBUGPRINTLN(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(digital_pin));
 			pinMode(digital_pin, INPUT);
 			started = true;
 		}
 		if (getModule() == sensorModule::taskclock) {
-			debug.println(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(digital_pin));
+			DEBUGPRINTLN(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(digital_pin));
 			pinMode(digital_pin, OUTPUT);
 			started = true;
 		}

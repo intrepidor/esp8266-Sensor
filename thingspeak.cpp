@@ -73,10 +73,10 @@ String getsThingspeakChannelInfo(String eol) {
 	}
 	s += "== Field Mapping to Position == " + eol;
 	for (fld = 1; fld <= MAX_THINGSPEAK_FIELD_COUNT; fld++) {
-		int _pos = dinfo.getPositionByTSFieldNumber(fld);
-		s += "  Field" + String(fld) + " = Position" + _pos + ", " + getDescriptionByPosition(_pos);
-		s += ", " + dinfo.getNameByPosition(_pos) + ", ";
-		if (dinfo.isFieldUsed(fld)) {
+		int _pos = dinfo.getPositionByTSField18Number(fld);
+		s += "  Field" + String(fld) + ": Position " + _pos + ", Desc=" + getDescriptionByPosition(_pos);
+		s += ", Name=" + dinfo.getNameByPosition(_pos) + ", Status=";
+		if (dinfo.isTSField18Used(fld)) {
 			s += "used";
 		}
 		else {
@@ -141,12 +141,11 @@ String ThingspeakPushChannelSettings(String eol, bool show_everything) {
 	String data("api_key=" + dinfo.getThingspeakUserApikey());
 	data += "&name=" + getURLEncode(dinfo.getTSChannelName());
 	data += "&description=" + getURLEncode(dinfo.getTSChannelDesc());
-	data += "&field1=" + getURLEncode("myfield1");
 	for (int fld = 1; fld <= MAX_THINGSPEAK_FIELD_COUNT; fld++) {
-		int _pos = dinfo.getPositionByTSFieldNumber(fld);
+		int _pos = dinfo.getPositionByTSField18Number(fld);
 		data += "&field" + String(fld) + "=";
 		// skip unused fields
-		if (dinfo.isFieldUsed(fld)) {
+		if (dinfo.isTSField18Used(fld)) {
 			data += getURLEncode(dinfo.getNameByPosition(_pos));
 		}
 		else {
@@ -240,7 +239,7 @@ void updateThingspeak(void) {
 	WiFiClient client;
 	String gStr = "/update?api_key=" + dinfo.getThingspeakApikey();
 	for (int fld = 1; fld <= MAX_THINGSPEAK_FIELD_COUNT; fld++) {
-		int pos = dinfo.getPositionByTSFieldNumber(fld);
+		int pos = dinfo.getPositionByTSField18Number(fld);
 		gStr += "&field" + String(fld) + "=" + getValueByPosition(pos);
 	}
 
@@ -254,7 +253,7 @@ void updateThingspeak(void) {
 	}
 	else {
 		kickExternalWatchdog();
-		debug.println(DebugLevel::HTTPGET,
+		DEBUGPRINTLN(DebugLevel::HTTPGET,
 				nl + "updateThingspeak(): Connecting to " + dinfo.getThingspeakIpaddr() + ": "
 						+ getTCPStatusString(client.status()) + " : Success");
 
@@ -262,7 +261,7 @@ void updateThingspeak(void) {
 		String getStr = "GET " + gStr + "HTTP/1.1";
 
 // Send the command
-		debug.println(DebugLevel::HTTPGET, "Sending -> " + getStr);
+		DEBUGPRINTLN(DebugLevel::HTTPGET, "Sending -> " + getStr);
 		yield();
 		kickExternalWatchdog();
 		size_t r = client.println(getStr); // this takes about 1 second (no watchdogs during this time)
@@ -273,7 +272,7 @@ void updateThingspeak(void) {
 		r += client.println();
 
 // Read the response
-		debug.println(DebugLevel::HTTPGET, "        -> " + String(r) + " bytes sent");
+		DEBUGPRINTLN(DebugLevel::HTTPGET, "        -> " + String(r) + " bytes sent");
 
 		if (r == 0) {
 			Serial.println(getStr + "  Send FAILED");
@@ -281,7 +280,7 @@ void updateThingspeak(void) {
 		}
 		else if (client.available()) {
 			String response = client.readString();
-			debug.println(DebugLevel::HTTPGET, "Response: " + response);
+			DEBUGPRINTLN(DebugLevel::HTTPGET, "Response: " + response);
 			if (isdigit(response.charAt(0))) {
 				thinkspeak_total_entries = response.toInt();
 				thingspeak_update_counter++;
