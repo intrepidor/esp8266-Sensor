@@ -1,6 +1,7 @@
 #include <EEPROM.h>
 #include <Esp.h>
 #include <Ticker.h>
+#include <Adafruit_ADS1015.h>
 //#include <gdbstub.h>
 #include "main.h"
 #include "temperature.h"
@@ -56,9 +57,14 @@ const uint8_t DIGITAL_PIN_3 = D6;
 const uint8_t DIGITAL_PIN_4 = D8;
 const uint8_t WATCHDOG_WOUT_PIN = D7; // toggle this pin for the external watchdog
 
-const uint8_t ANALOG_PIN = A0;
+const uint8_t ANALOG_PIN = A0; // this is the analog input pin on the ESP8266
 const uint8_t I2C_SDA_PIN = 2; // Use number directly since arduino_pins.h for nodemcu has the SDA mapping wrong
 const uint8_t I2C_SCL_PIN = 14; // Use number directly since arduino_pins.h for nodemcu has the SCL mapping wrong
+
+const uint8_t ADS1115_A0 = 0;	// this is the analog input pin on the ADS1115 separate module
+const uint8_t ADS1115_A1 = 1;	// this is the analog input pin on the ADS1115 separate module
+const uint8_t ADS1115_A2 = 2;	// this is the analog input pin on the ADS1115 separate module
+const uint8_t ADS1115_A3 = 3;	// this is the analog input pin on the ADS1115 separate module
 //--------------------------------------------------
 
 // LED on the ESP board
@@ -75,6 +81,9 @@ Device dinfo; // create AFTER Sensor declaration above
 Queue myQueue;
 bool outputTaskClock = false;
 uint8_t outputTaskClockPin = BUILTIN_LED;
+
+Adafruit_ADS1115 ads1115; /* Use this for the 16-bit version */
+float ADS1115_MV_PER_BIT = 1;
 
 //extern void pp_soft_wdt_stop();
 
@@ -144,6 +153,32 @@ void setup(void) {
 	WebInit(); // Calls WiFiManager to make sure connected to access point.
 	kickAllWatchdogs();
 
+// Configure ADS1115
+	/* Some "drivers" may also call Wire.begin(). That is ok so long
+	 * as they use the same pins for SDA and SCL. The Wire object is a
+	 * global, and calling Wire.begin() multiple times does no harm.
+	 * It's called here globally for the ADS1115 which supplies the ADC for the analog
+	 * pin in each port.
+	 */
+#ifdef ARDUINO_ESP8266_ESP12
+	Wire.begin(2, 14); // the pins for SDA and SCL in nodemcu/pins_arduino.h are wrong! So specify them directly here.
+#else
+	Wire.begin(); // does not work for ESP8266 due to bug in ESP8266_Arduino library
+#endif
+	// The ADC input range (or gain) can be changed via the following
+	// functions, but be careful never to exceed VDD +0.3V max, or to
+	// exceed the upper and lower limits if you adjust the input range!
+	// Setting these values incorrectly may destroy your ADC!
+	//
+	ads1115.setGain(GAIN_TWOTHIRDS);  // 2/3x gain +/- 6.144V  1 bit = 0.1875mV (default)
+	// ads1115.setGain(GAIN_ONE);        // 1x gain   +/- 4.096V  1 bit = 0.125mV
+	// ads1115.setGain(GAIN_TWO);        // 2x gain   +/- 2.048V  1 bit = 0.0625mV
+	// ads1115.setGain(GAIN_FOUR);       // 4x gain   +/- 1.024V  1 bit = 0.03125mV
+	// ads1115.setGain(GAIN_EIGHT);      // 8x gain   +/- 0.512V  1 bit = 0.015625mV
+	// ads1115.setGain(GAIN_SIXTEEN);    // 16x gain  +/- 0.256V  1 bit = 0.0078125mV
+	ADS1115_MV_PER_BIT = 0.1875;
+	ads1115.begin();
+
 // Configure Sensors
 	ConfigurePorts();
 	kickAllWatchdogs();
@@ -199,25 +234,25 @@ void ConfigurePorts(void) {
 		switch (portNumber) {
 			case 0: // port#0
 				p.digital = DIGITAL_PIN_1;
-				p.analog = ANALOG_PIN;
+				p.analog = ADS1115_A0;
 				p.sda = I2C_SDA_PIN;
 				p.scl = I2C_SCL_PIN;
 				break;
 			case 1: // port#1
 				p.digital = DIGITAL_PIN_2;
-				p.analog = ANALOG_PIN;
+				p.analog = ADS1115_A1;
 				p.sda = I2C_SDA_PIN;
 				p.scl = I2C_SCL_PIN;
 				break;
 			case 2: // port#2
 				p.digital = DIGITAL_PIN_3;
-				p.analog = ANALOG_PIN;
+				p.analog = ADS1115_A2;
 				p.sda = I2C_SDA_PIN;
 				p.scl = I2C_SCL_PIN;
 				break;
 			case 3: // port#3
 				p.digital = DIGITAL_PIN_4;
-				p.analog = ANALOG_PIN;
+				p.analog = ADS1115_A3;
 				p.sda = I2C_SDA_PIN;
 				p.scl = I2C_SCL_PIN;
 				break;
@@ -514,6 +549,7 @@ void printExtendedMenu(void) {
 	Serial.println(F("M  show data structure in RAM"));
 	Serial.println(F("C  write defaults to configuration memory"));
 	Serial.println(F("S  show Sensor debug info"));
+	Serial.println(F("P  read pin values"));
 	Serial.println(F("R  show reason for last reset"));
 	Serial.println(F("I  show ESP information"));
 	Serial.println(F("X  EspClass::reset()"));
@@ -681,6 +717,22 @@ int task_serialport_menu(unsigned long now) {
 				Serial.println(F("=== Data in RAM ==="));
 				Serial.println(dinfo.databaseToString(nl.c_str()));
 				Serial.println("");
+				break;
+			case 'P':
+				Serial.println(F("=== Current Port pin values ==="));
+				for (int portNumber = 0; portNumber < dinfo.getPortMax(); portNumber++) {
+					int d = sensors[portNumber]->getDigitalPin();
+					int a = sensors[portNumber]->getAnalogPin();
+					if (a < 0 || a > 3) a = 0;
+					Serial.println("Port #" + String(portNumber));
+					Serial.print("  Digital (" + String(d) + "):\t");
+					if (digitalRead(d)) Serial.println("HIGH");
+					else Serial.println("LOW");
+					Serial.print("  Analog  (" + String(a) + "):\t");
+					float ar = ads1115.readADC_SingleEnded(a);
+					Serial.print(String(ar) + " or ");
+					Serial.println(String(ar * ADS1115_MV_PER_BIT) + " mV");
+				}
 				break;
 			case 'I':
 				Serial.print(F("CycleCount:\t\t"));

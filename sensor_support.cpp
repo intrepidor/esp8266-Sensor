@@ -44,7 +44,7 @@ float getValueByPosition(int _pos) {
 		case 9:
 			return static_cast<float>(WiFi.RSSI());
 		case 10:
-			return static_cast<float>(millis() / MS_PER_MINUTE);
+			return static_cast<float>(millis() / static_cast<float>(MS_PER_MINUTE));
 		default:
 			return NAN;
 	}

@@ -488,7 +488,7 @@ int ConfigurationChange(void) {
 	bool taskclock_found = false;
 	bool ts_enable = false;
 	bool temp_farhen = false;
-	int which_form = 0;	// 0=unknown; 1=Device Config, 2=Thingspeak Config
+	//int which_form = 0;	// 0=unknown; 1=Device Config, 2=Thingspeak Config
 	if (server.args() > 0) {
 		bool found = false;
 		DEBUGPRINTLN(DebugLevel::WEBPAGEPROCESSING, "");
@@ -504,13 +504,13 @@ int ConfigurationChange(void) {
 			//   Run the page specific code and initializations.
 			if (sarg == String("configtype")) {
 				if (varg == "device") {
-					which_form = 1;
+					//which_form = 1;
 					if (!ts_enable) {
 						dinfo.setFahrenheitUnit(false);
 					}
 				}
 				else if (varg == "thingspeak") {
-					which_form = 2;
+					//which_form = 2;
 					if (!temp_farhen) {
 						dinfo.setThingspeakEnable(false);
 					}

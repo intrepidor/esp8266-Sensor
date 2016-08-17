@@ -137,6 +137,9 @@ public:
 	int getDigitalPin(void) {
 		return this->pins.digital;
 	}
+	int getAnalogPin(void) {
+		return this->pins.analog;
+	}
 
 	// module
 	void setModule(sensorModule m) {

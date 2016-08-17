@@ -46,7 +46,7 @@ String getsThingspeakInfo(String eol) {
 String getsThingspeakChannelInfo(String eol) {
 	String s("== Thingspeak Channel Info ==" + eol);
 	int fld = 0;
-	bool fields[MAX_THINGSPEAK_FIELD_COUNT] = { 0 };
+	bool fields[MAX_THINGSPEAK_FIELD_COUNT] = { false };
 	s += "Channel Name: " + dinfo.getTSChannelName() + eol;
 	s += "Channel Desc: " + dinfo.getTSChannelDesc() + eol;
 	s += "Extra Fields: " + String(dinfo.getTSFieldExtraMax()) + eol;

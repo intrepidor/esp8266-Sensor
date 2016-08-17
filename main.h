@@ -40,6 +40,7 @@ const bool DEBUGPRINT_ENABLED = true;
 #define DEBUGPRINT
 #define DEBUGPRINTLN
 const bool DEBUGPRINT_ENABLED = false;
+//lint -e522	// only suppress if DEBUGPRINT is an empty macro
 #endif
 ////////////////
 extern const uint8_t PIN_SOFTRESET;

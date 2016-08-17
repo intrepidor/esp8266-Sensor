@@ -98,7 +98,7 @@ String getURLEncode(const char* msg) {
 			}
 			else {
 				encodedMsg += '%';
-				encodedMsg += hex[*msg >> 4];
+				encodedMsg += hex[static_cast<unsigned char>(*msg) >> 4];
 				encodedMsg += hex[*msg & 15];
 			}
 			msg++;
