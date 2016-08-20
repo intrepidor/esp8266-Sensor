@@ -9,6 +9,7 @@
 #define MAIN_H_
 
 #include <Arduino.h>
+#include <Adafruit_ADS1015.h>
 #include "Queue.h"
 #include "temperature.h"
 #include "deviceinfo.h"
@@ -27,6 +28,7 @@ extern String ProgramInfo;
 
 extern const int SENSOR_COUNT;
 extern Sensor* sensors[];
+extern Adafruit_ADS1115 ads1115;
 
 extern Device dinfo;
 extern Queue myQueue;

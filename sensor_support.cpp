@@ -36,9 +36,9 @@ float getValueByPosition(int _pos) {
 		case 5:
 			return sensors[2]->getValue(1);
 		case 6:
-			return sensors[3]->getValue(0);
+			return NAN; //sensors[3]->getValue(0);
 		case 7:
-			return sensors[3]->getValue(1);
+			return NAN; //sensors[3]->getValue(1);
 		case 8:
 			return static_cast<float>(PIRcount);
 		case 9:
@@ -66,9 +66,9 @@ String getDescriptionByPosition(int _pos) {
 		case 5:
 			return F("Port2/chan1 (sensors[2].value[1])");
 		case 6:
-			return F("Port3/chan0 (sensors[3].value[0])");
+			return F("bug here"); //F("Port3/chan0 (sensors[3].value[0])");
 		case 7:
-			return F("Port3/chan1 (sensors[3].value[1])");
+			return F("bug here"); // F("Port3/chan1 (sensors[3].value[1])");
 		case 8:
 			return F("PIR");
 		case 9:

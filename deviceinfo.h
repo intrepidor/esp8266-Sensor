@@ -24,7 +24,7 @@ const unsigned long MIN_THINGSPEAK_UPDATE_PERIOD_MS = (20000); // 20 seconds
 
 //-----------------------------------------------------------------------------------
 // Device Class
-const int MAX_PORTS = 4;
+const int MAX_PORTS = 3;
 const int MAX_ADJ = 4;
 const int STRING_LENGTH = 19; // 1 less than 4-byte boundary for terminating null
 const int URL_LENGTH = 119;	// 1 less than 4 byte boundary for terminating null

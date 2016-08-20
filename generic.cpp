@@ -99,11 +99,11 @@ bool GenericSensor::acquire_setup(void) {
 bool GenericSensor::acquire1(void) {
 	if (started) {
 		if (getModule() == sensorModule::analog || getModule() == sensorModule::analog_digital) {
-			int a = analogRead(analog_pin);
+			uint16_t a = ads1115.readADC_SingleEnded(analog_pin);
 
 			// raw, non-corrected, values
 			setRawAnalog(static_cast<float>(a));
-			double a1 = a;
+			double a1 = a * ads1115.getMilliVoltsPerCount();
 			double a2 = a1 * a1;
 			double a3 = a2 * a1;
 

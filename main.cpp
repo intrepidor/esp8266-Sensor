@@ -1,7 +1,6 @@
 #include <EEPROM.h>
 #include <Esp.h>
 #include <Ticker.h>
-#include <Adafruit_ADS1015.h>
 //#include <gdbstub.h>
 #include "main.h"
 #include "temperature.h"
@@ -74,8 +73,8 @@ const uint8_t ADS1115_A3 = 3;	// this is the analog input pin on the ADS1115 sep
 // Create Objects --- note the order of creation is important
 DebugPrint debug;	// This must appear before Sensor and Device class declarations.
 
-const int SENSOR_COUNT = 4; // should be at least equal to the value of MAX_PORTS
-Sensor* sensors[SENSOR_COUNT] = { nullptr, nullptr, nullptr, nullptr };
+const int SENSOR_COUNT = MAX_PORTS; // should be at least equal to the value of MAX_PORTS
+Sensor* sensors[SENSOR_COUNT] = { nullptr };
 
 Device dinfo; // create AFTER Sensor declaration above
 Queue myQueue;
@@ -83,7 +82,6 @@ bool outputTaskClock = false;
 uint8_t outputTaskClockPin = BUILTIN_LED;
 
 Adafruit_ADS1115 ads1115; /* Use this for the 16-bit version */
-float ADS1115_MV_PER_BIT = 1;
 
 //extern void pp_soft_wdt_stop();
 
@@ -133,6 +131,9 @@ void setup(void) {
 		Serial.println(F("SDA held low -- erasing the EEPROM"));
 		dinfo.eraseEEPROM();
 	}
+	else {
+		Serial.println(F("If the EEPROM is corrupt, hold SDA low during startup to erase it."));
+	}
 	kickAllWatchdogs();
 
 	/* Copy persisted data from EEPROM into RAM */
@@ -176,7 +177,6 @@ void setup(void) {
 	// ads1115.setGain(GAIN_FOUR);       // 4x gain   +/- 1.024V  1 bit = 0.03125mV
 	// ads1115.setGain(GAIN_EIGHT);      // 8x gain   +/- 0.512V  1 bit = 0.015625mV
 	// ads1115.setGain(GAIN_SIXTEEN);    // 16x gain  +/- 0.256V  1 bit = 0.0078125mV
-	ADS1115_MV_PER_BIT = 0.1875;
 	ads1115.begin();
 
 // Configure Sensors
@@ -554,6 +554,7 @@ void printExtendedMenu(void) {
 	Serial.println(F("I  show ESP information"));
 	Serial.println(F("X  EspClass::reset()"));
 	Serial.println(F("Y  EspClass::restart()"));
+	Serial.println(F("Z  show size of datatypes"));
 	Serial.println(F("W  Test Watchdog (block here forever)"));
 	if (DEBUGPRINT_ENABLED) {
 		Serial.print("D  [" + debug.getDebugLevelString());
@@ -731,7 +732,7 @@ int task_serialport_menu(unsigned long now) {
 					Serial.print("  Analog  (" + String(a) + "):\t");
 					float ar = ads1115.readADC_SingleEnded(a);
 					Serial.print(String(ar) + " or ");
-					Serial.println(String(ar * ADS1115_MV_PER_BIT) + " mV");
+					Serial.println(String(ar * ads1115.getMilliVoltsPerCount()) + " mV");
 				}
 				break;
 			case 'I':
@@ -826,6 +827,31 @@ int task_serialport_menu(unsigned long now) {
 				for (;;) {
 					yield();
 				} // loop forever so the software watchdog for this task trips, but yield to the ESP OS
+				break;
+			case 'Z':
+				Serial.println(F("Datatype sizes in bytes:"));
+				Serial.print(F("bool:        "));
+				Serial.println(sizeof(bool));
+				Serial.print(F("char:        "));
+				Serial.println(sizeof(char));
+				Serial.print(F("wchar_t:     "));
+				Serial.println(sizeof(wchar_t));
+				Serial.print(F("short:       "));
+				Serial.println(sizeof(short));
+				Serial.print(F("int:         "));
+				Serial.println(sizeof(int));
+				Serial.print(F("long:        "));
+				Serial.println(sizeof(long));
+				Serial.print(F("long long:   "));
+				Serial.println(sizeof(long long));
+				Serial.print(F("float:       "));
+				Serial.println(sizeof(float));
+				Serial.print(F("double:      "));
+				Serial.println(sizeof(double));
+				Serial.print(F("long double: "));
+				Serial.println(sizeof(long double));
+				Serial.print(F("char*:       "));
+				Serial.println(sizeof(char*));
 				break;
 			default:
 				Serial.println("Unknown command: " + String(ch));
