@@ -32,7 +32,7 @@ String getsThingspeakInfo(String eol) {
 	s += "Update Period[sec]: " + String(dinfo.getThingspeakUpdatePeriodSeconds()) + eol;
 	s += "Queue.recur[ms]" + String(myQueue.getTimeInterval("thingspeak")) + eol;
 	s += "Next Update[sec]: " + String(next_update / MS_PER_SECOND) + eol;
-	s += "URL: " + dinfo.getThingspeakURL() + " (future use)" + eol;
+	s += "URL: " + dinfo.getThingspeakURL() + eol;
 	s += "Write Key: " + dinfo.getThingspeakApikey() + eol;
 	s += "User API Key: " + dinfo.getThingspeakUserApikey() + eol;
 	s += "Channel: " + String(dinfo.getThingspeakChannel()) + " (future use)" + eol;

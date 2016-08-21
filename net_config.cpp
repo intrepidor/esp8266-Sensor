@@ -94,34 +94,43 @@ ICACHE_FLASH_ATTR const char sHTTP_CSS[] = "<STYLE type=\"text/css\">"
 		"  background-color:DarkCyan;"
 		"  float:left;"
 		"}"
-		".defaultbutton{"
-		"background-color:darksalmon;"
-		"  float:left;"
-		"  color:black;"
-		"}"
-		".rebootbutton {"
-		"background-color:chocolate;"
-		"  float:left;"
-		"  color:black;"
-		"}"
 		".hrefbutton:hover{"
 		"  background:cyan;"
 		"  color:blue;"
 		"  text-decoration:none;"
 		"}"
-		".savebutton:hover{"
-		"  background:green;"
+		".defaultbutton{"
+		"background-color:darksalmon;"
+		"  float:left;"
 		"  color:black;"
-		"  text-decoration:none;"
 		"}"
 		".defaultbutton:hover{"
 		"  background:red;"
 		"  color:white;"
 		"  text-decoration:none;"
 		"}"
+		".mainmenubutton{"
+		"  background-color:Olive;"
+		"  float:left;"
+		"}"
+		".mainmenubutton:hover{"
+		"  background:DarkBlue;"
+		"  color:lightblue;"
+		"  text-decoration:none;"
+		"}"
+		".rebootbutton {"
+		"background-color:chocolate;"
+		"  float:left;"
+		"  color:black;"
+		"}"
 		".rebootbutton:hover{"
 		"  background:crimson;"
 		"  color:white;"
+		"  text-decoration:none;"
+		"}"
+		".savebutton:hover{"
+		"  background:green;"
+		"  color:black;"
 		"  text-decoration:none;"
 		"}"
 		".showdatacontainer{"
@@ -187,29 +196,42 @@ const char sHTTP_CONFIG_TYPE_DEVICE[] = "device\">";
 const char sHTTP_CONFIG_TYPE_THINGSPEAK[] = "thingspeak\">";
 
 //-----------------------------------------------------------------------------------
-const char sHTTP_BUTTONS[] = "<div class=\"savediv\">"
+const char sHTTP_SAVEBUTTON[] = "<div class=\"savediv\">"
 		"<input type=\"submit\" class=\"basebutton savebutton\" name=\"submit\" value=\"SAVE\"></div>";
-String getWebFooter(bool all, bool ts) {
+String getWebFooter(enum menu m) {
+	int menutype = static_cast<int>(m);
+
 	String wf("<div>");
 	String lin("\" href=\"http://" + localIPstr());
 	const String a("<a class=\"basebutton");
 	const String hre(" hrefbutton");
+	const String mmb(" mainmenubutton");
 	const String reb(" rebootbutton");
 	const String def(" defaultbutton");
-	wf += a + hre + lin + "\">Main Menu</a>";
-	wf += a + hre + lin + "/showdata\">Show Data</a>";
-	wf += a + hre + lin + "/csv\">Show CSV</a>";
-	wf += a + hre + lin + "/config\">Device Config</a>";
-	wf += a + hre + lin + "/tsconfig\">Thing Speak</a>";
-	wf += a + hre + lin + "/status\">Status</a>";
-	wf += a + hre + lin + "/sensordebug\">Sensor Debug</a>";
-	if (all) {
+	wf += a + mmb + lin + "\">Main Menu</a>";
+	if (menutype & (int) menu::Main) {
+		wf += a + hre + lin + "/config\">Device Config</a>";
+		wf += a + hre + lin + "/tsconfig\">Thing Speak</a>";
+		wf += a + hre + lin + "/utility\">Utility</a>";
+		wf += a + hre + lin + "/admin\">Admin</a>";
+	}
+	if (menutype & (int) menu::DeviceConfig) {
+	}
+	if (menutype & (int) menu::Utility) {
+		wf += a + hre + lin + "/showdata\">Show Data</a>";
+		wf += a + hre + lin + "/csv\">Show CSV</a>";
+		wf += a + hre + lin + "/status\">Status</a>";
+		wf += a + hre + lin + "/sensordebug\">Sensor Debug</a>";
+	}
+	if (menutype & (int) menu::Admin) {
 		wf += a + def + lin + "/factory_settings\">Factory Settings</a>";
-		if (ts) {
-			wf += a + def + lin + "/pushtschannelsettings\">Send to TS</a>";
-		}
 		wf += a + reb + lin + "/reboot\">Reboot</a>";
-		wf += sHTTP_BUTTONS;
+	}
+	if (menutype & (int) menu::Thingspeak) {
+		wf += a + def + lin + "/pushtschannelsettings\">Send to TS</a>";
+	}
+	if ((menutype & (int) menu::DeviceConfig) || (menutype & (int) menu::Thingspeak)) {
+		wf += sHTTP_SAVEBUTTON;
 	}
 	wf += sHTTP_DIVEND;
 	return wf;
@@ -326,7 +348,7 @@ void config(void) {
 	}
 
 // Buttons and links then END of Page
-	r = getWebFooter(true, false) + "</form></body></html>";
+	r = getWebFooter(menu::DeviceConfig) + "</form></body></html>";
 	server.sendContent(r);
 }
 
@@ -400,7 +422,7 @@ void tsconfig(void) {
 			String(dinfo.getThingspeakUpdatePeriodSeconds()), "");
 	r += sHTML_INPUT("API Write Key: ", 1, "apikey", dinfo.getThingspeakApikey(), "");
 	r += sHTML_INPUT("User API Key: ", 1, "userapikey", dinfo.getThingspeakUserApikey(), "");
-	r += sHTML_INPUT("URL (optional): ", 2, "tsurl", dinfo.getThingspeakURL(), "");
+	r += sHTML_INPUT("URL: ", 2, "tsurl", dinfo.getThingspeakURL(), "");
 	r += sHTML_INPUT("Channel: ", 1, "tschannel", String(dinfo.getThingspeakChannel()), "");
 	r += sHTML_INPUT("IP Address: ", 1, "ipaddr", dinfo.getThingspeakIpaddr(), "Default=184.106.153.149");
 	r += sHTTP_DIVEND;
@@ -442,7 +464,7 @@ void tsconfig(void) {
 	server.sendContent(r);
 
 // Buttons and links then END of Page
-	r = getWebFooter(true, true) + "</form></body></html>";
+	r = getWebFooter(menu::Thingspeak) + "</form></body></html>";
 	server.sendContent(r);
 }
 

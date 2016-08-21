@@ -20,10 +20,6 @@ ESP8266WebServer server(80);
 int32_t rssi = 0;
 String uri_v("/value");
 
-void _WriteDefaultsToDatabase(void) {
-	dinfo.writeDefaultsToDatabase();
-}
-
 void _EraseEEPROM(void) {
 	dinfo.eraseEEPROM();
 }
@@ -113,7 +109,7 @@ void WebInit(void) {
 		String response("");
 		sendHTML_Header(true);
 		response += "<h2>Main Menu</h2>";
-		response += "<br>" + getWebFooter(true, true) + "</body></html>";
+		response += "<br>" + getWebFooter(menu::Main) + "</body></html>";
 		server.sendContent(response);
 	});
 
@@ -144,7 +140,7 @@ void WebInit(void) {
 				}
 			}
 		}
-		response += "<br>" + getWebFooter(false, false) + "</body></html>";
+		response += "<br>" + getWebFooter(menu::Utility) + "</body></html>";
 		server.sendContent(response);
 	});
 
@@ -155,7 +151,7 @@ void WebInit(void) {
 				response += getsDeviceInfo("<br>");
 				response += getsThingspeakInfo("<br>");
 				response += getsThingspeakChannelInfo("<br>");
-				response += "== Database ==<br>"+dinfo.databaseToString("<br>") +"</div>" + getWebFooter(false, false);
+				response += "== Database ==<br>"+dinfo.databaseToString("<br>") +"</div>" + getWebFooter(menu::Utility);
 				server.sendContent(response);
 			});
 
@@ -163,7 +159,7 @@ void WebInit(void) {
 		sendHTML_Header(true);
 		String response("<h2>Sensor Debug</h2><div style=\"width:99%\">");
 		response += getsSensorInfo("<br>");
-		response += "</div>" + getWebFooter(false, false);
+		response += "</div>" + getWebFooter(menu::Utility);
 		server.sendContent(response);
 	});
 
@@ -196,20 +192,56 @@ void WebInit(void) {
 		server.send(200, "text/plain", response);
 	});
 
+	server.on("/utility", []() {
+		sendHTML_Header(true);
+		String response("<h1>Utility Menu</h1>");
+		response += getWebFooter(menu::Utility);
+		server.sendContent(response);
+	});
+
+	server.on("/admin", []() {
+		sendHTML_Header(true);
+		String response("<h1>Administration Menu</h1>");
+		response += getWebFooter(menu::Admin);
+		server.sendContent(response);
+	});
+
+	server.on("/factory_settings", []() {
+		sendHTML_Header(true);
+		String response("Configuration set to Factory defaults.");
+		dinfo.writeDefaultsToDatabase();
+		response += getWebFooter(menu::Admin);
+		server.sendContent(response);
+	});
+
+	server.on("/erase_eeprom", []() {
+		sendHTML_Header(true);
+		String response("EEPROM Erased. Factory settings loaded.");
+		_EraseEEPROM();
+		response += getWebFooter(menu::Admin);
+		server.sendContent(response);
+	});
+
+	server.on("/reboot", []() {
+		sendHTML_Header(true);
+		String response("Rebooting ... This may take a couple minutes.");
+		response += getWebFooter(menu::Admin);
+		server.sendContent(response);
+		delay(3000); /* 3 second delay */
+		ESPreset();
+	});
+
 	server.on("/pushtschannelsettings", []() {
 		sendHTML_Header(true);
 		String response("<h2>Push Channel Settings to Thingspeak</h2><div style=\"width:99%\">");
 		response += HTMLifyNewlines(ThingspeakPushChannelSettings("<br>", true));
-		response += "</div>" + getWebFooter(false, false);
+		response += "</div>" + getWebFooter(menu::Thingspeak);
 		server.sendContent(response);
 	});
 
 	server.on(uri_v.c_str(), sendValue);
 	server.on("/config", config);
-	server.on("/factory_settings", _WriteDefaultsToDatabase);
-	server.on("/erase_eeprom", _EraseEEPROM);
 	server.on("/tsconfig", tsconfig);
-	server.on("/reboot", ESPreset);
 
 	kickAllWatchdogs();
 	server.begin();
