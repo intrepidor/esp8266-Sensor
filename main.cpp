@@ -556,7 +556,7 @@ void printExtendedMenu(void) {
 	Serial.println(F("Y  EspClass::restart()"));
 	Serial.println(F("Z  show size of datatypes"));
 	Serial.println(F("W  Test Watchdog (block here forever)"));
-	if (DEBUGPRINT_ENABLED) {
+	if (DEBUGPRINT_ENABLED) { //lint !e774
 		Serial.print("D  [" + debug.getDebugLevelString());
 		Serial.println(F("] Debug level for logging to serial port"));
 	}
@@ -697,7 +697,7 @@ int task_serialport_menu(unsigned long now) {
 				Serial.println(F("Database written to EEPROM."));
 				break;
 			case 'D':
-				if (DEBUGPRINT_ENABLED) {
+				if (DEBUGPRINT_ENABLED) { //lint !e774
 					dinfo.setDebugLevel(static_cast<int>(debug.incrementDebugLevel()));
 					Serial.println("Debug Level set to: " + debug.getDebugLevelString());
 					if (eeprom_is_dirty) dinfo.saveDatabaseToEEPROM();
@@ -727,10 +727,10 @@ int task_serialport_menu(unsigned long now) {
 					if (a < 0 || a > 3) a = 0;
 					Serial.println("Port #" + String(portNumber));
 					Serial.print("  Digital (" + String(d) + "):\t");
-					if (digitalRead(d)) Serial.println("HIGH");
+					if (digitalRead(static_cast<uint8_t>(d))) Serial.println("HIGH");
 					else Serial.println("LOW");
 					Serial.print("  Analog  (" + String(a) + "):\t");
-					float ar = ads1115.readADC_SingleEnded(a);
+					float ar = ads1115.readADC_SingleEnded(static_cast<uint8_t>(a));
 					Serial.print(String(ar) + " or ");
 					Serial.println(String(ar * ads1115.getMilliVoltsPerCount()) + " mV");
 				}

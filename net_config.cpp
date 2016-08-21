@@ -416,9 +416,9 @@ void tsconfig(void) {
 	// Device Special Fields
 	r = sHTTP_DIVSTART + String("thingspeak") + sHTTP_DIVSTART_CLOSE;
 	r += "<label>Non-Sensor Parameters</label>";
-	r += "<br>PIR   [/min]" + sHTML_TSFieldExtra_INPUT(0);
-	r += "<br>RSSI   [dBm]" + sHTML_TSFieldExtra_INPUT(1);
-	r += "<br>Uptime [min]" + sHTML_TSFieldExtra_INPUT(2);
+	for (int q = 0; q < dinfo.getTSFieldExtraMax(); q++) {
+		r += "<br>" + getDescriptionByPosition(q + dinfo.getTSFieldPortMax()) + sHTML_TSFieldExtra_INPUT(q);
+	}
 	r += "<br>";
 	r += sHTTP_DIVEND;
 	server.sendContent(r);

@@ -84,8 +84,22 @@ private:
 		struct { // 546 bytes
 			char name[THINGSPEAK_CHANNEL_NAME + 1];
 			char desc[THINGSPEAK_CHANNEL_DESC + 1];
-			ThingspeakField fieldPort[THINGSPEAK_PORT_FIELDS]; // Positions 0 .. 7
-			ThingspeakField fieldExtra[THINGSPEAK_EXTRA_FIELDS]; // Positions 8 .. 11
+			//============================================================================
+			/* Position	Sensor					DeviceInfo Database
+			 *     0	Port 0, channel 0		db.thingspeakChannelSettings.fieldPort[0]
+			 *     1	Port 0, channel 1		db.thingspeakChannelSettings.fieldPort[1]
+			 *     2	Port 1, channel 0		db.thingspeakChannelSettings.fieldPort[2]
+			 *     3	Port 1, channel 1		db.thingspeakChannelSettings.fieldPort[3]
+			 *     4	Port 2, channel 0		db.thingspeakChannelSettings.fieldPort[4]
+			 *     5	Port 2, channel 1		db.thingspeakChannelSettings.fieldPort[5]
+			 *     6	PIR						db.thingspeakChannelSettings.fieldExtra[0]
+			 *     7	RSSI					db.thingspeakChannelSettings.fieldExtra[1]
+			 *     8	Uptime					db.thingspeakChannelSettings.fieldExtra[2]
+			 *     9	Spare					db.thingspeakChannelSettings.fieldExtra[3]
+			 */
+			//============================================================================
+			ThingspeakField fieldPort[THINGSPEAK_PORT_FIELDS]; // Positions 0 .. 5
+			ThingspeakField fieldExtra[THINGSPEAK_EXTRA_FIELDS]; // Positions 6 .. 9
 		} thingspeakChannelSettings;
 
 		// Ports // 120 bytes
@@ -98,7 +112,7 @@ private:
 		uint32_t end_of_eeprom_signature; // version of the configuration data format in the EEPROM
 		// put at the bottom so it moves around
 
-	} db; // estimate 838 bytes
+	} db; // measured size = 0x390 bytes
 
 public:
 // Default Constructor
@@ -169,18 +183,18 @@ public:
 		return THINGSPEAK_EXTRA_FIELDS;
 	}
 	bool isValidTSFieldExtraIndex(int _i) {
-		if (_i >= 0 && _i < getTSFieldPortMax()) return true;
+		if (_i >= 0 && _i < getTSFieldExtraMax()) return true;
 		return false;
 	}
 
 //--------------------------------------------------------
 // Thingspeak Position
 // Position is a number 0 to N where N equals the sum of
-//    getTSFieldExtraMax() and getTSFieldPortMax();
+//    getTSFieldPortMax() and getTSFieldExtraMax()
 //
 	String getNameByPosition(int _pos);
 	int getPositionByTSField18Number(int fld);
-	int getFieldByPosition(int _pos);
+//	int getFieldByPosition(int _pos);
 
 //--------------------------------------------------------
 // Thingspeak Fields (field1, field2, ... field 8

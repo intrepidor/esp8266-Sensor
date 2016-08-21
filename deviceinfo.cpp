@@ -52,12 +52,8 @@ void Device::writeDefaultsToDatabase(void) {
 	setThingspeakIpaddr("184.106.153.149");
 	setTSChannelName("MyChannel");
 	setTSChannelDesc("MyDescription");
-	for (int i = 0; i < dinfo.getTSFieldPortMax(); i++) {
-		setTSFieldPortNumber(i, i + 1);
-		setTSFieldPortName(i, String("nothing"));
-	}
 	for (int i = 0; i < dinfo.getTSFieldExtraMax(); i++) {
-		setTSFieldExtraNumber(i, 0);
+		setTSFieldExtraNumber(i, i + 1);
 		switch (i) {
 			case 0:
 				setTSFieldPortName(i, String("PIR [/min]"));
@@ -73,6 +69,10 @@ void Device::writeDefaultsToDatabase(void) {
 				break;
 		}
 	}
+	for (int i = 0; i < dinfo.getTSFieldPortMax(); i++) {
+		setTSFieldPortNumber(i, 0);
+		setTSFieldPortName(i, String("nothing"));
+	}
 	db.debuglevel = 0;
 	for (int i = 0; i < MAX_PORTS; i++) {
 		setPortName(i, "");
@@ -82,6 +82,7 @@ void Device::writeDefaultsToDatabase(void) {
 		}
 	}
 	// Do not set eeprom is dirty since these defaults are only temporary.
+	// FIXME -- are these really only temporary. Reevaluate of the dirty flag should be set
 }
 
 String Device::databaseToString(String eol) {
@@ -108,13 +109,13 @@ String Device::databaseToString(String eol) {
 	s += "== thingspeakChannelSettings ==" + eol;
 	s += ".ChannelName=" + getTSChannelName() + eol;
 	s += ".ChannelDesc=" + getTSChannelDesc() + eol;
-	for (int i = 0; i < getTSFieldPortMax(); i++) {
-		s += ".fieldPort[" + String(i) + "].number=" + getTSFieldPortNumber(i) + ", .name="
-				+ getTSFieldPortName(i) + eol;
-	}
 	for (int i = 0; i < getTSFieldExtraMax(); i++) {
 		s += ".fieldExtra[" + String(i) + "].number=" + getTSFieldExtraNumber(i) + ", .name="
 				+ getTSFieldExtraName(i) + eol;
+	}
+	for (int i = 0; i < getTSFieldPortMax(); i++) {
+		s += ".fieldPort[" + String(i) + "].number=" + getTSFieldPortNumber(i) + ", .name="
+				+ getTSFieldPortName(i) + eol;
 	}
 	s += "== cport ==";
 	for (int i = 0; i < getPortMax(); i++) {
@@ -218,22 +219,6 @@ void Device::setTSFieldExtraName(int _i, String s) {
 	}
 }
 
-//============================================================================
-/* Position	Sensor					DeviceInfo Database
- *     0	Port 0, channel 0		db.thingspeakChannelSettings.fieldPort[0]
- *     1	Port 0, channel 1		db.thingspeakChannelSettings.fieldPort[1]
- *     2	Port 1, channel 0		db.thingspeakChannelSettings.fieldPort[2]
- *     3	Port 1, channel 1		db.thingspeakChannelSettings.fieldPort[3]
- *     4	Port 2, channel 0		db.thingspeakChannelSettings.fieldPort[4]
- *     5	Port 2, channel 1		db.thingspeakChannelSettings.fieldPort[5]
- *     6	Port 3, channel 0		db.thingspeakChannelSettings.fieldPort[6]
- *     7	Port 3, channel 1		db.thingspeakChannelSettings.fieldPort[7]
- *     8	PIR						db.thingspeakChannelSettings.fieldExtra[0]
- *     9	RSSI					db.thingspeakChannelSettings.fieldExtra[1]
- *    10	Uptime					db.thingspeakChannelSettings.fieldExtra[2]
- *    11	Spare					db.thingspeakChannelSettings.fieldExtra[3]
- */
-//============================================================================
 //-------------------------------------------------------------------------------------------------
 String Device::getNameByPosition(int _pos) {
 	if (_pos < 0) {
@@ -263,9 +248,12 @@ int Device::getPositionByTSField18Number(int fld /* 1 .. 8 */) {
 	int pm = dinfo.getTSFieldPortMax();
 	if (fld > 0 && fld <= MAX_THINGSPEAK_FIELD_COUNT) {
 		// Look for assignment to field<fld>
+		// Prioritize the Extra fields, which are the built-in ones.
 		for (int e = 0; e < dinfo.getTSFieldExtraMax(); e++) {
 			if (fld == dinfo.getTSFieldExtraNumber(e)) return (e + pm);
 		}
+		// If the TS field # is not used by the extra fields above, then look
+		//    in the ports for use of the field.
 		for (int p = 0; p < pm; p++) {
 			if (fld == dinfo.getTSFieldPortNumber(p)) return p;
 		}
@@ -281,15 +269,16 @@ bool Device::isTSField18Used(int fld /* 1 .. 8 */) {
 }
 
 //----------------------------------------------------------------------
-int Device::getFieldByPosition(int _pos) {
-	if (_pos < 10) {
-		return dinfo.getTSFieldExtraNumber(_pos - dinfo.getTSFieldPortMax());
-	}
-	else if (_pos < dinfo.getTSFieldPortMax()) {
-		return dinfo.getTSFieldPortNumber(_pos);
-	}
-	return 0;
-}
+//  FIXME the code below is just wrong!
+//int Device::getFieldByPosition(int _pos) {
+//	if (_pos < 10) {
+//		return dinfo.getTSFieldExtraNumber(_pos - dinfo.getTSFieldPortMax());
+//	}
+//	else if (_pos < dinfo.getTSFieldPortMax()) {
+//		return dinfo.getTSFieldPortNumber(_pos);
+//	}
+//	return 0;
+//}
 
 //-------------------------------------------------------------------------------------------------
 void Device::setcDeviceName(const char* newname) {

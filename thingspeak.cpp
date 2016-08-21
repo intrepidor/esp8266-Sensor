@@ -52,23 +52,37 @@ String getsThingspeakChannelInfo(String eol) {
 	s += "Extra Fields: " + String(dinfo.getTSFieldExtraMax()) + eol;
 	for (int i = 0; i < dinfo.getTSFieldExtraMax(); i++) {
 		fld = dinfo.getTSFieldExtraNumber(i);
-		if (fld < 1) fld = 1;
-		s += "  " + getDescriptionByPosition(i + dinfo.getTSFieldPortMax()) + "= field" + String(fld);
-		if (fields[fld - 1]) {
-			s += " IGNORED AS DUPLICATE";
+		s += "  " + getDescriptionByPosition(i + dinfo.getTSFieldPortMax()) + "= ";
+		if (fld < 1) {
+			s += "none";
 		}
-		fields[fld - 1] = true;
+		else {
+			s += "field" + String(fld);
+			if (fld <= MAX_THINGSPEAK_FIELD_COUNT) {
+				if (fields[fld - 1]) {
+					s += " IGNORED AS DUPLICATE";
+				}
+				fields[fld - 1] = true;
+			}
+		}
 		s += eol;
 	}
 	s += "Port Fields: " + String(dinfo.getTSFieldPortMax()) + eol;
 	for (int i = 0; i < dinfo.getTSFieldPortMax(); i++) {
 		fld = dinfo.getTSFieldPortNumber(i);
-		if (fld < 1) fld = 1; // this avoid buffer overrun, but also creates a potential bug
-		s += "  " + getDescriptionByPosition(i) + "= field" + String(fld);
-		if (fields[fld - 1]) {
-			s += " IGNORED AS DUPLICATE";
+		s += "  " + getDescriptionByPosition(i) + "= ";
+		if (fld < 1) {
+			s += "none";
 		}
-		fields[fld - 1] = true;
+		else {
+			s += "field" + String(fld);
+			if (fld <= MAX_THINGSPEAK_FIELD_COUNT) {
+				if (fields[fld - 1]) {
+					s += " IGNORED AS DUPLICATE";
+				}
+				fields[fld - 1] = true;
+			}
+		}
 		s += eol;
 	}
 	s += "== Field Mapping to Position == " + eol;

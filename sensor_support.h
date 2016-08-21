@@ -12,9 +12,6 @@
 const int SENSOR_VALUE_COUNT = 2;
 const int SENSOR_CALIB_COUNT = 4;	// should be the same as MAX_ADJ
 
-extern float getValueByPosition(int _pos);
-String getDescriptionByPosition(int _pos);
-
 //-------------------------------------------------------------------
 enum class sensorModule {
 	off = 0,
@@ -58,5 +55,8 @@ extern t_sensor const sensorList[];
 extern int getSensorValueCount(void);
 extern int getSensorCalCount(void);
 extern String getSensorModuleName(sensorModule mode);
+
+extern float getValueByPosition(int _pos);
+extern String getDescriptionByPosition(int _pos);
 
 #endif /* SENSOR_SUPPORT_H_ */
