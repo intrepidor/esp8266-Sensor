@@ -104,32 +104,32 @@ t_sensor const sensorList[static_cast<int>(sensorModule::END)] = {
 //
 		{ "off", sensorModule::off },
 		// Generic
-		{ "AnalogDigital", sensorModule::analog_digital },	// analog value, digital bit
-		{ "Digital", sensorModule::digital },				// digital bit
-		{ "Analog", sensorModule::analog },                 // analog value
+		{ "Generic Analog and Digital Inputs", sensorModule::analog_digital },	// analog value, digital bit
+		{ "Generic Digital Input", sensorModule::digital },				// digital bit
+		{ "Generic Analog Input", sensorModule::analog },                 // analog value
 		// ... Temperature and Humidity
-		{ "TH DHT11", sensorModule::dht11 },                   // 1 wire serial data
-		{ "TH DHT22", sensorModule::dht22 },                   // 1 wire serial data
-		{ "TH HTU21D_Si7021", sensorModule::htu21d_si7102 },   // I2C
-		{ "T DS18b20", sensorModule::ds18b20 },               // Official 1-Wire
+		{ "DHT11 Temp and Humidity Sensor", sensorModule::dht11 },                   // 1 wire serial data
+		{ "DHT22 Temp and Humidity Sensor", sensorModule::dht22 },                   // 1 wire serial data
+		{ "HTU21D_Si7021 Temp and Humidity Sensor", sensorModule::htu21d_si7102 },   // I2C
+		{ "DS18b20 Temperature Sensor", sensorModule::ds18b20 },               // Official 1-Wire
 		// ... Misc
-		{ "Sonar", sensorModule::sonar },
-		{ "Sound", sensorModule::sound },
-		{ "Reed", sensorModule::reed },
+		{ "Sonar Distance Sensor", sensorModule::sonar },
+		{ "Sound Sensor", sensorModule::sound },
+		{ "Reed Switch Sensor", sensorModule::reed },
 		// ... PIR
-		{ "P HCS501", sensorModule::hcs501 },                 // digital bit
-		{ "P HCSR505", sensorModule::hcsr505 },               // digital bit
+		{ "HCS501 PIR Sensor", sensorModule::hcs501 },                 // digital bit
+		{ "HCSR505 PIR Sensor", sensorModule::hcsr505 },               // digital bit
 		// ... ANALOG
 		// One Digital IO and/or one ADC
-		{ "D GY2Y10", sensorModule::dust },
-		{ "M Rain", sensorModule::rain },
-		{ "M Soil", sensorModule::soil },
-		{ "S SoundH", sensorModule::soundh },
-		{ "G Methane", sensorModule::methane },
+		{ "Sharp GY2Y10 Dust Sensor", sensorModule::Sharp_GP2Y10_DustSensor },
+		{ "Rain Sensor", sensorModule::rain },
+		{ "Soil/Moisture Sensor", sensorModule::soil },
+		{ "SoundH Sensor", sensorModule::soundh },
+		{ "Bosch MQ Gas Sensor Module", sensorModule::methane },
 		// Misc IC2 Devices
-		{ "TP BMP180", sensorModule::gy68_BMP180 },			// I2C Temperature and Pressure
-		{ "L BH1750FVI", sensorModule::gy30_BH1750FVI },	// I2C Light Sensor
-		{ "LCD1602", sensorModule::lcd1602 },				// I2C
+		{ "BMP180/GY68 Temp and Pressure Sensor", sensorModule::gy68_BMP180 },// I2C Temperature and Pressure
+		{ "BH1750FVI Light Sensor", sensorModule::gy30_BH1750FVI },	// I2C Light Sensor
+		{ "IC2 LCD1602", sensorModule::lcd1602 },				// I2C
 		// Serial
 		{ "RFID", sensorModule::rfid },
 		{ "Marquee", sensorModule::marquee },

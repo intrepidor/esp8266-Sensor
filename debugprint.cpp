@@ -67,6 +67,9 @@ DebugLevel DebugPrint::incrementDebugLevel(void) {
 			debuglevel = DebugLevel::WEBPAGEPROCESSING;
 			break;
 		case DebugLevel::WEBPAGEPROCESSING:
+			debuglevel = DebugLevel::PCF8591;
+			break;
+		case DebugLevel::PCF8591:
 		case DebugLevel::END:
 		default:
 			debuglevel = DebugLevel::OFF;
@@ -88,6 +91,7 @@ String DebugPrint::convertDebugLevelToString(DebugLevel dl) {
 	if (getBitwiseAND(dl, DebugLevel::HTTPGET)) r += String(" HTTPGET");
 	if (getBitwiseAND(dl, DebugLevel::HTTPPUT)) r += String(" HTTPPUT");
 	if (getBitwiseAND(dl, DebugLevel::WEBPAGEPROCESSING)) r += String(" WEBPAGEPROCESSING");
+	if (getBitwiseAND(dl, DebugLevel::PCF8591)) r += String(" PCF8591");
 	if (r.length() < 1) r += "UNKNOWN";
 	r += " (" + String(static_cast<int>(dl)) + ")";
 	return r;

@@ -30,7 +30,7 @@ enum class sensorModule {
 	hcs501,
 	hcsr505,
 // 1 digital + 1 analog
-	dust,
+	Sharp_GP2Y10_DustSensor,
 	rain,
 	soil,
 	soundh,

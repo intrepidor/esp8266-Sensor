@@ -14,6 +14,7 @@
 #include "temperature.h"
 #include "deviceinfo.h"
 #include "debugprint.h"
+#include "pcf8591.h"
 
 #define USE_DEBUG_PRINT
 
@@ -29,6 +30,7 @@ extern String ProgramInfo;
 extern const int SENSOR_COUNT;
 extern Sensor* sensors[];
 extern Adafruit_ADS1115 ads1115;
+extern PCF8591 pcf8591;
 
 extern Device dinfo;
 extern Queue myQueue;

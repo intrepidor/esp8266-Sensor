@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "main.h"
 #include "util.h"
+#include "pcf8591.h"
 #include "generic.h"
 
 void GenericSensor::init(sensorModule m, SensorPins& p) {
@@ -17,7 +18,7 @@ void GenericSensor::init(sensorModule m, SensorPins& p) {
 
 	// These are the defaults.
 	setCalEnable(TEMP_CAL_CHANNEL_ANALOG_OFFSET, false);
-	setCalName(TEMP_CAL_CHANNEL_ANALOG_OFFSET, "Analog Offset");
+	setCalName(TEMP_CAL_CHANNEL_ANALOG_OFFSET, "Offset");
 	setCalEnable(TEMP_CAL_CHANNEL_ANALOG_FIRST_ORDER, false);
 	setCalName(TEMP_CAL_CHANNEL_ANALOG_FIRST_ORDER, "1st order Gain");
 	setCalEnable(TEMP_CAL_CHANNEL_ANALOG_SECOND_ORDER, false);
@@ -30,7 +31,8 @@ void GenericSensor::init(sensorModule m, SensorPins& p) {
 	setValueEnable(TEMP_VALUE_CHANNEL_DIGITAL, false);
 	setValueName(TEMP_VALUE_CHANNEL_DIGITAL, "Digital");
 
-	if (m == sensorModule::analog || m == sensorModule::analog_digital) {
+	if (m == sensorModule::analog || m == sensorModule::analog_digital
+			|| m == sensorModule::Sharp_GP2Y10_DustSensor) {
 		setCalEnable(TEMP_CAL_CHANNEL_ANALOG_OFFSET, true);
 		setCalEnable(TEMP_CAL_CHANNEL_ANALOG_FIRST_ORDER, true);
 		setCalEnable(TEMP_CAL_CHANNEL_ANALOG_SECOND_ORDER, true);
@@ -44,6 +46,10 @@ void GenericSensor::init(sensorModule m, SensorPins& p) {
 
 	if (m == sensorModule::taskclock) {
 		// none are used
+	}
+
+	if (m == sensorModule::Sharp_GP2Y10_DustSensor) {
+		setValueName(TEMP_VALUE_CHANNEL_ANALOG, "Dust mg/m^3");
 	}
 
 	// The pins used to interact with the sensor
@@ -84,9 +90,10 @@ bool GenericSensor::acquire_setup(void) {
 			pinMode(digital_pin, INPUT);
 			started = true;
 		}
-		if (getModule() == sensorModule::taskclock) {
+		if (getModule() == sensorModule::taskclock || getModule() == sensorModule::Sharp_GP2Y10_DustSensor) {
 			DEBUGPRINTLN(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(digital_pin));
 			pinMode(digital_pin, OUTPUT);
+			digitalWrite(digital_pin, HIGH); // Turn off the LED
 			started = true;
 		}
 		if (getModule() == sensorModule::off) {
@@ -103,7 +110,7 @@ bool GenericSensor::acquire1(void) {
 
 			// raw, non-corrected, values
 			setRawAnalog(static_cast<float>(a));
-			double a1 = a * ads1115.getMilliVoltsPerCount();
+			double a1 = a * ads1115.getVoltsPerCount();
 			double a2 = a1 * a1;
 			double a3 = a2 * a1;
 
@@ -122,6 +129,53 @@ bool GenericSensor::acquire1(void) {
 			else {
 				setDigital(1);
 			}
+		}
+		if (getModule() == sensorModule::Sharp_GP2Y10_DustSensor) {
+			/*
+			 * To take a reading:
+			 * 1. Turn on the IR LED by outputting a LOW on the digital pin.
+			 * 2. Wait 0.28ms.
+			 * 3. Read the analog output. Finish this step within 0.04ms.
+			 * 4. Turn off the IR LED.
+			 * Note: The IR LED should be on for 0.32 +/- 0.02 ms.
+			 * 5. Convert the analog voltage into a measurement of dust
+			 *    density as mg/m^3 using predetermined formulas.
+			 * 6. Don't read the sensor faster than once per 10ms
+			 */
+
+			digitalWrite(digital_pin, LOW); // power on the LED
+			delayMicroseconds(280);	// Wait for the output sample to present itself. 0.28ms per data sheet
+
+			// Make a marker for timing with the scope
+			digitalWrite(digital_pin, HIGH);
+			digitalWrite(digital_pin, LOW);
+
+			// Measure the result
+			int a = pcf8591.readADC(2); // takes about 700uS
+			digitalWrite(digital_pin, HIGH); // Turn off the LED
+
+			// convert to millivolts
+			double a0 = static_cast<double>(a) * pcf8591.getVoltsPerCount();
+
+			Serial.print("A2=");
+			Serial.println(a);
+
+			// convert to dust density and store as raw value
+			// linear equation from Chris Nafis http://www.howmuchsnow.com/arduino/airquality/
+			double a1 = a0; // (0.17 * a0 - 0.1) * 1000;
+			setRawAnalog(static_cast<float>(a1));
+
+			// Apply the user calibrations
+			double a2 = a1 * a1; // precalculate square term
+			double a3 = a2 * a1; // precalculate cubed term
+
+			a1 = getCal(TEMP_CAL_CHANNEL_ANALOG_OFFSET) + a1 * getCal(TEMP_CAL_CHANNEL_ANALOG_FIRST_ORDER)
+					+ a2 * getCal(TEMP_CAL_CHANNEL_ANALOG_SECOND_ORDER)
+					+ a3 * getCal(TEMP_CAL_CHANNEL_ANALOG_THIRD_ORDER);
+
+			// Calibration corrected values
+			setAnalog(static_cast<float>(a1));
+			delay(9); // don't do more than 1 per 10ms
 		}
 		if (getModule() == sensorModule::taskclock) {
 			return true; // do nothing

@@ -15,7 +15,7 @@
 extern String nl;
 
 enum class DebugLevel
-	: int {
+	: unsigned long {
 		/* Log statements with OFF don't print anything.
 		 */
 		OFF = 0,
@@ -29,10 +29,11 @@ enum class DebugLevel
 		 *  do not print.
 		 */
 		EEPROM = 8,		// interactions with the EEPROM
-	TIMINGS = 16,	// Sensor Acquisition timings
-	HTTPPUT = 32,	// Thingspeak PUT
-	HTTPGET = 64,	// Thingspeak GET
-	WEBPAGEPROCESSING = 128, // processing of configuration web pages
+	TIMINGS = 16,		// Sensor Acquisition timings
+	HTTPPUT = 32,		// Thingspeak PUT
+	HTTPGET = 64,		// Thingspeak GET
+	WEBPAGEPROCESSING = 128,		// processing of configuration web pages
+	PCF8591 = 256,
 	// END is not a level
 	END
 };

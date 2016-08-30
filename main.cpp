@@ -15,6 +15,8 @@
 #include "thingspeak.h"
 #include "wdog.h"
 #include "util.h"
+#include "i2c_scanner.h"
+#include "pcf8591.h"
 
 extern int task_readpir(unsigned long now);
 extern int task_acquire(unsigned long now);
@@ -82,6 +84,7 @@ bool outputTaskClock = false;
 uint8_t outputTaskClockPin = BUILTIN_LED;
 
 Adafruit_ADS1115 ads1115; /* Use this for the 16-bit version */
+PCF8591 pcf8591;
 
 //extern void pp_soft_wdt_stop();
 
@@ -166,6 +169,8 @@ void setup(void) {
 #else
 	Wire.begin(); // does not work for ESP8266 due to bug in ESP8266_Arduino library
 #endif
+
+// Internal ADC1115 Configuration
 	// The ADC input range (or gain) can be changed via the following
 	// functions, but be careful never to exceed VDD +0.3V max, or to
 	// exceed the upper and lower limits if you adjust the input range!
@@ -178,6 +183,14 @@ void setup(void) {
 	// ads1115.setGain(GAIN_EIGHT);      // 8x gain   +/- 0.512V  1 bit = 0.015625mV
 	// ads1115.setGain(GAIN_SIXTEEN);    // 16x gain  +/- 0.256V  1 bit = 0.0078125mV
 	ads1115.begin();
+
+// Configure the PCF8591 YL-40 Module if present. It may or may not be connected.
+#ifdef PCF8591_FIXME
+	pcf8591.disableDAC();
+	pcf8591.setInputs(pcf8591_AnInput_Type::four_single_ended);
+	pcf8591.disableAutoIncrementChannel();
+	pcf8591.begin();
+#endif
 
 // Configure Sensors
 	ConfigurePorts();
@@ -326,7 +339,10 @@ void ConfigurePorts(void) {
 							break;
 						case static_cast<int>(sensorModule::hcsr505):
 							break;
-						case static_cast<int>(sensorModule::dust):
+						case static_cast<int>(sensorModule::Sharp_GP2Y10_DustSensor):
+							sensors[portNumber] = new GenericSensor();
+							sensors[portNumber]->init(sensorModule::Sharp_GP2Y10_DustSensor, p);
+							sensors[portNumber]->setName("Sharp GP2Y10");
 							break;
 						case static_cast<int>(sensorModule::rain):
 							break;
@@ -535,8 +551,8 @@ void printMenu(void) {
 	Serial.println(F("t  show Thingspeak Channel Settings"));
 	Serial.println(F("c  show calibration values"));
 	Serial.println(F("m  show measured values"));
-	Serial.println(F("r  show chart of values (raw)"));
-	Serial.println(F("s  show chart of values"));
+	Serial.println(F("rR show chart of values (raw)"));
+	Serial.println(F("sS show chart of values"));
 	Serial.println(F("w  show web URLs"));
 	Serial.println(F("p  push Thingspeak Channel Settings"));
 	Serial.println(F("z  Extended menu"));
@@ -545,21 +561,23 @@ void printMenu(void) {
 
 void printExtendedMenu(void) {
 	Serial.println(F("MENU EXTENDED ---------------------"));
-	Serial.println(F("E  show data structure in EEPROM"));
-	Serial.println(F("M  show data structure in RAM"));
+	Serial.println(F("A  show Sensor debug info"));
+	Serial.println(F("B  show reason for last reset"));
 	Serial.println(F("C  write defaults to configuration memory"));
-	Serial.println(F("S  show Sensor debug info"));
-	Serial.println(F("P  read pin values"));
-	Serial.println(F("R  show reason for last reset"));
-	Serial.println(F("I  show ESP information"));
-	Serial.println(F("X  EspClass::reset()"));
-	Serial.println(F("Y  EspClass::restart()"));
-	Serial.println(F("Z  show size of datatypes"));
-	Serial.println(F("W  Test Watchdog (block here forever)"));
 	if (DEBUGPRINT_ENABLED) { //lint !e774
 		Serial.print("D  [" + debug.getDebugLevelString());
 		Serial.println(F("] Debug level for logging to serial port"));
 	}
+	Serial.println(F("E  show data structure in EEPROM"));
+	Serial.println(F("I  show ESP information"));
+	Serial.println(F("M  show data structure in RAM"));
+	Serial.println(F("P  read pin values"));
+	Serial.println(F("T  test PCF8591"));
+	Serial.println(F("V  Scan I2C Bus"));
+	Serial.println(F("W  Test Watchdog (block here forever)"));
+	Serial.println(F("X  EspClass::reset()"));
+	Serial.println(F("Y  EspClass::restart()"));
+	Serial.println(F("Z  show size of datatypes"));
 	Serial.println("");
 }
 
@@ -568,18 +586,51 @@ int task_serialport_menu(unsigned long now) {
 	count++;
 	static bool need_new_heading = true;
 	static bool raw_need_new_heading = true;
+	static bool T_need_new_heading = true;
+	static bool continueS = false;
+	static bool continueR = false;
+	static bool continueT = false;
+	char ch = 0;
 
-	if (Serial.available() > 0) {
-		char ch = static_cast<char>(Serial.read());
-		if (ch != 's') {
-			need_new_heading = true;
+	// Get next keystroke
+	if ((continueS == false && continueR == false && continueT == false) || Serial.available()) {
+		ch = static_cast<char>(Serial.read());
+		continueS = false;
+		continueR = false;
+		continueT = false;
+	}
+	else {
+		if (continueS) ch = 's';
+		else if (continueR) ch = 'r';
+		else if (continueT) ch = 'T';
+		else {
+			continueS = false;
+			continueR = false;
+			continueT = false;
 		}
-		if (ch != 'r') {
-			raw_need_new_heading = true;
-		}
+	}
+
+	// Determine if new heading is needed
+	if (ch != 's') {
+		need_new_heading = true;
+	}
+	if (ch != 'r') {
+		raw_need_new_heading = true;
+	}
+	if (ch != 'T') {
+		T_need_new_heading = true;
+	}
+	if (ch > 0) {
+		// Process the keystroke
 		switch (ch) {
 			case '?':
 				printMenu();
+				break;
+			case 'S':
+				continueS = true;
+				break;
+			case 'R':
+				continueR = true;
 				break;
 			case 'z':
 				printExtendedMenu();
@@ -732,8 +783,22 @@ int task_serialport_menu(unsigned long now) {
 					Serial.print("  Analog  (" + String(a) + "):\t");
 					float ar = ads1115.readADC_SingleEnded(static_cast<uint8_t>(a));
 					Serial.print(String(ar) + " or ");
-					Serial.println(String(ar * ads1115.getMilliVoltsPerCount()) + " mV");
+					Serial.println(String(ar * ads1115.getVoltsPerCount() * 1000) + " mV");
 				}
+				Serial.println(F("=== PCF8591 8-bit ADC (if present) ==="));
+				for (int p = 0; p < PCF8591_ADC_MAX_CHANNELS; p++) {
+					int d = pcf8591.readADC(p);
+					Serial.print("A" + String(p) + ":\t");
+					Serial.print(d);
+					Serial.print(" or ");
+					Serial.println(String(d * pcf8591.getVoltsPerCount() * 1000) + " mV");
+				}
+				break;
+			case 'T':
+				if (T_need_new_heading) Serial.println("=== PCF8591 Test ===");
+				test_pcf8591();
+				T_need_new_heading = false;
+				continueT = true;
 				break;
 			case 'I':
 				Serial.print(F("CycleCount:\t\t"));
@@ -805,14 +870,23 @@ int task_serialport_menu(unsigned long now) {
 
 				Serial.println("");
 				break;
-			case 'R':
+			case 'B':
 				Serial.print(F("Last Reset --> "));
 				Serial.println(ESP.getResetInfo() + nl);
 				break;
-			case 'S':
+			case 'A':
 				Serial.print(nl);
 				Serial.println(F("Sensor Debug Information"));
 				Serial.println(getsSensorInfo(nl));
+				break;
+			case 'V':
+				scanI2CBus();
+				break;
+			case 'W':
+				Serial.println(F("Looping here forever - Software Watchdog for Menu should trip ... "));
+				for (;;) {
+					yield();
+				} // loop forever so the software watchdog for this task trips, but yield to the ESP OS
 				break;
 			case 'X':
 				Serial.println(F("Calling EspClass::reset()"));
@@ -821,12 +895,6 @@ int task_serialport_menu(unsigned long now) {
 			case 'Y':
 				Serial.println(F("Calling EspClass::restart()"));
 				ESP.restart();
-				break;
-			case 'W':
-				Serial.println(F("Looping here forever - Software Watchdog for Menu should trip ... "));
-				for (;;) {
-					yield();
-				} // loop forever so the software watchdog for this task trips, but yield to the ESP OS
 				break;
 			case 'Z':
 				Serial.println(F("Datatype sizes in bytes:"));
@@ -854,7 +922,7 @@ int task_serialport_menu(unsigned long now) {
 				Serial.println(sizeof(char*));
 				break;
 			default:
-				Serial.println("Unknown command: " + String(ch));
+				//Serial.println("Unknown command: " + String(ch));
 				break;
 		}
 	}
