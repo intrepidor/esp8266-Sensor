@@ -34,6 +34,7 @@ enum class DebugLevel
 	HTTPGET = 64,		// Thingspeak GET
 	WEBPAGEPROCESSING = 128,		// processing of configuration web pages
 	PCF8591 = 256,
+	SHARPGP2Y10 = 512,
 	// END is not a level
 	END
 };

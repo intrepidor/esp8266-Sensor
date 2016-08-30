@@ -83,7 +83,7 @@ Queue myQueue;
 bool outputTaskClock = false;
 uint8_t outputTaskClockPin = BUILTIN_LED;
 
-Adafruit_ADS1115 ads1115; /* Use this for the 16-bit version */
+Adafruit_ADS1115 ads1115(0x4A); // SDA pin connected to ADDR pin for IC2 Address of 0x4A instead of 0x48
 PCF8591 pcf8591;
 
 //extern void pp_soft_wdt_stop();

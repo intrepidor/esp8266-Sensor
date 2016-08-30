@@ -156,9 +156,7 @@ bool GenericSensor::acquire1(void) {
 
 			// convert to millivolts
 			double a0 = static_cast<double>(a) * pcf8591.getVoltsPerCount();
-
-			Serial.print("A2=");
-			Serial.println(a);
+			DEBUGPRINTLN(DebugLevel::SHARPGP2Y10, "GP2Y10 A2=" + String(a));
 
 			// convert to dust density and store as raw value
 			// linear equation from Chris Nafis http://www.howmuchsnow.com/arduino/airquality/
