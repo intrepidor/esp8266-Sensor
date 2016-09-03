@@ -37,7 +37,7 @@ int PCF8591::readADC(const int _channel) {
 	if (_channel >= 0 && _channel < PCF8591_ADC_MAX_CHANNELS) {
 		if (config(_channel)) {
 			if (Wire.requestFrom(i2cAddress, BYTES_TO_READ, true /* send stop */) == BYTES_TO_READ) {
-				for (int i = 0; i < BYTES_TO_READ; i++) {
+				for (size_t i = 0; i < BYTES_TO_READ; i++) {
 					r = Wire.read();
 				}
 			}
@@ -55,17 +55,17 @@ int PCF8591::readAgain(void) {
 }
 
 void test_pcf8591(void) {
-	const unsigned char PCF8591 = 0x48; // I2C bus address
+	const unsigned char I2CADDR = 0x48; // I2C bus address
 	const size_t BYTES_TO_READ = 5; // Throw away the first read.
 
 	for (int chan = 0; chan < 4; chan++) {
-		Wire.beginTransmission(PCF8591); // wake up PCF8591
+		Wire.beginTransmission(I2CADDR); // wake up PCF8591
 		Wire.write(chan); // control byte - select channel (0 to 3)
 		Wire.endTransmission();
 		delayMicroseconds(500);
-		Wire.requestFrom(PCF8591, BYTES_TO_READ, true /* send stop */);
-		for (int i = 0; i < BYTES_TO_READ; i++) {
-			unsigned char v = Wire.read();
+		Wire.requestFrom(I2CADDR, BYTES_TO_READ, true /* send stop */);
+		for (size_t i = 0; i < BYTES_TO_READ; i++) {
+			int v = Wire.read();
 			if (i == 1) {
 				Serial.print("[" + String(v) + "]");
 			}

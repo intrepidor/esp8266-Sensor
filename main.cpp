@@ -199,7 +199,7 @@ void setup(void) {
 // Configure Scheduler, scheduleFunction (function pointer, task name, start delay in ms, repeat interval in ms)
 // WARNING: Tasks must run minimally every 30 seconds to prevent software watchdog timer resets
 	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
-	myQueue.scheduleFunction(task_acquire, "acquire", 1000, 500);
+	myQueue.scheduleFunction(task_acquire, "acquire", 1000, 300);
 	myQueue.scheduleFunction(task_updatethingspeak, "thingspeak", 2000, 1000); // 1 second resolution
 	myQueue.scheduleFunction(task_flashled, "led", 250, 100);
 	myQueue.scheduleFunction(task_serialport_menu, "menu", 2000, 500);

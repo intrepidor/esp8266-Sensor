@@ -18,7 +18,7 @@ const int PCF8591_ERROR_READ = -1;
 
 // Misc constants
 const int PCF8591_MAX_RANGE = 256;
-const float PCF8591_VOLTAGE = 3.3F;
+const double PCF8591_VOLTAGE = 3.3D;
 const int PCF8591_ADC_MAX_CHANNELS = 4;
 
 /* I2C Address = 1001abcr
@@ -142,8 +142,8 @@ public:
 		config();
 	}
 
-	float getVoltsPerCount(void) {
-		return PCF8591_VOLTAGE / PCF8591_MAX_RANGE;
+	double getVoltsPerCount(void) {
+		return PCF8591_VOLTAGE / static_cast<double>(PCF8591_MAX_RANGE);
 	}
 };
 

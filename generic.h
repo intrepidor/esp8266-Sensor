@@ -24,6 +24,10 @@ private:
 	uint8_t analog_pin;
 	bool started;
 	int sensorPortNumber;
+	unsigned int last_reading_timestamp_us;
+	int reading_count;
+	int generic_accumulator;
+	int reading_count_within_cycle;
 public:
 	~GenericSensor() {
 		sensorPortNumber = 255;
@@ -37,6 +41,10 @@ public:
 		digital_pin = 255;
 		analog_pin = 255;
 		started = false;
+		last_reading_timestamp_us = 0;
+		reading_count = 0;
+		reading_count_within_cycle = 0;
+		generic_accumulator = 0;
 	}
 
 	// Interface Functions (virtual in Sensor class)
