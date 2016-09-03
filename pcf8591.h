@@ -60,7 +60,6 @@ enum pcf8591_AnInput_Type
 class PCF8591 {
 
 private:
-	int lastADCReading[PCF8591_ADC_MAX_CHANNELS];
 	pcf8591_AnInput_Type inputType;
 	uint8_t analog_output_status; // 0x00 = off, 0x40 = on
 	uint8_t auto_increment_channel_status; // 0x00 = off, 0x40 = on
@@ -86,6 +85,10 @@ public:
 		disableDAC();
 		disableAutoIncrementChannel();
 		setInputs(pcf8591_AnInput_Type::four_single_ended);
+	}
+
+	uint8_t getAddr(void) {
+		return i2cAddress;
 	}
 
 	//
@@ -132,6 +135,7 @@ public:
 	bool config(int channel);
 
 	int readADC(const int _channel /* 0 to 3 */);
+	int readAgain(void);
 
 	void writeDAC(uint8_t dac) {
 		dacReg = dac;

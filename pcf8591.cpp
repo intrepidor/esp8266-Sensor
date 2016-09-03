@@ -40,21 +40,18 @@ int PCF8591::readADC(const int _channel) {
 				for (int i = 0; i < BYTES_TO_READ; i++) {
 					r = Wire.read();
 				}
-				lastADCReading[_channel] = r;
-			}
-			else {
-				DEBUGPRINTLN(DebugLevel::PCF8591, F("readADC: requestFrom error"));
 			}
 		}
-		else {
-			DEBUGPRINTLN(DebugLevel::PCF8591, F("readADC: config returned error"));
-		}
 	}
-	else {
-		DEBUGPRINTLN(DebugLevel::PCF8591, F("readADC: Channel out of range"));
-	}
-	DEBUGPRINTLN(DebugLevel::PCF8591, "readADC: result[" + String(_channel) + "]=" + String(r));
 	return r;
+}
+
+int PCF8591::readAgain(void) {
+	// Set the channel number by calling readADC or config prior to this function.
+	const size_t BYTES_TO_READ = 2;
+	Wire.requestFrom(i2cAddress, BYTES_TO_READ, true /* send stop */);
+	Wire.read();	// discard the first read
+	return Wire.read();
 }
 
 void test_pcf8591(void) {

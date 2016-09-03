@@ -142,21 +142,69 @@ bool GenericSensor::acquire1(void) {
 			 *    density as mg/m^3 using predetermined formulas.
 			 * 6. Don't read the sensor faster than once per 10ms
 			 */
+			pcf8591.config(2);	// preconfigure the channel for the ADC.
+			const size_t BYTES_TO_READ = 5;
 
+			/* Turn on the LED, then read 5 samples from the ADC. The first sample
+			 *    represents data from a prior cycle, so discard it. Take the remaining
+			 *    samples and find the highest value. That will be the result.
+			 */
 			digitalWrite(digital_pin, LOW); // power on the LED
-			delayMicroseconds(280);	// Wait for the output sample to present itself. 0.28ms per data sheet
+			/* The requestFrom is a complete operation. It sends the Start, IC2Addr, Read bit,
+			 *    does the specified number of reads, then sends the stop. You access the results
+			 *    by making repeated calls to Wire.read(). The call to Wire.read() does not
+			 *    actually do the read, but retrieves a value already read and stored in a buffer.
+			 */
+			Wire.requestFrom(pcf8591.getAddr(), BYTES_TO_READ, true /* send stop */); // takes 600us(5 bytes)
+			digitalWrite(digital_pin, HIGH);
+
+			// Discard the first sample, and find the maximum value of the other samples.
+			int a = 0, b = 0;
+			int sum = 0;
+			float avg = 0;
+			DEBUGPRINT(DebugLevel::SHARPGP2Y10, "GP2Y10 A2: ");
+			for (int i = 0; i < BYTES_TO_READ; i++) {
+				b = Wire.read();
+				if (i > 0) {
+					if (b > a) a = b;
+					sum += b;
+					DEBUGPRINT(DebugLevel::SHARPGP2Y10, String(b) + " ");
+				}
+			}
+			avg = sum / static_cast<float>(BYTES_TO_READ - 1);
+//			if (avg < 1) avg = 1;
+			DEBUGPRINTLN(DebugLevel::SHARPGP2Y10,
+					": max/avg/ratio:\t" + String(a) + "\t " + String(sum) + "\t" + String(avg) + "\t"
+							+ String(avg / a));
+
+#if(0)
+			int a = 0, b=0;
+			digitalWrite(digital_pin, LOW); // power on the LED
+			for (int i = 0; i < 5; i++) {
+				b = pcf8591.readADC(); // takes about 700uS
+				digitalWrite(digital_pin, HIGH);
+				digitalWrite(digital_pin, LOW);
+//				if (b > a) a = b;
+			}
+			digitalWrite(digital_pin, HIGH); // Turn off the LED
+#endif
+
+#if(0)
+			int a = 0;
+			digitalWrite(digital_pin, LOW); // power on the LED
+			delayMicroseconds(280);// Wait for the output sample to present itself. 0.28ms per data sheet
 
 			// Make a marker for timing with the scope
 			digitalWrite(digital_pin, HIGH);
 			digitalWrite(digital_pin, LOW);
 
 			// Measure the result
-			int a = pcf8591.readADC(2); // takes about 700uS
-			digitalWrite(digital_pin, HIGH); // Turn off the LED
+			a = pcf8591.readADC(2);// takes about 700uS
+			digitalWrite(digital_pin, HIGH);// Turn off the LED
+#endif
 
 			// convert to millivolts
 			double a0 = static_cast<double>(a) * pcf8591.getVoltsPerCount();
-			DEBUGPRINTLN(DebugLevel::SHARPGP2Y10, "GP2Y10 A2=" + String(a));
 
 			// convert to dust density and store as raw value
 			// linear equation from Chris Nafis http://www.howmuchsnow.com/arduino/airquality/
