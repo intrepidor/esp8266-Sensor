@@ -166,9 +166,7 @@ bool TemperatureSensor::acquire_setup(void) {
 				//    interleaves the sensors so there is enough delay.
 				dallas->setWaitForConversion(false);
 				started = true;
-				return true;
 			}
-			return acquire1();
 		}
 	}
 	else if (m == sensorModule::dht11 || m == sensorModule::dht22) {
@@ -176,7 +174,6 @@ bool TemperatureSensor::acquire_setup(void) {
 		if (dht) {
 			dht->read_setup();
 			started = true;
-			return true;
 		}
 	}
 	else if (m == sensorModule::htu21d_si7102) {
@@ -185,10 +182,9 @@ bool TemperatureSensor::acquire_setup(void) {
 				htu21d->setResolution(USER_REGISTER_RESOLUTION_RH12_TEMP14);
 				started = true;
 			}
-			return true; // there is no other setup for this sensor
 		}
 	}
-	return false;
+	return true;
 }
 
 bool TemperatureSensor::acquire1(void) {
@@ -199,7 +195,6 @@ bool TemperatureSensor::acquire1(void) {
 			// request to all devices on the bus. It takes a while, up to 750ms,
 			// so acquire2 will read the value.
 			dallas->requestTemperatures();	// tell all devices on the bus to measure the temperature
-			return true;
 		}
 	}
 	else if (m == sensorModule::dht11 || m == sensorModule::dht22) {
@@ -209,7 +204,6 @@ bool TemperatureSensor::acquire1(void) {
 			float t = dht->readTemperature(false); // read celcius
 			StoreTemperature(t);
 		}
-		return true;
 	}
 	else if (m == sensorModule::htu21d_si7102) {
 		if (htu21d && started) {
@@ -220,10 +214,9 @@ bool TemperatureSensor::acquire1(void) {
 			else {
 				StoreTemperature(t);
 			}
-			return true;
 		}
 	}
-	return false;
+	return true;
 }
 
 bool TemperatureSensor::acquire2(void) {
@@ -237,7 +230,6 @@ bool TemperatureSensor::acquire2(void) {
 			else {
 				StoreTemperature(t);
 			}
-			return true;
 		}
 	}
 	else if (m == sensorModule::dht11 || m == sensorModule::dht22) {
@@ -246,7 +238,6 @@ bool TemperatureSensor::acquire2(void) {
 		if (dht && started) {
 			float h = dht->readHumidity();
 			StoreHumidity(h);
-			return true;
 		}
 	}
 	else if (m == sensorModule::htu21d_si7102) {
@@ -258,10 +249,9 @@ bool TemperatureSensor::acquire2(void) {
 			else {
 				StoreHumidity(h);
 			}
-			return true;
 		}
 	}
-	return false;
+	return true;
 }
 
 bool TemperatureSensor::StoreTemperature(float t) {

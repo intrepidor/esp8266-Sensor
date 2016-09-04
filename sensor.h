@@ -227,8 +227,12 @@ public:
 	sensorModule getModule(void) {
 		return this->module;
 	}
-	sensorModule getType() const {
-		return this->module;
+//	sensorModule getType() const {
+//		return this->module;
+//	}
+	bool isSensorActive(void) {
+		if (module == sensorModule::off) return false;
+		return true;
 	}
 	String getModuleName(void);
 

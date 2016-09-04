@@ -33,7 +33,7 @@ extern void ConfigurePorts(void);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.18 Allan Inda 2016Sept04");
+String ProgramInfo("Environment Sensor v0.19 Allan Inda 2016Sept04");
 
 // Other
 long count = 0;
@@ -468,81 +468,91 @@ int task_acquire(unsigned long starting_time) {
 		unsigned long _then = _now;
 		unsigned long _dur = _now;
 		unsigned long lasttime = 0;
-		Sensor* cur_sensor = sensors[next_sensor_to_acquire];
 
-		DEBUGPRINT(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(next_sensor_to_acquire));
-		switch (cur_sensor->getNextSubTask()) {
-			case 0:
-				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire_setup START"));
-				if ((_now - cur_sensor->last_acquiresetup_timestamp_ms)
-						>= cur_sensor->minimum_time_between_acquiresetup_ms) {
-					lasttime = cur_sensor->last_acquiresetup_timestamp_ms;
-					cur_sensor->last_acquiresetup_timestamp_ms = _now;
-					if (cur_sensor->acquire_setup()) cur_sensor->incNextSubtask();
-					_then = millis();
-					_dur = _then - _now;
-					DEBUGPRINT(DebugLevel::TIMINGS, F("\t\tct="));
-					DEBUGPRINT(DebugLevel::TIMINGS, (_now - lasttime));
-					DEBUGPRINT(DebugLevel::TIMINGS, "/");
-					DEBUGPRINTLN(DebugLevel::TIMINGS, cur_sensor->minimum_time_between_acquiresetup_ms);
-				}
-				else {
-					_then = millis();
-					_dur = _then - _now;
-					DEBUGPRINTLN(DebugLevel::TIMINGS, "\tdelayed");
-				}
-				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(next_sensor_to_acquire));
-				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire_setup DONE \t\t\tdur="));
-				DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
-				break;
-			case 1:
-				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire1      START"));
-				if ((_now - cur_sensor->last_acquiresetup_timestamp_ms)
-						>= cur_sensor->minimum_wait_time_after_acquiresetup_ms) {
-					lasttime = cur_sensor->last_acquiresetup_timestamp_ms;
-					cur_sensor->last_acquire1_timestamp_ms = _now;
-					if (cur_sensor->acquire1()) cur_sensor->incNextSubtask();
-					_then = millis();
-					_dur = _then - _now;
-					DEBUGPRINT(DebugLevel::TIMINGS, F("\t\tct="));
-					DEBUGPRINT(DebugLevel::TIMINGS, (_now - lasttime));
-					DEBUGPRINT(DebugLevel::TIMINGS, "/");
-					DEBUGPRINTLN(DebugLevel::TIMINGS, cur_sensor->minimum_wait_time_after_acquiresetup_ms);
-				}
-				else {
-					_then = millis();
-					_dur = _then - _now;
-					DEBUGPRINTLN(DebugLevel::TIMINGS, "\tdelayed");
-				}
-				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(next_sensor_to_acquire));
-				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire1      DONE \t\t\tdur="));
-				DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
-				break;
-			case 2:
-				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire2      START"));
-				if ((_now - cur_sensor->last_acquire1_timestamp_ms)
-						>= cur_sensor->minimum_wait_time_after_acquire1_ms) {
-					lasttime = cur_sensor->last_acquire1_timestamp_ms;
-					cur_sensor->last_acquire2_timestamp_ms = _now;
-					if (cur_sensor->acquire2()) cur_sensor->incNextSubtask();
-					_then = millis();
-					_dur = _then - _now;
-					DEBUGPRINT(DebugLevel::TIMINGS, F("\t\tct="));
-					DEBUGPRINT(DebugLevel::TIMINGS, (_now - lasttime));
-					DEBUGPRINT(DebugLevel::TIMINGS, "/");
-					DEBUGPRINTLN(DebugLevel::TIMINGS, cur_sensor->minimum_wait_time_after_acquire1_ms);
-				}
-				else {
-					_then = millis();
-					_dur = _then - _now;
-					DEBUGPRINTLN(DebugLevel::TIMINGS, "\tdelayed");
-				}
-				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(next_sensor_to_acquire));
-				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire2      DONE \t\t\tdur="));
-				DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
-				break;
-			default:
-				break;
+		Sensor* cur_sensor = sensors[next_sensor_to_acquire];
+		if (cur_sensor->isSensorActive()) {
+
+			DEBUGPRINT(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(next_sensor_to_acquire));
+			switch (cur_sensor->getNextSubTask()) {
+				case 0:
+					DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire_setup START"));
+					if ((_now - cur_sensor->last_acquiresetup_timestamp_ms)
+							>= cur_sensor->minimum_time_between_acquiresetup_ms) {
+						lasttime = cur_sensor->last_acquiresetup_timestamp_ms;
+						cur_sensor->last_acquiresetup_timestamp_ms = _now;
+						cur_sensor->acquire_setup();
+						cur_sensor->incNextSubtask();
+						_then = millis();
+						_dur = _then - _now;
+						DEBUGPRINT(DebugLevel::TIMINGS, F("\t\tct="));
+						DEBUGPRINT(DebugLevel::TIMINGS, (_now - lasttime));
+						DEBUGPRINT(DebugLevel::TIMINGS, "/");
+						DEBUGPRINTLN(DebugLevel::TIMINGS, cur_sensor->minimum_time_between_acquiresetup_ms);
+					}
+					else {
+						_then = millis();
+						_dur = _then - _now;
+						DEBUGPRINTLN(DebugLevel::TIMINGS, "\tdelayed");
+					}
+					DEBUGPRINT(DebugLevel::TIMINGS,
+							String(_then) + " sensors[" + String(next_sensor_to_acquire));
+					DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire_setup DONE \t\t\tdur="));
+					DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
+					break;
+				case 1:
+					DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire1      START"));
+					if ((_now - cur_sensor->last_acquiresetup_timestamp_ms)
+							>= cur_sensor->minimum_wait_time_after_acquiresetup_ms) {
+						lasttime = cur_sensor->last_acquiresetup_timestamp_ms;
+						cur_sensor->last_acquire1_timestamp_ms = _now;
+						cur_sensor->acquire1();
+						cur_sensor->incNextSubtask();
+						_then = millis();
+						_dur = _then - _now;
+						DEBUGPRINT(DebugLevel::TIMINGS, F("\t\tct="));
+						DEBUGPRINT(DebugLevel::TIMINGS, (_now - lasttime));
+						DEBUGPRINT(DebugLevel::TIMINGS, "/");
+						DEBUGPRINTLN(DebugLevel::TIMINGS,
+								cur_sensor->minimum_wait_time_after_acquiresetup_ms);
+					}
+					else {
+						_then = millis();
+						_dur = _then - _now;
+						DEBUGPRINTLN(DebugLevel::TIMINGS, "\tdelayed");
+					}
+					DEBUGPRINT(DebugLevel::TIMINGS,
+							String(_then) + " sensors[" + String(next_sensor_to_acquire));
+					DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire1      DONE \t\t\tdur="));
+					DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
+					break;
+				case 2:
+					DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire2      START"));
+					if ((_now - cur_sensor->last_acquire1_timestamp_ms)
+							>= cur_sensor->minimum_wait_time_after_acquire1_ms) {
+						lasttime = cur_sensor->last_acquire1_timestamp_ms;
+						cur_sensor->last_acquire2_timestamp_ms = _now;
+						cur_sensor->acquire2();
+						cur_sensor->incNextSubtask();
+						_then = millis();
+						_dur = _then - _now;
+						DEBUGPRINT(DebugLevel::TIMINGS, F("\t\tct="));
+						DEBUGPRINT(DebugLevel::TIMINGS, (_now - lasttime));
+						DEBUGPRINT(DebugLevel::TIMINGS, "/");
+						DEBUGPRINTLN(DebugLevel::TIMINGS, cur_sensor->minimum_wait_time_after_acquire1_ms);
+					}
+					else {
+						_then = millis();
+						_dur = _then - _now;
+						DEBUGPRINTLN(DebugLevel::TIMINGS, "\tdelayed");
+					}
+					DEBUGPRINT(DebugLevel::TIMINGS,
+							String(_then) + " sensors[" + String(next_sensor_to_acquire));
+					DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire2      DONE \t\t\tdur="));
+					DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
+					break;
+				default:
+					break;
+			}
 		}
 		next_sensor_to_acquire++;
 
