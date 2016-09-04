@@ -33,7 +33,7 @@ extern void ConfigurePorts(void);
 // -----------------------
 // Custom configuration
 // -----------------------
-String ProgramInfo("Environment Sensor v0.17 Allan Inda 2016July30");
+String ProgramInfo("Environment Sensor v0.18 Allan Inda 2016Sept04");
 
 // Other
 long count = 0;
@@ -198,12 +198,13 @@ void setup(void) {
 
 // Configure Scheduler, scheduleFunction (function pointer, task name, start delay in ms, repeat interval in ms)
 // WARNING: Tasks must run minimally every 30 seconds to prevent software watchdog timer resets
-	myQueue.scheduleFunction(task_readpir, "PIR", 500, 50);
-	myQueue.scheduleFunction(task_acquire, "acquire", 1000, 300);
-	myQueue.scheduleFunction(task_updatethingspeak, "thingspeak", 2000, 1000); // 1 second resolution
-	myQueue.scheduleFunction(task_flashled, "led", 250, 100);
-	myQueue.scheduleFunction(task_serialport_menu, "menu", 2000, 500);
-	myQueue.scheduleFunction(task_webServer, "webserver", 3000, 10);
+	// A lot of the times are prime numbers to reduce the chance of overlaps
+	myQueue.scheduleFunction(task_readpir, "PIR", 501, 43);
+	myQueue.scheduleFunction(task_acquire, "acquire", 997, 47);
+	myQueue.scheduleFunction(task_updatethingspeak, "thingspeak", 1997, 1000); // 1 second resolution
+	myQueue.scheduleFunction(task_flashled, "led", 251, 97);
+	myQueue.scheduleFunction(task_serialport_menu, "menu", 1993, 503);
+	myQueue.scheduleFunction(task_webServer, "webserver", 2999, 11);
 
 // Print boot up information and menu
 	printInfo();
@@ -449,72 +450,110 @@ int task_readpir(unsigned long now) {
 	return 0;
 }
 
-int task_acquire(unsigned long now) {
-	static int next_acquire_number = 0;
-	wdog_timer[static_cast<int>(taskname_acquire)] = now; // kick the software watchdog
-	const int MAX_ACQUIRES = ACQUIRES_PER_SENSOR * SENSOR_COUNT;
+int task_acquire(unsigned long starting_time) {
+	wdog_timer[static_cast<int>(taskname_acquire)] = starting_time; // kick the software watchdog
 
-	if (next_acquire_number < 0 || next_acquire_number > (MAX_ACQUIRES - 1)) {
-		next_acquire_number = 0;
-	}
+	static int next_sensor_to_acquire = 0;
+	static const unsigned long minimum_work_per_this_slice_ms = 13; // keep working until at least this much time is elapsed.
+	unsigned long ending_time = starting_time + minimum_work_per_this_slice_ms;
+	bool no_time_left = false;
 
-	// Interleave the sensors, so setup is run for each sensor in order, then
-	//    acquire1 is run for each sensor, then acquire2 and then back to setup.
-	int subtask_number = next_acquire_number / SENSOR_COUNT;
-	int sensor_number = next_acquire_number - int(subtask_number * SENSOR_COUNT);
+	while (no_time_left == false) {
+		if (next_sensor_to_acquire >= SENSOR_COUNT) {
+			next_sensor_to_acquire = 0;
+		}
 
-	// Just in case, double check so a out of bounds error does not occur.
-	if (subtask_number >= ACQUIRES_PER_SENSOR) {
-		Serial.println(F("ERROR in task_acquire(): subacquire_number>=ACQUIRES_PER_SENSOR"));
-		next_acquire_number = -1;
-	}
-	if (sensor_number >= SENSOR_COUNT) {
-		Serial.println(F("ERROR in task_acquire(): sensor_number>=SENSOR_COUNT"));
-		next_acquire_number = -1;
-	}
+		// run the next sub-task
+		unsigned long _now = millis();
+		unsigned long _then = _now;
+		unsigned long _dur = _now;
+		unsigned long lasttime = 0;
+		Sensor* cur_sensor = sensors[next_sensor_to_acquire];
 
-	// run the next sub-task
-	unsigned long _now = millis();
-	unsigned long _then = _now;
-	unsigned long _dur = _now;
-	if (next_acquire_number >= 0) {
-		switch (subtask_number) {
+		DEBUGPRINT(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(next_sensor_to_acquire));
+		switch (cur_sensor->getNextSubTask()) {
 			case 0:
-				DEBUGPRINT(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(sensor_number));
-				DEBUGPRINTLN(DebugLevel::TIMINGS, F("]->acquire_setup START"));
-				sensors[sensor_number]->acquire_setup(); //lint !e661
-				_then = millis();
-				_dur = _then - _now;
-				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensor_number));
-				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire_setup DONE \t\ttime="));
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire_setup START"));
+				if ((_now - cur_sensor->last_acquiresetup_timestamp_ms)
+						>= cur_sensor->minimum_time_between_acquiresetup_ms) {
+					lasttime = cur_sensor->last_acquiresetup_timestamp_ms;
+					cur_sensor->last_acquiresetup_timestamp_ms = _now;
+					if (cur_sensor->acquire_setup()) cur_sensor->incNextSubtask();
+					_then = millis();
+					_dur = _then - _now;
+					DEBUGPRINT(DebugLevel::TIMINGS, F("\t\tct="));
+					DEBUGPRINT(DebugLevel::TIMINGS, (_now - lasttime));
+					DEBUGPRINT(DebugLevel::TIMINGS, "/");
+					DEBUGPRINTLN(DebugLevel::TIMINGS, cur_sensor->minimum_time_between_acquiresetup_ms);
+				}
+				else {
+					_then = millis();
+					_dur = _then - _now;
+					DEBUGPRINTLN(DebugLevel::TIMINGS, "\tdelayed");
+				}
+				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(next_sensor_to_acquire));
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire_setup DONE \t\t\tdur="));
 				DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
 				break;
 			case 1:
-				DEBUGPRINT(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(sensor_number));
-				DEBUGPRINTLN(DebugLevel::TIMINGS, F("]->acquire1 START"));
-				sensors[sensor_number]->acquire1(); //lint !e661
-				_then = millis();
-				_dur = _then - _now;
-				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensor_number));
-				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire1 DONE \t\ttime="));
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire1      START"));
+				if ((_now - cur_sensor->last_acquiresetup_timestamp_ms)
+						>= cur_sensor->minimum_wait_time_after_acquiresetup_ms) {
+					lasttime = cur_sensor->last_acquiresetup_timestamp_ms;
+					cur_sensor->last_acquire1_timestamp_ms = _now;
+					if (cur_sensor->acquire1()) cur_sensor->incNextSubtask();
+					_then = millis();
+					_dur = _then - _now;
+					DEBUGPRINT(DebugLevel::TIMINGS, F("\t\tct="));
+					DEBUGPRINT(DebugLevel::TIMINGS, (_now - lasttime));
+					DEBUGPRINT(DebugLevel::TIMINGS, "/");
+					DEBUGPRINTLN(DebugLevel::TIMINGS, cur_sensor->minimum_wait_time_after_acquiresetup_ms);
+				}
+				else {
+					_then = millis();
+					_dur = _then - _now;
+					DEBUGPRINTLN(DebugLevel::TIMINGS, "\tdelayed");
+				}
+				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(next_sensor_to_acquire));
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire1      DONE \t\t\tdur="));
 				DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
 				break;
 			case 2:
-				DEBUGPRINT(DebugLevel::TIMINGS, String(_now) + " sensors[" + String(sensor_number));
-				DEBUGPRINTLN(DebugLevel::TIMINGS, F("]->acquire2 START"));
-				sensors[sensor_number]->acquire2(); //lint !e661
-				_then = millis();
-				_dur = _then - _now;
-				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensor_number));
-				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire2 DONE \t\ttime="));
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire2      START"));
+				if ((_now - cur_sensor->last_acquire1_timestamp_ms)
+						>= cur_sensor->minimum_wait_time_after_acquire1_ms) {
+					lasttime = cur_sensor->last_acquire1_timestamp_ms;
+					cur_sensor->last_acquire2_timestamp_ms = _now;
+					if (cur_sensor->acquire2()) cur_sensor->incNextSubtask();
+					_then = millis();
+					_dur = _then - _now;
+					DEBUGPRINT(DebugLevel::TIMINGS, F("\t\tct="));
+					DEBUGPRINT(DebugLevel::TIMINGS, (_now - lasttime));
+					DEBUGPRINT(DebugLevel::TIMINGS, "/");
+					DEBUGPRINTLN(DebugLevel::TIMINGS, cur_sensor->minimum_wait_time_after_acquire1_ms);
+				}
+				else {
+					_then = millis();
+					_dur = _then - _now;
+					DEBUGPRINTLN(DebugLevel::TIMINGS, "\tdelayed");
+				}
+				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(next_sensor_to_acquire));
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire2      DONE \t\t\tdur="));
 				DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
 				break;
 			default:
 				break;
 		}
+		next_sensor_to_acquire++;
+
+		// Determine if there is more time left in the time slide for this task.
+		if (millis() > ending_time) {
+			no_time_left = true;
+			DEBUGPRINTLN(DebugLevel::TIMINGS, "DONE");
+		}
 	}
-	next_acquire_number++;
-	return next_acquire_number;
+
+	return 0;
 }
 
 int task_updatethingspeak(unsigned long now) {
@@ -565,7 +604,7 @@ void printExtendedMenu(void) {
 	Serial.println(F("B  show reason for last reset"));
 	Serial.println(F("C  write defaults to configuration memory"));
 	if (DEBUGPRINT_ENABLED) { //lint !e774
-		Serial.print("D  [" + debug.getDebugLevelString());
+		Serial.print("dD  [" + debug.getDebugLevelString());
 		Serial.println(F("] Debug level for logging to serial port"));
 	}
 	Serial.println(F("E  show data structure in EEPROM"));
@@ -592,7 +631,7 @@ int task_serialport_menu(unsigned long now) {
 	static bool continueT = false;
 	char ch = 0;
 
-	// Get next keystroke
+// Get next keystroke
 	if ((continueS == false && continueR == false && continueT == false) || Serial.available()) {
 		ch = static_cast<char>(Serial.read());
 		continueS = false;
@@ -610,7 +649,7 @@ int task_serialport_menu(unsigned long now) {
 		}
 	}
 
-	// Determine if new heading is needed
+// Determine if new heading is needed
 	if (ch != 's') {
 		need_new_heading = true;
 	}
@@ -621,7 +660,7 @@ int task_serialport_menu(unsigned long now) {
 		T_need_new_heading = true;
 	}
 	if (ch > 0) {
-		// Process the keystroke
+// Process the keystroke
 		switch (ch) {
 			case '?':
 				printMenu();
@@ -748,6 +787,16 @@ int task_serialport_menu(unsigned long now) {
 				Serial.println(F("Database written to EEPROM."));
 				break;
 			case 'D':
+				if (DEBUGPRINT_ENABLED) { //lint !e774
+					dinfo.setDebugLevel(static_cast<int>(debug.decrementDebugLevel()));
+					Serial.println("Debug Level set to: " + debug.getDebugLevelString());
+					if (eeprom_is_dirty) dinfo.saveDatabaseToEEPROM();
+				}
+				else {
+					Serial.println(F("Debug statements not in binary"));
+				}
+				break;
+			case 'd':
 				if (DEBUGPRINT_ENABLED) { //lint !e774
 					dinfo.setDebugLevel(static_cast<int>(debug.incrementDebugLevel()));
 					Serial.println("Debug Level set to: " + debug.getDebugLevelString());

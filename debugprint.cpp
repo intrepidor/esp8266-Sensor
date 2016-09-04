@@ -40,6 +40,49 @@ bool DebugPrint::isDebugLevel(DebugLevel dlevel) {
 	return getBitwiseAND(dlevel, debuglevel);
 }
 
+DebugLevel DebugPrint::decrementDebugLevel(void) {
+	switch (debuglevel) {
+		case DebugLevel::END:
+		case DebugLevel::INFO:
+			debuglevel = DebugLevel::OFF;
+			break;
+		case DebugLevel::ERROR:
+			debuglevel = DebugLevel::INFO;
+			break;
+		case DebugLevel::DEBUG:
+			debuglevel = DebugLevel::ERROR;
+			break;
+		case DebugLevel::EEPROM:
+			debuglevel = DebugLevel::DEBUG;
+			break;
+		case DebugLevel::TIMINGS:
+			debuglevel = DebugLevel::EEPROM;
+			break;
+		case DebugLevel::HTTPPUT:
+			debuglevel = DebugLevel::TIMINGS;
+			break;
+		case DebugLevel::HTTPGET:
+			debuglevel = DebugLevel::HTTPPUT;
+			break;
+		case DebugLevel::WEBPAGEPROCESSING:
+			debuglevel = DebugLevel::HTTPGET;
+			break;
+		case DebugLevel::PCF8591:
+			debuglevel = DebugLevel::WEBPAGEPROCESSING;
+			break;
+		case DebugLevel::SHARPGP2Y10:
+			debuglevel = DebugLevel::PCF8591;
+			break;
+		case DebugLevel::OFF:
+		default:
+			debuglevel = DebugLevel::SHARPGP2Y10;
+			break;
+	}
+	eeprom_is_dirty = true;
+	validateDebugLevel();
+	return debuglevel;
+}
+
 DebugLevel DebugPrint::incrementDebugLevel(void) {
 	switch (debuglevel) {
 		case DebugLevel::OFF:

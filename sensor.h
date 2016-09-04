@@ -86,9 +86,81 @@ private:
 	SensorValue cal[SENSOR_CALIB_COUNT];
 	sensorModule module;
 	SensorPins pins;
+	/*
+	 * After time_till_stale_ms time has passed, the values stored in value[] for the
+	 * sensor are set to NAN (i.e. invalidated). This avoids having a stale value
+	 * being reported such as after a sensor is removed or if the sensor breaks.
+	 */
 	unsigned long time_till_stale_ms;
 
 public:
+	/* ---------------------------------------------------------------------
+	 * This variable keeps track of the next subtask to run for a given sensor. The
+	 * choices are 0:acquire_setup(), 1:acquire1(), and 2:acquire2(). All other values
+	 * are invalid. If the subtask is too large, it's converted to zero. This provides
+	 * wrap-around. Wrap-around in the negative direction is not allowed, so that is also
+	 * set to zero.
+	 */
+	int next_subtask;
+	void setNextSubtask(int n) {
+		next_subtask = n;
+		getNextSubTask(); // performs range checking.
+	}
+	int incNextSubtask(void) {
+		next_subtask++;
+		return getNextSubTask();
+	}
+	int getNextSubTask(void) {
+		if (next_subtask < 0 || next_subtask > 2) next_subtask = 0;
+		return next_subtask;
+	}
+
+	/* ---------------------------------------------------------------------
+	 * All sensor measurements start with a call to acquire_setup(). The value of
+	 * minimum_time_between_acquiresetup_ms configures the minimum time between
+	 * successive calls, and essentually sets the sensor's sample rate. The reason
+	 * for limiting the rate is that some sensors require a settle down time after
+	 * a read and before the next read can occur, e.g. Sharp GY2Y10 dust sensor.
+	 */
+	unsigned long minimum_time_between_acquiresetup_ms;
+
+	/* ---------------------------------------------------------------------
+	 * Most of the time when reading a sensor, the acquire_setup() is used to send
+	 * the start conversion trigger or otherwise tell the sensor to perform a reading.
+	 * The time until this conversion completes could be quite long (e.g. DHT22).
+	 * Rather than have a delay loop that could be 10s or 100s of milliseconds long,
+	 * the request for data is sent by acquire_setup(), and the actual reading of that
+	 * data is done by acquire1(). The value of minimum_wait_time_after_acquiresetup_ms
+	 * sets the minimum time to delay before attempting the read in acquire1().
+	 */
+	unsigned long minimum_wait_time_after_acquiresetup_ms;
+
+	/* ---------------------------------------------------------------------
+	 * This is sets the minimum time between the call to acquire1() and acquire2().
+	 */
+	unsigned long minimum_wait_time_after_acquire1_ms;
+
+	/* ---------------------------------------------------------------------
+	 * last_acquiresetup_timestamp_ms keeps track of the last time a acquire_setup() was
+	 * executed on a given sensor for the purpose of ensuring the proper delays and
+	 * sample rate controlled by minimum_time_between_acquiresetup_ms and
+	 * minimum_wait_time_after_acquiresetup_ms.
+	 */
+	unsigned long last_acquiresetup_timestamp_ms;
+
+	/* ---------------------------------------------------------------------
+	 * last_acquire1_timestamp_ms keeps track of the last time a acquire1() was
+	 * executed on a given sensor for the purpose of ensuring the proper delays and
+	 * sample rates.
+	 */
+	unsigned long last_acquire1_timestamp_ms;
+
+	/* ---------------------------------------------------------------------
+	 * last_acquire2_timestamp_ms keeps track of the last time a acquire2() was
+	 * executed. This time is not needed other than for debugging purposes.
+	 */
+	unsigned long last_acquire2_timestamp_ms;
+
 	~Sensor() { /* nothing to destroy */
 	}
 	// CONSIDER creating a constructor that includes the init parameters, then call
@@ -101,7 +173,14 @@ public:
 		this->time_till_stale_ms = 10000; // default to 10 seconds
 		// SensorValue's have their own constructor
 		// SensorPins has its own constructor
+		this->minimum_time_between_acquiresetup_ms = 0;
+		this->minimum_wait_time_after_acquiresetup_ms = 0;
+		this->minimum_wait_time_after_acquire1_ms = 0;
+		this->last_acquiresetup_timestamp_ms = 0;
+		this->last_acquire1_timestamp_ms = 0;
+		this->next_subtask = 0;
 	}
+
 	virtual void init(sensorModule, SensorPins&) = 0;
 	virtual bool acquire_setup(void) = 0;
 	virtual bool acquire1(void) = 0;

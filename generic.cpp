@@ -31,6 +31,10 @@ void GenericSensor::init(sensorModule m, SensorPins& p) {
 	setValueEnable(TEMP_VALUE_CHANNEL_DIGITAL, false);
 	setValueName(TEMP_VALUE_CHANNEL_DIGITAL, "Digital");
 
+	minimum_time_between_acquiresetup_ms = 0;
+	minimum_wait_time_after_acquiresetup_ms = 0;
+	minimum_wait_time_after_acquire1_ms = 0;
+
 	if (m == sensorModule::analog || m == sensorModule::analog_digital
 			|| m == sensorModule::Sharp_GP2Y10_DustSensor) {
 		setCalEnable(TEMP_CAL_CHANNEL_ANALOG_OFFSET, true);
@@ -50,6 +54,8 @@ void GenericSensor::init(sensorModule m, SensorPins& p) {
 
 	if (m == sensorModule::Sharp_GP2Y10_DustSensor) {
 		setValueName(TEMP_VALUE_CHANNEL_ANALOG, "Dust u/m^3");
+		setStaleAge_ms(60000); // don't timeout the value for at least a minute. The acquire routine has it's own timeout/stale code
+		minimum_time_between_acquiresetup_ms = 10; // don't read faster then once per 10ms.
 	}
 
 	// The pins used to interact with the sensor
@@ -82,31 +88,31 @@ bool GenericSensor::acquire_setup(void) {
 	}
 	else {
 		if (getModule() == sensorModule::analog || getModule() == sensorModule::analog_digital) {
-			DEBUGPRINTLN(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(analog_pin));
 			started = true;
+			return true;
 		}
 		if (getModule() == sensorModule::digital || getModule() == sensorModule::analog_digital) {
-			DEBUGPRINTLN(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(digital_pin));
 			pinMode(digital_pin, INPUT);
 			started = true;
+			return true;
 		}
 		if (getModule() == sensorModule::taskclock || getModule() == sensorModule::Sharp_GP2Y10_DustSensor) {
-			DEBUGPRINTLN(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(digital_pin));
 			pinMode(digital_pin, OUTPUT);
 			digitalWrite(digital_pin, HIGH); // Turn off the LED
-			setStaleAge_ms(60000); // don't timeout the value for at least a minute. The acquire routine has it's own timeout/stale code
 			started = true;
-		}
-		if (getModule() == sensorModule::off) {
-			started = true;
+			return true;
 		}
 	}
-	return true;
+	return false;
 }
 
 bool GenericSensor::acquire1(void) {
 	if (started) {
 		unsigned int now = micros();
+		////////////////////////////////////////////////////////////////////////////////////////////
+		if (getModule() == sensorModule::off) {
+			started = false;
+		}
 		////////////////////////////////////////////////////////////////////////////////////////////
 		if (getModule() == sensorModule::analog || getModule() == sensorModule::analog_digital) {
 			last_reading_timestamp_us = now;
@@ -125,7 +131,9 @@ bool GenericSensor::acquire1(void) {
 
 			// Calibration corrected values
 			setAnalog(static_cast<float>(a1));
+			return true;
 		}
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		if (getModule() == sensorModule::digital || getModule() == sensorModule::analog_digital) {
 			last_reading_timestamp_us = now;
@@ -137,6 +145,7 @@ bool GenericSensor::acquire1(void) {
 			else {
 				setDigital(1);
 			}
+			//return true; // this executes so fast, just call it no work done.
 		}
 		////////////////////////////////////////////////////////////////////////////////////////////
 		static const unsigned int GP2Y10_MIN_SAMPLE_PERIOD_US = 100000; // Take measurements not faster than every 0.1 seconds
@@ -257,14 +266,16 @@ bool GenericSensor::acquire1(void) {
 					DEBUGPRINT(DebugLevel::SHARPGP2Y10, "\tug/m^3=" + String(a1));
 				}
 				DEBUGPRINTLN(DebugLevel::SHARPGP2Y10, "");
+				return true;
 			}
+
 		}
 		////////////////////////////////////////////////////////////////////////////////////////////
 		if (getModule() == sensorModule::taskclock) {
-			return true; // do nothing
+			; // do nothing
 		}
 	}
-	return true;
+	return false;
 }
 
 bool GenericSensor::acquire2(void) {

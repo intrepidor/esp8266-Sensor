@@ -24,10 +24,10 @@ private:
 	uint8_t analog_pin;
 	bool started;
 	int sensorPortNumber;
-	unsigned int last_reading_timestamp_us;
+	unsigned long last_reading_timestamp_us;
 	int reading_count;
 	int generic_accumulator;
-	int reading_count_within_cycle;
+	unsigned int reading_count_within_cycle;
 public:
 	~GenericSensor() {
 		sensorPortNumber = 255;

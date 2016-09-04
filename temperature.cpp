@@ -62,21 +62,33 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 			dht = new DHT(digital_pin, DHT11);
 			delay(2000); // FIXME -- there is no reason for this delay. Neither the constructor or begin do anything other that initialize variables.
 			dht->begin();
+			minimum_time_between_acquiresetup_ms = 2000;
+			minimum_wait_time_after_acquiresetup_ms = 250;
+			minimum_wait_time_after_acquire1_ms = 250;
 			break;
 		case sensorModule::dht22:
 			dht = new DHT(digital_pin, DHT22);
 			delay(2000); // FIXME -- there is no reason for this delay. Neither the constructor or begin do anything other that initialize variables.
 			dht->begin();
+			minimum_time_between_acquiresetup_ms = 2000;
+			minimum_wait_time_after_acquiresetup_ms = 250;
+			minimum_wait_time_after_acquire1_ms = 250;
 			break;
 		case sensorModule::ds18b20:
 			ow = new OneWire(digital_pin);	// specify pin on creation
 			dallas = new DallasTemperature(ow);
+			minimum_time_between_acquiresetup_ms = 2000;
+			minimum_wait_time_after_acquiresetup_ms = 0;
+			minimum_wait_time_after_acquire1_ms = 800;
 			// do the begin later since it takes a while
 			break;
 		case sensorModule::htu21d_si7102:
 			htu21d = new HTU21D();
 //			htu21d->begin(callbackfunction);
 			htu21d->begin();
+			minimum_time_between_acquiresetup_ms = 2000;
+			minimum_wait_time_after_acquiresetup_ms = 0;
+			minimum_wait_time_after_acquire1_ms = 0;
 			break;
 		default:
 			break;  // none of these sensors are supported by this module
@@ -140,7 +152,6 @@ String TemperatureSensor::getsInfo(String eol) {
 }
 
 bool TemperatureSensor::acquire_setup(void) {
-	DEBUGPRINTLN(DebugLevel::TIMINGS, String(millis()) + ", setup() " + String(digital_pin));
 	pinMode(digital_pin, INPUT);
 	sensorModule m = getModule();
 	if (m == sensorModule::ds18b20) {
@@ -174,7 +185,7 @@ bool TemperatureSensor::acquire_setup(void) {
 				htu21d->setResolution(USER_REGISTER_RESOLUTION_RH12_TEMP14);
 				started = true;
 			}
-			return acquire1();	// there is no setup for this sensor
+			return true; // there is no other setup for this sensor
 		}
 	}
 	return false;
@@ -196,18 +207,20 @@ bool TemperatureSensor::acquire1(void) {
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht && started) {
 			float t = dht->readTemperature(false); // read celcius
-			return StoreTemperature(t);
+			StoreTemperature(t);
 		}
+		return true;
 	}
 	else if (m == sensorModule::htu21d_si7102) {
 		if (htu21d && started) {
 			float t = htu21d->readTemperature();	// takes up to 100ms
 			if (t >= 998.0F) {
-				return StoreTemperature(NAN);
+				StoreTemperature (NAN);
 			}
 			else {
-				return StoreTemperature(t);
+				StoreTemperature(t);
 			}
+			return true;
 		}
 	}
 	return false;
@@ -219,11 +232,12 @@ bool TemperatureSensor::acquire2(void) {
 		if (dallas && started) {
 			float t = dallas->getTempCByIndex(0);
 			if (t == DEVICE_DISCONNECTED_C || t < -55.0F || t > 125.0F) { // device limits are -55C to +125C
-				return StoreTemperature(NAN);
+				StoreTemperature (NAN);
 			}
 			else {
-				return StoreTemperature(t);
+				StoreTemperature(t);
 			}
+			return true;
 		}
 	}
 	else if (m == sensorModule::dht11 || m == sensorModule::dht22) {
@@ -231,18 +245,20 @@ bool TemperatureSensor::acquire2(void) {
 		// Reading temperature or humidity takes about 250 milliseconds!
 		if (dht && started) {
 			float h = dht->readHumidity();
-			return StoreHumidity(h);
+			StoreHumidity(h);
+			return true;
 		}
 	}
 	else if (m == sensorModule::htu21d_si7102) {
 		if (htu21d && started) {
 			float h = htu21d->readHumidity();	// takes up to 100ms
 			if (h >= 998.0F) {
-				return StoreHumidity(NAN);
+				StoreHumidity (NAN);
 			}
 			else {
-				return StoreHumidity(h);
+				StoreHumidity(h);
 			}
+			return true;
 		}
 	}
 	return false;

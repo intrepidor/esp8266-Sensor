@@ -18,7 +18,7 @@ const int PCF8591_ERROR_READ = -1;
 
 // Misc constants
 const int PCF8591_MAX_RANGE = 256;
-const double PCF8591_VOLTAGE = 3.3D;
+const double PCF8591_VOLTAGE = 3.3F;
 const int PCF8591_ADC_MAX_CHANNELS = 4;
 
 /* I2C Address = 1001abcr

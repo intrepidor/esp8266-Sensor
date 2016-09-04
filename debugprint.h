@@ -64,6 +64,7 @@ public:
 
 	bool isDebugLevel(DebugLevel dlevel);
 	DebugLevel incrementDebugLevel(void);
+	DebugLevel decrementDebugLevel(void);
 
 	String getDebugLevelString(void) {
 		return convertDebugLevelToString(debuglevel);
