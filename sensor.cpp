@@ -28,6 +28,89 @@ float SensorValue::getValue() {
 //
 ///////////////////////////////////////////////////////////////////////////
 
+bool Sensor::acquire(void) {
+	unsigned long _now = millis();
+	unsigned long _then = _now;
+	unsigned long _dur = _now;
+	unsigned long lasttime = 0;
+	if (isSensorActive()) {
+		switch (getNextSubTask()) {
+			case 0:
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire_setup START"));
+				if ((_now - last_acquiresetup_timestamp_ms) >= minimum_time_between_acquiresetup_ms) {
+					lasttime = last_acquiresetup_timestamp_ms;
+					last_acquiresetup_timestamp_ms = _now;
+					acquire_setup();
+					incNextSubtask();
+					_then = millis();
+					_dur = _then - _now;
+					DEBUGPRINT(DebugLevel::TIMINGS, F("\t\tct="));
+					DEBUGPRINT(DebugLevel::TIMINGS, (_now - lasttime));
+					DEBUGPRINT(DebugLevel::TIMINGS, "/");
+					DEBUGPRINTLN(DebugLevel::TIMINGS, minimum_time_between_acquiresetup_ms);
+				}
+				else {
+					_then = millis();
+					_dur = _then - _now;
+					DEBUGPRINTLN(DebugLevel::TIMINGS, "\tdelayed");
+				}
+				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensorID));
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire_setup DONE \t\t\tdur="));
+				DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
+				break;
+			case 1:
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire1      START"));
+				if ((_now - last_acquiresetup_timestamp_ms) >= minimum_wait_time_after_acquiresetup_ms) {
+					lasttime = last_acquiresetup_timestamp_ms;
+					last_acquire1_timestamp_ms = _now;
+					acquire1();
+					incNextSubtask();
+					_then = millis();
+					_dur = _then - _now;
+					DEBUGPRINT(DebugLevel::TIMINGS, F("\t\tct="));
+					DEBUGPRINT(DebugLevel::TIMINGS, (_now - lasttime));
+					DEBUGPRINT(DebugLevel::TIMINGS, "/");
+					DEBUGPRINTLN(DebugLevel::TIMINGS, minimum_wait_time_after_acquiresetup_ms);
+				}
+				else {
+					_then = millis();
+					_dur = _then - _now;
+					DEBUGPRINTLN(DebugLevel::TIMINGS, "\tdelayed");
+				}
+				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensorID));
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire1      DONE \t\t\tdur="));
+				DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
+				break;
+			case 2:
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire2      START"));
+				if ((_now - last_acquire1_timestamp_ms) >= minimum_wait_time_after_acquire1_ms) {
+					lasttime = last_acquire1_timestamp_ms;
+					last_acquire2_timestamp_ms = _now;
+					acquire2();
+					incNextSubtask();
+					_then = millis();
+					_dur = _then - _now;
+					DEBUGPRINT(DebugLevel::TIMINGS, F("\t\tct="));
+					DEBUGPRINT(DebugLevel::TIMINGS, (_now - lasttime));
+					DEBUGPRINT(DebugLevel::TIMINGS, "/");
+					DEBUGPRINTLN(DebugLevel::TIMINGS, minimum_wait_time_after_acquire1_ms);
+				}
+				else {
+					_then = millis();
+					_dur = _then - _now;
+					DEBUGPRINTLN(DebugLevel::TIMINGS, "\tdelayed");
+				}
+				DEBUGPRINT(DebugLevel::TIMINGS, String(_then) + " sensors[" + String(sensorID));
+				DEBUGPRINT(DebugLevel::TIMINGS, F("]->acquire2      DONE \t\t\tdur="));
+				DEBUGPRINTLN(DebugLevel::TIMINGS, _dur);
+				break;
+			default:
+				break;
+		}
+	}
+	return true;
+}
+
 void Sensor::setType(int _channel, valueType t) {
 	if (isValueChannelValid(_channel)) {
 		value[_channel].setType(t);

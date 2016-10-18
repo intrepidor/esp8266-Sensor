@@ -31,9 +31,9 @@ void GenericSensor::init(sensorModule m, SensorPins& p) {
 	setValueEnable(TEMP_VALUE_CHANNEL_DIGITAL, false);
 	setValueName(TEMP_VALUE_CHANNEL_DIGITAL, "Digital");
 
-	minimum_time_between_acquiresetup_ms = 0;
-	minimum_wait_time_after_acquiresetup_ms = 0;
-	minimum_wait_time_after_acquire1_ms = 0;
+	setWaitTimeBetweenAcquireSetupMS(0);
+	setWaitTimeAfterAcquireSetupMS(0);
+	setWaitTimeAfterAcquire1MS(0);
 
 	if (m == sensorModule::analog || m == sensorModule::analog_digital
 			|| m == sensorModule::Sharp_GP2Y10_DustSensor) {
@@ -55,7 +55,7 @@ void GenericSensor::init(sensorModule m, SensorPins& p) {
 	if (m == sensorModule::Sharp_GP2Y10_DustSensor) {
 		setValueName(TEMP_VALUE_CHANNEL_ANALOG, "Dust u/m^3");
 		setStaleAge_ms(60000); // don't timeout the value for at least a minute. The acquire routine has it's own timeout/stale code
-		minimum_time_between_acquiresetup_ms = 10; // don't read faster then once per 10ms.
+		setWaitTimeBetweenAcquireSetupMS(10); // don't read faster then once per 10ms.
 	}
 
 	// The pins used to interact with the sensor

@@ -60,35 +60,33 @@ void TemperatureSensor::init(sensorModule m, SensorPins& p) {
 	switch (m) {
 		case sensorModule::dht11:
 			dht = new DHT(digital_pin, DHT11);
-			delay(2000); // FIXME -- there is no reason for this delay. Neither the constructor or begin do anything other that initialize variables.
 			dht->begin();
-			minimum_time_between_acquiresetup_ms = 2000;
-			minimum_wait_time_after_acquiresetup_ms = 250;
-			minimum_wait_time_after_acquire1_ms = 250;
+			setWaitTimeBetweenAcquireSetupMS(2000);
+			setWaitTimeAfterAcquireSetupMS(250);
+			setWaitTimeAfterAcquire1MS(250);
 			break;
 		case sensorModule::dht22:
 			dht = new DHT(digital_pin, DHT22);
-			delay(2000); // FIXME -- there is no reason for this delay. Neither the constructor or begin do anything other that initialize variables.
 			dht->begin();
-			minimum_time_between_acquiresetup_ms = 2000;
-			minimum_wait_time_after_acquiresetup_ms = 250;
-			minimum_wait_time_after_acquire1_ms = 250;
+			setWaitTimeBetweenAcquireSetupMS(2000);
+			setWaitTimeAfterAcquireSetupMS(250);
+			setWaitTimeAfterAcquire1MS(250);
 			break;
 		case sensorModule::ds18b20:
 			ow = new OneWire(digital_pin);	// specify pin on creation
 			dallas = new DallasTemperature(ow);
-			minimum_time_between_acquiresetup_ms = 2000;
-			minimum_wait_time_after_acquiresetup_ms = 0;
-			minimum_wait_time_after_acquire1_ms = 800;
+			setWaitTimeBetweenAcquireSetupMS(2000);
+			setWaitTimeAfterAcquireSetupMS(0);
+			setWaitTimeAfterAcquire1MS(800);
 			// do the begin later since it takes a while
 			break;
 		case sensorModule::htu21d_si7102:
 			htu21d = new HTU21D();
 //			htu21d->begin(callbackfunction);
 			htu21d->begin();
-			minimum_time_between_acquiresetup_ms = 2000;
-			minimum_wait_time_after_acquiresetup_ms = 0;
-			minimum_wait_time_after_acquire1_ms = 0;
+			setWaitTimeBetweenAcquireSetupMS(2000);
+			setWaitTimeAfterAcquireSetupMS(0);
+			setWaitTimeAfterAcquire1MS(0);
 			break;
 		default:
 			break;  // none of these sensors are supported by this module

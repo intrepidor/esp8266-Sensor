@@ -84,7 +84,7 @@ public:
 		dacReg = 0;
 		disableDAC();
 		disableAutoIncrementChannel();
-		setInputs(pcf8591_AnInput_Type::four_single_ended);
+		inputType = pcf8591_AnInput_Type::four_single_ended;
 	}
 
 	uint8_t getAddr(void) {

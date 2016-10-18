@@ -86,15 +86,8 @@ private:
 	SensorValue cal[SENSOR_CALIB_COUNT];
 	sensorModule module;
 	SensorPins pins;
-	/*
-	 * After time_till_stale_ms time has passed, the values stored in value[] for the
-	 * sensor are set to NAN (i.e. invalidated). This avoids having a stale value
-	 * being reported such as after a sensor is removed or if the sensor breaks.
-	 */
-	unsigned long time_till_stale_ms;
 
-public:
-	/* ---------------------------------------------------------------------
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * This variable keeps track of the next subtask to run for a given sensor. The
 	 * choices are 0:acquire_setup(), 1:acquire1(), and 2:acquire2(). All other values
 	 * are invalid. If the subtask is too large, it's converted to zero. This provides
@@ -102,20 +95,21 @@ public:
 	 * set to zero.
 	 */
 	int next_subtask;
-	void setNextSubtask(int n) {
-		next_subtask = n;
-		getNextSubTask(); // performs range checking.
-	}
-	int incNextSubtask(void) {
-		next_subtask++;
-		return getNextSubTask();
-	}
-	int getNextSubTask(void) {
-		if (next_subtask < 0 || next_subtask > 2) next_subtask = 0;
-		return next_subtask;
-	}
 
-	/* ---------------------------------------------------------------------
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	 * There are multiple sensor instance created. This is an ID number used to map
+	 * the sensor instance to a port number.
+	 */
+	int sensorID; 	// should be the port number: 0, 1, 2.
+
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	 * After time_till_stale_ms time has passed, the values stored in value[] for the
+	 * sensor are set to NAN (i.e. invalidated). This avoids having a stale value
+	 * being reported such as after a sensor is removed or if the sensor breaks.
+	 */
+	unsigned long time_till_stale_ms;
+
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * All sensor measurements start with a call to acquire_setup(). The value of
 	 * minimum_time_between_acquiresetup_ms configures the minimum time between
 	 * successive calls, and essentually sets the sensor's sample rate. The reason
@@ -124,7 +118,7 @@ public:
 	 */
 	unsigned long minimum_time_between_acquiresetup_ms;
 
-	/* ---------------------------------------------------------------------
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * Most of the time when reading a sensor, the acquire_setup() is used to send
 	 * the start conversion trigger or otherwise tell the sensor to perform a reading.
 	 * The time until this conversion completes could be quite long (e.g. DHT22).
@@ -135,12 +129,12 @@ public:
 	 */
 	unsigned long minimum_wait_time_after_acquiresetup_ms;
 
-	/* ---------------------------------------------------------------------
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * This is sets the minimum time between the call to acquire1() and acquire2().
 	 */
 	unsigned long minimum_wait_time_after_acquire1_ms;
 
-	/* ---------------------------------------------------------------------
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * last_acquiresetup_timestamp_ms keeps track of the last time a acquire_setup() was
 	 * executed on a given sensor for the purpose of ensuring the proper delays and
 	 * sample rate controlled by minimum_time_between_acquiresetup_ms and
@@ -148,52 +142,120 @@ public:
 	 */
 	unsigned long last_acquiresetup_timestamp_ms;
 
-	/* ---------------------------------------------------------------------
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * last_acquire1_timestamp_ms keeps track of the last time a acquire1() was
 	 * executed on a given sensor for the purpose of ensuring the proper delays and
 	 * sample rates.
 	 */
 	unsigned long last_acquire1_timestamp_ms;
 
-	/* ---------------------------------------------------------------------
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	 * last_acquire2_timestamp_ms keeps track of the last time a acquire2() was
 	 * executed. This time is not needed other than for debugging purposes.
 	 */
 	unsigned long last_acquire2_timestamp_ms;
 
+public:
+
 	~Sensor() { /* nothing to destroy */
 	}
-	// CONSIDER creating a constructor that includes the init parameters, then call
-	// init via the constructor
+
 	Sensor(void) {
 		sensorName = "";
 		memset(value, 0, sizeof(value));
 		memset(cal, 0, sizeof(cal));
-		this->module = sensorModule::off;
-		this->time_till_stale_ms = 10000; // default to 10 seconds
+		module = sensorModule::off;
+		time_till_stale_ms = 10000; // default to 10 seconds
 		// SensorValue's have their own constructor
 		// SensorPins has its own constructor
-		this->minimum_time_between_acquiresetup_ms = 0;
-		this->minimum_wait_time_after_acquiresetup_ms = 0;
-		this->minimum_wait_time_after_acquire1_ms = 0;
-		this->last_acquiresetup_timestamp_ms = 0;
-		this->last_acquire1_timestamp_ms = 0;
-		this->next_subtask = 0;
+		minimum_time_between_acquiresetup_ms = 0;
+		minimum_wait_time_after_acquiresetup_ms = 0;
+		minimum_wait_time_after_acquire1_ms = 0;
+		last_acquiresetup_timestamp_ms = 0;
+		last_acquire1_timestamp_ms = 0;
+		last_acquire2_timestamp_ms = 0;
+		next_subtask = 0;
+		sensorID = -1;
 	}
 
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	virtual void init(sensorModule, SensorPins&) = 0;
 	virtual bool acquire_setup(void) = 0;
 	virtual bool acquire1(void) = 0;
 	virtual bool acquire2(void) = 0;
-	virtual String getsInfo(String eol) = 0;
 
+	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	 * This funciton will take care of calling acquire_setup, acquire1, and acquire2,
+	 * and ensure the timing between the calls is correct as configured.
+	 */
+	bool acquire(void);
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// Timing
+	unsigned long getTimeTillStaleMS(void) {
+		return time_till_stale_ms;
+	}
+	void setTimeTillStaleMS(unsigned long t) {
+		time_till_stale_ms = t;
+	}
+
+	unsigned long getWaitTimeBetweenAcquireSetupMS(void) {
+		return minimum_time_between_acquiresetup_ms;
+	}
+	void setWaitTimeBetweenAcquireSetupMS(unsigned long t) {
+		minimum_time_between_acquiresetup_ms = t;
+	}
+
+	unsigned long getWaitTimeAfterAcquireSetupMS(void) {
+		return minimum_wait_time_after_acquiresetup_ms;
+	}
+	void setWaitTimeAfterAcquireSetupMS(unsigned long t) {
+		minimum_wait_time_after_acquiresetup_ms = t;
+	}
+
+	unsigned long getWaitTimeAfterAcquire1MS(void) {
+		return minimum_wait_time_after_acquire1_ms;
+	}
+	void setWaitTimeAfterAcquire1MS(unsigned long t) {
+		minimum_wait_time_after_acquire1_ms = t;
+	}
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	void setNextSubtask(int n) {
+		next_subtask = n;
+		getNextSubTask(); // performs range checking.
+	}
+	int incNextSubtask(void) {
+		next_subtask++;
+		return getNextSubTask();
+	}
+	int getNextSubTask(void) {
+		/* there are only 3 subtasks: acquire_setup, acquire1, and acquire2 */
+		if (next_subtask < 0 || next_subtask > 2) next_subtask = 0;
+		return next_subtask;
+	}
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	void setID(int id) {
+		sensorID = id;
+	}
+	int getID(void) {
+		return sensorID;
+	}
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// Types
 	void setType(int _channel, valueType t);
 	valueType getType(int _channel);
+
 	void setUOM(int _channel, uomType u);
 	uomType getUOM(int _channel);
 
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// General
+
+	virtual String getsInfo(String eol) = 0;
+
 	String getName(void) {
 		return sensorName;
 	}
@@ -201,6 +263,7 @@ public:
 		sensorName = _name;
 	}
 
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// Timeout until the values become stale
 	void setStaleAge_ms(unsigned long _time_till_stale) {
 		time_till_stale_ms = _time_till_stale;
@@ -209,6 +272,7 @@ public:
 		return time_till_stale_ms;
 	}
 
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// pins
 	void setPins(const SensorPins &p) {
 		this->pins.setPins(p);
@@ -220,6 +284,7 @@ public:
 		return this->pins.analog;
 	}
 
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// module
 	void setModule(sensorModule m) {
 		this->module = m;
@@ -227,16 +292,16 @@ public:
 	sensorModule getModule(void) {
 		return this->module;
 	}
-//	sensorModule getType() const {
-//		return this->module;
-//	}
+	String getModuleName(void);
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	bool isSensorActive(void) {
 		if (module == sensorModule::off) return false;
 		return true;
 	}
-	String getModuleName(void);
 
-	// raw values
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// Raw values (calibration not applied)
 	float getRawValue(int _channel);
 	float getRawValueWithoutUnitConversion(int _channel);
 	bool setRawValue(int _channel, float v);
@@ -245,7 +310,8 @@ public:
 		return millis() - rawval[channel].last_sample_time_ms;
 	}
 
-	// values
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// Final values (calibration applied)
 	bool isValueChannelValid(int channel);
 	bool setValueName(int channel, String name);
 	String getValueName(int channel);
@@ -260,7 +326,8 @@ public:
 	}
 	void printValues(void);
 
-	// cals
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// Calibration Data
 	bool isCalChannelValid(int channel);
 	bool setCalName(int channel, String name);
 	String getCalName(int channel);
